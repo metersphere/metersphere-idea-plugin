@@ -9,7 +9,6 @@
       Features：<br>
       <ul>
       <li>Javadoc-based analysis,no additional annotations.</li>
-      <li>Supporting field filtering, automatically ignoring the analysis of filtering fields.</li>
       <li>Automatically identify classes, generate api documents to MeterSphere.</li>
       <li>Support list, set, collection and other data structures, and support nested generic parsing.</li>
       <li>Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on json5.</li>
@@ -31,7 +30,6 @@
       特性：<br>
       <ul>
       <li>基于javadoc解析，无代码入侵</li>
-      <li>支持字段过滤，自动忽略过滤字段的解析</li>
       <li>自动识别类，生成接口定义到 MeterSphere</li>
       <li>支持List、Set、Collection等数据结构，支持嵌套泛型解析</li>
       <li>支持@ResponseBody等常用注解的解析</li>
