@@ -83,12 +83,10 @@ public class MeterSphereExporter implements IExporter {
             if (temp.exists()) {
                 temp.delete();
             }
-            return true;
+            return r;
         } catch (Exception e) {
             ProgressManager.getGlobalProgressIndicator().setText("Export to MeterSphere error:" + e.getMessage());
-            logger.error("MeterSphere plugin export to metersphere error start......");
             logger.error(e);
-            logger.error("MeterSphere plugin export to metersphere error end......");
             return false;
         }
     }

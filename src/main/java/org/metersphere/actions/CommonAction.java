@@ -17,7 +17,7 @@ public abstract class CommonAction extends AnAction {
         if (project == null) {
             return;
         }
-        AtomicBoolean r = new AtomicBoolean(false);
+        AtomicBoolean r = new AtomicBoolean(true);
         ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
             try {
                 ApplicationManager.getApplication().runReadAction((ThrowableComputable<Boolean, Throwable>) () -> {
