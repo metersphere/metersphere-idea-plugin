@@ -1,0 +1,41 @@
+// Copyright 2000-2021 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.2.1'
+}
+
+group 'org.intellij.sdk'
+version '1.0.0'
+
+sourceCompatibility = 11
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.projectlombok:lombok:1.18.16'
+    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5'
+    implementation 'com.alibaba:fastjson:1.2.78'
+    compileOnly 'org.projectlombok:lombok:1.18.16'
+    annotationProcessor 'org.projectlombok:lombok:1.18.16'
+    testCompileOnly 'org.projectlombok:lombok:1.18.16'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.16'
+}
+
+intellij {
+    version = '2020.3.2'
+    plugins = ['com.intellij.java']
+}
+
+buildSearchableOptions {
+    enabled = false
+}
+
+patchPluginXml {
+    version = project.version
+    sinceBuild = '183.*'
+}
+
+
+//d
