@@ -179,6 +179,7 @@ public class PostmanExporter implements IExporter {
                             String urlStr = Optional.ofNullable(getUrlFromAnnotation(e1)).orElse("");
                             urlBean.setPath(getPath(urlStr, basePath));
                             urlBean.setQuery(getQuery(e1, requestBean));
+                            urlBean.setVariable(getVariable(urlBean.getPath()));
 
                             String rawPre = (StringUtils.isNotBlank(basePath) ? "/" + basePath : "");
                             if (withBasePath) {
@@ -283,6 +284,20 @@ public class PostmanExporter implements IExporter {
             }
         });
         return models;
+    }
+
+    private List<?> getVariable(List<String> path) {
+        JSONArray variables = new JSONArray();
+        for (String s : path) {
+            if (s.startsWith(":")) {
+                JSONObject var = new JSONObject();
+                var.put("key", s.substring(1, s.length()));
+                variables.add(var);
+            }
+        }
+        if (variables.size() > 0)
+            return variables;
+        return null;
     }
 
     /**

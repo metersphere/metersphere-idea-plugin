@@ -65,6 +65,7 @@ public class PostmanModel implements Serializable {
                 private String raw;
                 private List<String> path;
                 private List<?> query;
+                private List<?> variable;
             }
 
             @Data
