@@ -4,7 +4,14 @@
     <vendor email="dahai.zhang@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
-    <em>支持导出 HTTP 接口到 MeterSphere.<em><br>
+    <p>
+    <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
+      |&nbsp
+    <a href="https://github.com/metersphere/metersphere-idea-plugin/issues">Issues</a>
+    </p>
+    <br>
+    <em>支持导出 HTTP 接口到 MeterSphere.<em>
+    <br>
     <br>
       Features：<br>
       <ul>
@@ -78,9 +85,6 @@
       </table><br>
       <em>Compatible IDE versions:</em><br>
       2018.3+ <br><br>
-      <p><a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
-      |&nbsp<a href="https://github.com/metersphere/metersphere-idea-plugin/issues">Issues</a></p>
-
     ]]></description>
 
 
