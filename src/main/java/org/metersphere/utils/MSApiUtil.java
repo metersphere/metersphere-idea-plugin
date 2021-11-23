@@ -1,11 +1,14 @@
 package org.metersphere.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.intellij.openapi.diagnostic.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.metersphere.state.AppSettingState;
@@ -68,18 +71,50 @@ public class MSApiUtil {
      * @param appSettingState
      * @return
      */
-    public static JSONObject getProjectList(AppSettingState appSettingState) {
+    public static JSONObject getProjectList(AppSettingState appSettingState, JSONObject param) {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/project/listAll");
-            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
-            httpGet.addHeader("signature", getSinature(appSettingState));
-            CloseableHttpResponse response = httpClient.execute(httpGet);
+            HttpPost httPost = new HttpPost(appSettingState.getMeterSphereAddress() + "/project/list/related");
+            httPost.addHeader("accessKey", appSettingState.getAccesskey());
+            httPost.addHeader("signature", getSinature(appSettingState));
+            httPost.addHeader("Content-Type", "application/json");
+            StringEntity stringEntity = new StringEntity(param.toJSONString());
+            httPost.setEntity(stringEntity);
+            CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
                 return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
             logger.error("getProjectList failed", e);
+            return null;
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param appSettingState
+     * @return
+     */
+    public static JSONObject getUserInfo(AppSettingState appSettingState) {
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        try {
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
+            httPost.addHeader("accessKey", appSettingState.getAccesskey());
+            httPost.addHeader("signature", getSinature(appSettingState));
+            CloseableHttpResponse response = httpClient.execute(httPost);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+            }
+        } catch (Exception e) {
+            logger.error("getUserInfo failed", e);
             return null;
         } finally {
             if (httpClient != null) {

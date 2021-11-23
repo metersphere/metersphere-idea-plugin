@@ -129,8 +129,11 @@ public class AppSettingComponent {
     private boolean init() {
         AppSettingState appSettingState = appSettingService.getState();
 
+        JSONObject userInfo = MSApiUtil.getUserInfo(appSettingState);
+        JSONObject param = new JSONObject();
+        param.put("userId", userInfo.getString("data"));
         //初始化项目
-        JSONObject project = MSApiUtil.getProjectList(appSettingState);
+        JSONObject project = MSApiUtil.getProjectList(appSettingState, param);
         if (project != null && project.getBoolean("success")) {
             appSettingState.setProjectList(gson.fromJson(gson.toJson(project.getJSONArray("data")), new TypeToken<List<MSProject>>() {
             }.getType()));
