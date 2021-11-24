@@ -237,7 +237,7 @@ public class PostmanExporter implements IExporter {
                             for (PsiParameter pe : parameterList.getParameters()) {
                                 PsiAnnotation[] pAt = pe.getAnnotations();
                                 if (pAt != null && pAt.length != 0) {
-                                    if (pe.hasAnnotation("org.springframework.web.bind.annotation.RequestBody")) {
+                                    if (PsiAnnotationUtil.findAnnotations(pe, Pattern.compile("RequestBody")).size() > 0) {
                                         bodyBean.setMode("raw");
                                         bodyBean.setRaw(getRaw(pe));
 
@@ -250,7 +250,7 @@ public class PostmanExporter implements IExporter {
                                         //隐式
                                         addRestHeader(headerBeans);
                                     }
-                                    if (pe.hasAnnotation("org.springframework.web.bind.annotation.RequestPart")) {
+                                    if (PsiAnnotationUtil.findAnnotations(pe, Pattern.compile("RequestPart")).size() > 0) {
                                         bodyBean.setMode("formdata");
                                         bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe));
                                         requestBean.setBody(bodyBean);
@@ -561,7 +561,7 @@ public class PostmanExporter implements IExporter {
         for (PsiParameter psiParameter : parameter) {
             PsiAnnotation[] pAt = psiParameter.getAnnotations();
             if (pAt != null && pAt.length != 0) {
-                if (psiParameter.hasAnnotation("org.springframework.web.bind.annotation.RequestBody") && psiParameter.hasAnnotation("org.springframework.web.bind.annotation.RequestPart") && psiParameter.hasAnnotation("org.springframework.web.bind.annotation.PathVariable")) {
+                if (PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestBody")).size() > 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestPart")).size() > 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("PathVariable")).size() > 0) {
                     JSONObject stringParam = new JSONObject();
                     stringParam.put("key", psiParameter.getName());
                     stringParam.put("value", "");
