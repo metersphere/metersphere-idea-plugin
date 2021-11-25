@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -67,7 +68,8 @@ public class MeterSphereExporter implements IExporter {
             JSONObject info = new JSONObject();
             info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
             String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            info.put("name", psiElement.getProject().getName());
+            String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : psiElement.getProject().getName();
+            info.put("name", exportName);
             info.put("description", "exported at " + dateTime);
             jsonObject.put("info", info);
             bufferedWriter.write(new Gson().toJson(jsonObject));

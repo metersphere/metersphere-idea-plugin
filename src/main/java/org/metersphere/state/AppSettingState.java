@@ -25,6 +25,7 @@ public class AppSettingState {
     private List<String> moduleNameList;
     private String moduleId;
     private String moduleName;
+    private String exportModuleName;
 
     private String modeId = "http";
     //嵌套对象参数解析的深度

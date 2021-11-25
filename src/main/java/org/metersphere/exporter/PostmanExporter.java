@@ -119,7 +119,10 @@ public class PostmanExporter implements IExporter {
             if (controllerClass != null) {
                 PostmanModel model = new PostmanModel();
                 if (!f.getName().endsWith(".java")) return;
-                model.setName(f.getName().replace(".java", ""));
+                PsiClass[] classes = f.getClasses();
+                if (classes.length == 0)
+                    return;
+                model.setName(getApiName(f.getClasses()[0]));
                 model.setDescription(model.getName());
                 List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                 boolean isRequest = false;
@@ -306,7 +309,9 @@ public class PostmanExporter implements IExporter {
      * @param e1
      * @return
      */
-    private String getApiName(PsiMethod e1) {
+    private String getApiName(PsiDocCommentOwner e1) {
+        if (e1 == null)
+            return "unknown module";
         String apiName = e1.getName();
         Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
         if (tokens.size() > 0) {
@@ -320,7 +325,6 @@ public class PostmanExporter implements IExporter {
             }
         }
         return apiName;
-
     }
 
     private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFromdata(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> formdata, PsiParameter pe) {
