@@ -18,6 +18,7 @@ import javax.swing.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,7 @@ public class AppSettingComponent {
     private JComboBox modeId;
     private JButton syncButton;
     private JComboBox deepthCB;
+    private JTextField moduleName;
     private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
@@ -49,6 +51,9 @@ public class AppSettingComponent {
         secretkey.setText(appSettingState.getSecretkey());
         modeId.setSelectedItem(appSettingState.getModeId());
         apiType.setSelectedItem(appSettingState.getApiType());
+        if (StringUtils.isNotBlank(appSettingState.getExportModuleName())) {
+            moduleName.setText(new String(appSettingState.getExportModuleName().getBytes(StandardCharsets.UTF_8)));
+        }
         if (appSettingState.getProjectNameList() != null) {
             appSettingState.getProjectNameList().forEach(p -> projectNameCB.addItem(p));
         }
@@ -123,6 +128,12 @@ public class AppSettingComponent {
         });
         deepthCB.addActionListener(actionEvent -> {
             appSettingState.setDeepth(Integer.valueOf(deepthCB.getSelectedItem().toString()));
+        });
+        moduleName.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                appSettingState.setExportModuleName(new String(moduleName.getText().trim().getBytes(StandardCharsets.UTF_8)));
+            }
         });
     }
 
