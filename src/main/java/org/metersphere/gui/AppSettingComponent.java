@@ -15,9 +15,7 @@ import org.metersphere.state.MSProject;
 import org.metersphere.utils.MSApiUtil;
 
 import javax.swing.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,9 +35,10 @@ public class AppSettingComponent {
     private JComboBox projectNameCB;
     private JComboBox moduleNameCB;
     private JComboBox modeId;
-    private JButton syncButton;
     private JComboBox deepthCB;
     private JTextField moduleName;
+    private JCheckBox javadocCheckBox;
+    private JTextField contextPath;
     private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
@@ -70,11 +69,18 @@ public class AppSettingComponent {
             moduleNameCB.setSelectedItem(appSettingState.getModuleName());
         }
         deepthCB.setSelectedItem(appSettingState.getDeepth().toString());
+        if (StringUtils.isNotBlank(appSettingState.getContextPath())) {
+            contextPath.setText(appSettingState.getContextPath().trim());
+        }
+        javadocCheckBox.setSelected(appSettingState.isJavadoc());
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
-                Messages.showInfoMessage("Connect success!", "Info");
+                if (init())
+                    Messages.showInfoMessage("sync success!", "Info");
+                else
+                    Messages.showInfoMessage("sync fail!", "Info");
             } else {
-                Messages.showInfoMessage("Connect fail!", "Info");
+                Messages.showInfoMessage("connect fail!", "Info");
             }
         });
         meterSphereAddress.addKeyListener(new KeyAdapter() {
@@ -116,16 +122,6 @@ public class AppSettingComponent {
         modeId.addActionListener(actionEvent -> {
             appSettingState.setModeId(modeId.getSelectedItem().toString());
         });
-        syncButton.addActionListener(actionEvent -> {
-            if (test(appSettingState)) {
-                if (init())
-                    Messages.showInfoMessage("sync success!", "Info");
-                else
-                    Messages.showInfoMessage("sync fail!", "Info");
-            } else {
-                Messages.showInfoMessage("connect fail!", "Info");
-            }
-        });
         deepthCB.addActionListener(actionEvent -> {
             appSettingState.setDeepth(Integer.valueOf(deepthCB.getSelectedItem().toString()));
         });
@@ -134,6 +130,15 @@ public class AppSettingComponent {
             public void keyReleased(KeyEvent e) {
                 appSettingState.setExportModuleName(new String(moduleName.getText().trim().getBytes(StandardCharsets.UTF_8)));
             }
+        });
+        contextPath.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                appSettingState.setContextPath(contextPath.getText().trim());
+            }
+        });
+        javadocCheckBox.addActionListener((actionEvent) -> {
+            appSettingState.setJavadoc(javadocCheckBox.isSelected());
         });
     }
 

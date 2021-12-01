@@ -30,6 +30,10 @@ public class AppSettingState {
     private String modeId = "http";
     //嵌套对象参数解析的深度
     private Integer deepth = 1;
+    //全体 url 前缀
+    private String contextPath;
+    //是否支持读取 javadoc
+    private boolean javadoc = true;
 
     public String getMeterSphereAddress() {
         if (StringUtils.isNotBlank(this.meterSphereAddress)) {
