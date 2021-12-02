@@ -1,5 +1,7 @@
 package org.metersphere.constants;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +30,12 @@ public class PluginConstants {
         add("java.lang.Boolean");
         add("String");
         add("java.lang.String");
+        add("JSONObject");
+        add("com.alibaba.fastjson.JSONObject");
+        add("JsonObject");
+        add("com.google.gson.JsonObject");
+        add("Map");
+        add("java.util.Map");
     }};
 
     public static final Map<String, Object> simpleJavaTypeValue = new HashMap<>() {{
@@ -49,6 +57,12 @@ public class PluginConstants {
         put("java.lang.Boolean", false);
         put("java.lang.String", "");
         put("String", "");
+        put("com.alibaba.fastjson.JSONObject", new JSONObject());
+        put("JSONObject", new JSONObject());
+        put("com.google.gson.JsonObject", new JSONObject());
+        put("JsonObject", new JSONObject());
+        put("java.util.Map", new JSONObject());
+        put("Map", new JSONObject());
     }};
 
     public enum MessageTitle {
