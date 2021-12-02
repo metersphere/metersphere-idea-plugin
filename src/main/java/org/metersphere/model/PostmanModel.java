@@ -121,9 +121,11 @@ public class PostmanModel implements Serializable {
 
                 @Data
                 public static class UrlBeanX implements Serializable {
-
                     private String host;
+                    private String raw;
+                    private List<String> path;
                     private List<?> query;
+                    private List<?> variable;
                 }
 
                 @Data

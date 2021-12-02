@@ -9,7 +9,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
 import com.intellij.openapi.fileChooser.FileChooserFactory;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
@@ -29,7 +28,6 @@ import org.metersphere.utils.UTF8Util;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -214,8 +212,8 @@ public class PostmanExporter implements IExporter {
                                 addFormHeader(headerBeans);
                             }
                             PsiElement headAn = findModifierInList(e1.getModifierList(), "headers");
+                            PostmanModel.ItemBean.RequestBean.HeaderBean headerBean = new PostmanModel.ItemBean.RequestBean.HeaderBean();
                             if (headAn != null) {
-                                PostmanModel.ItemBean.RequestBean.HeaderBean headerBean = new PostmanModel.ItemBean.RequestBean.HeaderBean();
                                 String headerStr = PsiAnnotationUtil.getAnnotationValue((PsiAnnotation) headAn, "headers", String.class);
                                 if (StringUtils.isNotBlank(headerStr)) {
                                     headerBean.setKey(headerStr.split("=")[0]);
@@ -246,8 +244,8 @@ public class PostmanExporter implements IExporter {
                                     }
 
                                 }
-                                requestBean.setHeader(removeDuplicate(headerBeans));
                             }
+                            requestBean.setHeader(removeDuplicate(headerBeans));
                             //body
                             PsiParameterList parameterList = e1.getParameterList();
                             PostmanModel.ItemBean.RequestBean.BodyBean bodyBean = new PostmanModel.ItemBean.RequestBean.BodyBean();
@@ -291,6 +289,7 @@ public class PostmanExporter implements IExporter {
                                 }
                             }
                             itemBean.setRequest(requestBean);
+                            itemBean.setResponse(getResponseBean(itemBean, e1));
                             itemBeans.add(itemBean);
                         }
                     }
@@ -301,6 +300,64 @@ public class PostmanExporter implements IExporter {
             }
         });
         return models;
+    }
+
+    private List<PostmanModel.ItemBean.ResponseBean> getResponseBean(PostmanModel.ItemBean itemBean, PsiMethod e1) {
+        PostmanModel.ItemBean.ResponseBean responseBean = new PostmanModel.ItemBean.ResponseBean();
+        responseBean.setName(itemBean.getName() + "-Example");
+        responseBean.setStatus("OK");
+        responseBean.setCode(200);
+        responseBean.setHeader(getResponseHeader(itemBean));
+        responseBean.set_postman_previewlanguage("json");
+        responseBean.setOriginalRequest(JSONObject.parseObject(JSONObject.toJSONString(itemBean.getRequest()), PostmanModel.ItemBean.ResponseBean.OriginalRequestBean.class));
+        responseBean.setBody(getResponseBody(e1));
+        return new ArrayList<>() {{
+            add(responseBean);
+        }};
+    }
+
+    private String getResponseBody(PsiMethod e1) {
+        PsiTypeElement element = (PsiTypeElement) PsiTreeUtil.findChildrenOfType(e1, PsiTypeElement.class).toArray()[0];
+        String returnType = element.getText();
+        if (!"void".equalsIgnoreCase(returnType)) {
+            return getRaw(element);
+        }
+        return "";
+    }
+
+    private List<PostmanModel.ItemBean.ResponseBean.HeaderBeanXX> getResponseHeader(PostmanModel.ItemBean itemBean) {
+        List<PostmanModel.ItemBean.ResponseBean.HeaderBeanXX> headers = new ArrayList<>();
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h1 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h1.setKey("date");
+        h1.setName("date");
+        h1.setValue("Thu, 02 Dec 2021 06:26:59 GMT");
+        h1.setDescription("The date and time that the message was sent");
+        headers.add(h1);
+
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h2 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h2.setKey("server");
+        h2.setName("server");
+        h2.setValue("Apache-Coyote/1.1");
+        h2.setDescription("A name for the server");
+        headers.add(h2);
+
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h3 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h3.setKey("transfer-encoding");
+        h3.setName("transfer-encoding");
+        h3.setValue("chunked");
+        h3.setDescription("The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity.");
+        headers.add(h3);
+
+
+        if (itemBean.getRequest().getHeader() != null && itemBean.getRequest().getHeader().stream().filter(s -> s.getKey().equalsIgnoreCase("Content-Type")).count() > 0) {
+            PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h4 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+            h4.setKey("content-type");
+            h4.setName("content-type");
+            h4.setValue(itemBean.getRequest().getHeader().stream().filter(s -> s.getKey().equalsIgnoreCase("Content-Type")).findFirst().orElse(new PostmanModel.ItemBean.RequestBean.HeaderBean()).getValue());
+            headers.add(h4);
+        }
+        return headers;
+
     }
 
     private Map<String, String> getParamMap(PsiMethod e1, AppSettingState state) {
@@ -749,7 +806,86 @@ public class PostmanExporter implements IExporter {
         return JSONObject.toJSONString(param, SerializerFeature.PrettyFormat);
     }
 
+    public String getRaw(PsiTypeElement pe) {
+        String javaType = pe.getType().getCanonicalText();
+        PsiClass psiClass = JavaPsiFacade.getInstance(pe.getProject()).findClass(pe.getType().getCanonicalText(), GlobalSearchScope.allScope(pe.getProject()));
+        LinkedHashMap param = new LinkedHashMap();
+        AppSettingState state = ApplicationManager.getApplication().getComponent(AppSettingService.class).getState();
+        int maxDeepth = state.getDeepth();
+        int curDeepth = 1;
+        //这个判断对多层集合嵌套的数据类型
+        if (psiClass != null) {
+            //普通类型
+            if (PluginConstants.simpleJavaType.contains(javaType))
+                param.put(pe.getText(), PluginConstants.simpleJavaTypeValue.get(javaType));
+            else {
+                //对象类型
+
+                PsiField[] fields = psiClass.getAllFields();
+                for (PsiField field : fields) {
+                    if (skipJavaTypes.contains(field.getName().toLowerCase()))
+                        continue;
+                    //简单对象
+                    if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))
+                        param.put(field.getName(), PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()));
+                        //这个判断对多层集合嵌套的数据类型
+                    else {
+                        //复杂对象
+                        //容器
+                        if (field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">")) {
+                            param.put(field.getName(), new ArrayList<>() {{
+                                add(getFields(getPsiClass(field, "collection"), curDeepth, maxDeepth));
+                            }});
+                        } else if (field.getType().getCanonicalText().contains("[]"))//数组
+                            param.put(field.getName(), getJSONArray(field, curDeepth, maxDeepth));
+                        else//普通对象
+                            param.put(field.getName(), getFields(getPsiClass(field, "pojo"), curDeepth, maxDeepth));
+                    }
+                }
+            }
+        } else {
+            //复杂对象
+            //容器
+            if (isCollection(pe)) {
+                JSONArray arr = new JSONArray();
+                arr.add(getFields(getPsiClass(pe, "collection"), curDeepth, maxDeepth));
+                return arr.toJSONString();
+            } else if (javaType.contains("[]"))//数组
+                return getJSONArray(pe, curDeepth, maxDeepth).toJSONString();
+            else if (isMap(pe)) {
+                getRawMap(param, pe);
+            }
+
+        }
+
+        return JSONObject.toJSONString(param, SerializerFeature.PrettyFormat);
+    }
+
     private void getRawMap(LinkedHashMap param, PsiField field) {
+        if (!field.getType().getCanonicalText().contains("<")) {
+            param.put(field.getName(), new JSONObject());
+            return;
+        }
+        String keyJavaType = field.getType().getPresentableText().split("<")[1].split(",")[0];
+        String valueType = field.getType().getPresentableText().split("<")[1].split(",")[1].replace(">", "");
+        if (PluginConstants.simpleJavaType.contains(keyJavaType)) {
+            if (PluginConstants.simpleJavaType.contains(valueType))
+                param.put(PluginConstants.simpleJavaTypeValue.get(keyJavaType), PluginConstants.simpleJavaTypeValue.get(valueType));
+            else
+                param.put(PluginConstants.simpleJavaTypeValue.get(keyJavaType), new JSONObject());
+        } else {
+            if (PluginConstants.simpleJavaType.contains(valueType))
+                param.put(new JSONObject(), PluginConstants.simpleJavaTypeValue.get(valueType));
+            else
+                param.put(new JSONObject(), new JSONObject());
+        }
+    }
+
+    private void getRawMap(LinkedHashMap param, PsiTypeElement field) {
+        if (!field.getType().getCanonicalText().contains("<")) {
+            param.put(field.getText(), new JSONObject());
+            return;
+        }
         String keyJavaType = field.getType().getPresentableText().split("<")[1].split(",")[0];
         String valueType = field.getType().getPresentableText().split("<")[1].split(",")[1].replace(">", "");
         if (PluginConstants.simpleJavaType.contains(keyJavaType)) {
@@ -792,6 +928,10 @@ public class PostmanExporter implements IExporter {
         return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
     }
 
+    private boolean isCollection(PsiTypeElement field) {
+        return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
+    }
+
     private boolean isCollection(PsiParameter field) {
         return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
     }
@@ -806,6 +946,10 @@ public class PostmanExporter implements IExporter {
         return field.getType().getPresentableText().contains("Map");
     }
 
+    private boolean isMap(PsiTypeElement field) {
+        return field.getType().getPresentableText().contains("Map");
+    }
+
     private boolean isMap(PsiParameter field) {
         return field.getType().getPresentableText().contains("Map");
     }
@@ -817,6 +961,22 @@ public class PostmanExporter implements IExporter {
      * @return
      */
     private JSONArray getJSONArray(PsiField field, int curDeepth, int maxDeepth) {
+        JSONArray r = new JSONArray();
+        String qualifiedName = field.getType().getCanonicalText().replace("[]", "");
+        if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
+            r.add(PluginConstants.simpleJavaTypeValue.get(qualifiedName));
+        } else {
+            if (curDeepth == maxDeepth)
+                return new JSONArray();
+            PsiClass psiClass = getPsiClass(field, "array");
+            if (psiClass != null) {
+                r.add(getFields(psiClass, curDeepth + 1, maxDeepth));
+            }
+        }
+        return r;
+    }
+
+    private JSONArray getJSONArray(PsiTypeElement field, int curDeepth, int maxDeepth) {
         JSONArray r = new JSONArray();
         String qualifiedName = field.getType().getCanonicalText().replace("[]", "");
         if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
@@ -883,6 +1043,15 @@ public class PostmanExporter implements IExporter {
     }
 
     private PsiClass getPsiClass(PsiField field, String type) {
+        if (type.equalsIgnoreCase("collection"))
+            return JavaPsiFacade.getInstance(field.getProject()).findClass(field.getType().getCanonicalText().split("<")[1].split(">")[0], GlobalSearchScope.allScope(field.getProject()));
+        else if (type.equalsIgnoreCase("array"))
+            return JavaPsiFacade.getInstance(field.getProject()).findClass(field.getType().getCanonicalText().replace("[]", ""), GlobalSearchScope.allScope(field.getProject()));
+        else
+            return JavaPsiFacade.getInstance(field.getProject()).findClass(field.getType().getCanonicalText(), GlobalSearchScope.allScope(field.getProject()));
+    }
+
+    private PsiClass getPsiClass(PsiTypeElement field, String type) {
         if (type.equalsIgnoreCase("collection"))
             return JavaPsiFacade.getInstance(field.getProject()).findClass(field.getType().getCanonicalText().split("<")[1].split(">")[0], GlobalSearchScope.allScope(field.getProject()));
         else if (type.equalsIgnoreCase("array"))
