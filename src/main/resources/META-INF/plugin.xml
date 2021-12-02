@@ -10,7 +10,7 @@
     <p>
     <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
       |&nbsp
-    <a href="https://github.com/metersphere/metersphere-idea-plugin/issues">Issues</a>
+    <a href="https://github.com/metersphere/metersphere/issues">Issues</a>
     </p>
     <br>
       Features：<br>
@@ -90,6 +90,7 @@
 
     <change-notes><![CDATA[<ul>
         <li><b>1.0.0</b> support export Http api to MeterSphere.</li>
+        <li><b>1.0.1</b> add context-path,xport-name,javadoc support.</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
@@ -135,6 +136,16 @@
             <keyboard-shortcut
                     first-keystroke="control C"
                     keymap="Mac OS X 10.5+" replace-all="true"/>
+        </action>
+
+
+        <action id="PostmanAction"
+                class="org.metersphere.actions.ExportToPostmanAction" text="Export Postman"
+                description="Export Postman">
+            <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereProjectViewPopupMenu" anchor="last"/>
         </action>
 
     </actions>

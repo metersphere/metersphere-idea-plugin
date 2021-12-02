@@ -21,6 +21,7 @@ import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.HttpFutureUtils;
 import org.metersphere.utils.MSApiUtil;
+import org.metersphere.utils.ProgressUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,7 +45,7 @@ public class MeterSphereExporter implements IExporter {
         try {
 
             if (!MSApiUtil.test(appSettingService.getState())) {
-                ProgressManager.getGlobalProgressIndicator().setText("please input correct ak sk!");
+                ProgressUtil.show(("please input correct ak sk!"));
                 return false;
             }
             List<PsiJavaFile> files = new LinkedList<>();
@@ -53,12 +54,12 @@ public class MeterSphereExporter implements IExporter {
                     f instanceof PsiJavaFile
             ).collect(Collectors.toList());
             if (files.size() == 0) {
-                ProgressManager.getGlobalProgressIndicator().setText("No java file detected! please change your search root");
+                ProgressUtil.show(("No java file detected! please change your search root"));
                 return false;
             }
-            List<PostmanModel> postmanModels = postmanExporter.transform(files, false);
+            List<PostmanModel> postmanModels = postmanExporter.transform(files, false, appSettingService.getState());
             if (postmanModels.size() == 0) {
-                ProgressManager.getGlobalProgressIndicator().setText("No java api was found! please change your search root");
+                ProgressUtil.show(("No java api was found! please change your search root"));
                 return false;
             }
             File temp = File.createTempFile(UUID.randomUUID().toString(), null);
@@ -78,23 +79,23 @@ public class MeterSphereExporter implements IExporter {
 
             boolean r = uploadToServer(temp);
             if (r) {
-                ProgressManager.getGlobalProgressIndicator().setText("Export to MeterSphere success!");
+                ProgressUtil.show(("Export to MeterSphere success!"));
             } else {
-                ProgressManager.getGlobalProgressIndicator().setText("Export to MeterSphere fail!");
+                ProgressUtil.show(("Export to MeterSphere fail!"));
             }
             if (temp.exists()) {
                 temp.delete();
             }
             return r;
         } catch (Exception e) {
-            ProgressManager.getGlobalProgressIndicator().setText("Export to MeterSphere error:" + e.getMessage());
+            ProgressUtil.show(("Export to MeterSphere error:" + e.getMessage()));
             logger.error(e);
             return false;
         }
     }
 
     private boolean uploadToServer(File file) {
-        ProgressManager.getGlobalProgressIndicator().setText(String.format("Start to sync to MeterSphere Server"));
+        ProgressUtil.show((String.format("Start to sync to MeterSphere Server")));
         CloseableHttpClient httpclient = HttpFutureUtils.getOneHttpClient();
         AppSettingState state = appSettingService.getState();
         String url = state.getMeterSphereAddress() + "/api/definition/import";

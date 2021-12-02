@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
 import org.metersphere.exporter.ExporterFactory;
+import org.metersphere.utils.ProgressUtil;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,7 +22,7 @@ public abstract class CommonAction extends AnAction {
         ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
             try {
                 ApplicationManager.getApplication().runReadAction((ThrowableComputable<Boolean, Throwable>) () -> {
-                    ProgressManager.getGlobalProgressIndicator().setText("begin exporting...");
+                    ProgressUtil.show(("begin exporting..."));
                     if (!ExporterFactory.export(source, event))
                         throw new RuntimeException("failed");
                     return true;
@@ -35,6 +36,10 @@ public abstract class CommonAction extends AnAction {
             Messages.showInfoMessage("Export to MeterSphere success!", "Info");
         else
             Messages.showInfoMessage("Export to MeterSphere fail! please see log file in idea.log", "Info");
+    }
+
+    protected void exportDirectly(String source, AnActionEvent event) {
+        ExporterFactory.export(source, event);
     }
 
 }

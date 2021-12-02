@@ -24,6 +24,8 @@ import org.metersphere.constants.PluginConstants;
 import org.metersphere.constants.SpringMappingConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
+import org.metersphere.utils.ProgressUtil;
+import org.metersphere.utils.UTF8Util;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -36,6 +38,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PostmanExporter implements IExporter {
+    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+
     @Override
     public boolean export(PsiElement psiElement) {
         try {
@@ -48,7 +52,7 @@ public class PostmanExporter implements IExporter {
                 Messages.showInfoMessage("No java file detected! please change your search root", infoTitle());
                 return false;
             }
-            List<PostmanModel> postmanModels = transform(files, true);
+            List<PostmanModel> postmanModels = transform(files, true, appSettingService.getState());
             if (postmanModels.size() == 0) {
                 Messages.showInfoMessage("No java api was found! please change your search root", infoTitle());
                 return false;
@@ -94,7 +98,7 @@ public class PostmanExporter implements IExporter {
         if (psiElement instanceof PsiDirectory) {
             Arrays.stream(psiElement.getChildren()).forEach(p -> {
                 if (p instanceof PsiJavaFile) {
-                    ProgressManager.getGlobalProgressIndicator().setText("Found controller: " + ((PsiJavaFile) p).getName());
+                    ProgressUtil.show(("Found controller: " + ((PsiJavaFile) p).getName()));
                     files.add((PsiJavaFile) p);
                 } else if (p instanceof PsiDirectory) {
                     getFile(p, files);
@@ -102,7 +106,7 @@ public class PostmanExporter implements IExporter {
             });
         } else {
             if (psiElement.getContainingFile() instanceof PsiJavaFile) {
-                ProgressManager.getGlobalProgressIndicator().setText("Found controller: " + (psiElement.getContainingFile()).getName());
+                ProgressUtil.show(("Found controller: " + (psiElement.getContainingFile()).getName()));
                 files.add((PsiJavaFile) psiElement.getContainingFile());
             }
         }
@@ -111,7 +115,7 @@ public class PostmanExporter implements IExporter {
 
     Logger logger = Logger.getInstance(PostmanExporter.class);
 
-    public List<PostmanModel> transform(List<PsiJavaFile> files, boolean withBasePath) {
+    public List<PostmanModel> transform(List<PsiJavaFile> files, boolean withBasePath, AppSettingState state) {
         List<PostmanModel> models = new LinkedList<>();
         files.forEach(f -> {
             logger.info(f.getText() + "...........");
@@ -122,7 +126,7 @@ public class PostmanExporter implements IExporter {
                 PsiClass[] classes = f.getClasses();
                 if (classes.length == 0)
                     return;
-                model.setName(getApiName(f.getClasses()[0]));
+                model.setName(getApiName(f.getClasses()[0], state));
                 model.setDescription(model.getName());
                 List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                 boolean isRequest = false;
@@ -156,6 +160,12 @@ public class PostmanExporter implements IExporter {
                             basePath = "";
                         }
                     }
+                    if (StringUtils.isNotBlank(state.getContextPath())) {
+                        if (StringUtils.isNotBlank(basePath))
+                            basePath = state.getContextPath().replaceFirst("/", "") + "/" + basePath;
+                        else
+                            basePath = state.getContextPath().replaceFirst("/", "");
+                    }
 
                     Collection<PsiMethod> methodCollection = PsiTreeUtil.findChildrenOfType(controllerClass, PsiMethod.class);
                     Iterator<PsiMethod> methodIterator = methodCollection.iterator();
@@ -167,7 +177,7 @@ public class PostmanExporter implements IExporter {
                         if (mapO.isPresent()) {
                             PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
                             //方法名称
-                            itemBean.setName(getApiName(e1));
+                            itemBean.setName(getApiName(e1, state));
                             PostmanModel.ItemBean.RequestBean requestBean = new PostmanModel.ItemBean.RequestBean();
                             //请求类型
                             requestBean.setMethod(getMethod(mapO.get()));
@@ -176,22 +186,26 @@ public class PostmanExporter implements IExporter {
                                 isRequest = false;
                                 continue;
                             }
+
+                            Map<String, String> paramJavaDoc = getParamMap(e1, state);
                             //url
                             PostmanModel.ItemBean.RequestBean.UrlBean urlBean = new PostmanModel.ItemBean.RequestBean.UrlBean();
+
                             urlBean.setHost("{{" + e1.getProject().getName() + "}}");
                             String urlStr = Optional.ofNullable(getUrlFromAnnotation(e1)).orElse("");
                             urlBean.setPath(getPath(urlStr, basePath));
-                            urlBean.setQuery(getQuery(e1, requestBean));
-                            urlBean.setVariable(getVariable(urlBean.getPath()));
+                            urlBean.setQuery(getQuery(e1, requestBean, paramJavaDoc));
+                            urlBean.setVariable(getVariable(urlBean.getPath(), paramJavaDoc));
 
                             String rawPre = (StringUtils.isNotBlank(basePath) ? "/" + basePath : "");
                             if (withBasePath) {
-                                urlBean.setRaw(urlBean.getHost() + rawPre + (urlStr.startsWith("/") ? urlStr : "/" + urlStr));
+                                String cp = StringUtils.isNotBlank(state.getContextPath()) ? "{{" + e1.getProject().getName() + "}}" + "/" + state.getContextPath() : "{{" + e1.getProject().getName() + "}}";
+                                urlBean.setRaw(cp + rawPre + (urlStr.startsWith("/") ? urlStr : "/" + urlStr));
                             } else {
                                 urlBean.setRaw(rawPre + (urlStr.startsWith("/") ? urlStr : "/" + urlStr));
                             }
                             requestBean.setUrl(urlBean);
-                            ProgressManager.getGlobalProgressIndicator().setText(String.format("Found controller: %s api: %s", f.getName(), urlBean.getRaw()));
+                            ProgressUtil.show((String.format("Found controller: %s api: %s", f.getName(), urlBean.getRaw())));
                             //header
                             List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans = new ArrayList<>();
                             if (restController) {
@@ -289,12 +303,37 @@ public class PostmanExporter implements IExporter {
         return models;
     }
 
-    private List<?> getVariable(List<String> path) {
+    private Map<String, String> getParamMap(PsiMethod e1, AppSettingState state) {
+        if (e1 == null)
+            return new HashMap<>();
+        if (!state.isJavadoc()) {
+            return new HashMap<>();
+        }
+        Map<String, String> r = new HashMap<>();
+        Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
+        if (tokens.size() > 0) {
+            Iterator<PsiDocToken> iterator = tokens.iterator();
+            while (iterator.hasNext()) {
+                PsiDocToken token = iterator.next();
+                if (token.getTokenType().toString().equalsIgnoreCase("DOC_TAG_NAME") && token.getText().equalsIgnoreCase("@param")) {
+                    PsiDocToken paramEn = iterator.next();
+                    PsiDocToken paramZh = iterator.next();
+                    if (!StringUtils.isAllBlank(paramEn.getText(), paramZh.getText())) {
+                        r.put(UTF8Util.toUTF8String(paramEn.getText()), UTF8Util.toUTF8String(paramZh.getText()));
+                    }
+                }
+            }
+        }
+        return r;
+    }
+
+    private List<?> getVariable(List<String> path, Map<String, String> paramJavaDoc) {
         JSONArray variables = new JSONArray();
         for (String s : path) {
             if (s.startsWith(":")) {
                 JSONObject var = new JSONObject();
-                var.put("key", s.substring(1, s.length()));
+                var.put("key", s.substring(1));
+                var.put("description", paramJavaDoc.get(s.substring(1)));
                 variables.add(var);
             }
         }
@@ -309,17 +348,20 @@ public class PostmanExporter implements IExporter {
      * @param e1
      * @return
      */
-    private String getApiName(PsiDocCommentOwner e1) {
+    private String getApiName(PsiDocCommentOwner e1, AppSettingState state) {
         if (e1 == null)
             return "unknown module";
         String apiName = e1.getName();
+        if (!state.isJavadoc()) {
+            return apiName;
+        }
         Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
         if (tokens.size() > 0) {
             Iterator<PsiDocToken> iterator = tokens.iterator();
             while (iterator.hasNext()) {
                 PsiDocToken token = iterator.next();
                 if (token.getTokenType().toString().equalsIgnoreCase("DOC_COMMENT_DATA")) {
-                    apiName = new String(token.getText().getBytes(StandardCharsets.UTF_8));
+                    apiName = UTF8Util.toUTF8String(token.getText());
                     break;
                 }
             }
@@ -555,7 +597,7 @@ public class PostmanExporter implements IExporter {
         addHeader(headerBeans, "multipart/form-data");
     }
 
-    public List<?> getQuery(PsiMethod e1, PostmanModel.ItemBean.RequestBean requestBean) {
+    public List<?> getQuery(PsiMethod e1, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
         List<JSONObject> r = new ArrayList<>();
         PsiParameterList parametersList = e1.getParameterList();
         PsiParameter[] parameter = parametersList.getParameters();
@@ -570,7 +612,7 @@ public class PostmanExporter implements IExporter {
                     stringParam.put("key", psiParameter.getName());
                     stringParam.put("value", "");
                     stringParam.put("equals", true);
-                    stringParam.put("description", "");
+                    stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
                     r.add(stringParam);
                 } else {
                     if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
@@ -583,7 +625,7 @@ public class PostmanExporter implements IExporter {
                     stringParam.put("key", psiParameter.getName());
                     stringParam.put("value", "");
                     stringParam.put("equals", true);
-                    stringParam.put("description", "");
+                    stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
                     r.add(stringParam);
                 } else {
                     if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
