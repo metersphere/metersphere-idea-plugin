@@ -375,7 +375,7 @@ public class PostmanExporter implements IExporter {
                 if (token.getTokenType().toString().equalsIgnoreCase("DOC_TAG_NAME") && token.getText().equalsIgnoreCase("@param")) {
                     PsiDocToken paramEn = iterator.next();
                     PsiDocToken paramZh = iterator.next();
-                    if (!org.apache.commons.lang3.StringUtils.isAllBlank(paramEn.getText(), paramZh.getText())) {
+                    if (StringUtils.isNoneBlank(paramEn.getText(), paramZh.getText())) {
                         r.put(UTF8Util.toUTF8String(paramEn.getText()), UTF8Util.toUTF8String(paramZh.getText()));
                     }
                 }
