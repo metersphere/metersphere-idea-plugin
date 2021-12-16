@@ -12,6 +12,7 @@ import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -917,6 +918,16 @@ public class PostmanExporter implements IExporter {
         }
     }
 
+    private static final List<String> collectionNames = new ArrayList<>() {
+        {
+            add("List");
+            add("Set");
+            add("Map");
+            add("Queue");
+            add("Vector");
+            add("Stack");
+        }
+    };
 
     /**
      * 简单判断 后期优化多重嵌套结构
@@ -925,15 +936,33 @@ public class PostmanExporter implements IExporter {
      * @return
      */
     private boolean isCollection(PsiField field) {
-        return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
+        for (String s : PluginConstants.javaBaseCollectionType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isCollection(PsiTypeElement field) {
-        return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
+        for (String s : PluginConstants.javaBaseCollectionType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isCollection(PsiParameter field) {
-        return field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">") && !field.getType().getCanonicalText().contains("Map");
+        for (String s : PluginConstants.javaBaseCollectionType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -943,15 +972,33 @@ public class PostmanExporter implements IExporter {
      * @return
      */
     private boolean isMap(PsiField field) {
-        return field.getType().getPresentableText().contains("Map");
+        for (String s : PluginConstants.javaMapType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isMap(PsiTypeElement field) {
-        return field.getType().getPresentableText().contains("Map");
+        for (String s : PluginConstants.javaMapType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isMap(PsiParameter field) {
-        return field.getType().getPresentableText().contains("Map");
+        for (String s : PluginConstants.javaMapType) {
+            if (field.getType().getCanonicalText().startsWith(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
