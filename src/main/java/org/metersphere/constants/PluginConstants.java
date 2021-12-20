@@ -65,22 +65,33 @@ public class PluginConstants {
         put("Map", new JSONObject());
     }};
 
-    public static final List<String> javaBaseCollectionType = new ArrayList<>(){ {
-        add("java.util.List");
-        add("java.util.ArrayList");
-        add("java.util.LinkedList");
-        add("java.util.Set");
-        add("java.util.HashSet");
-        add("java.util.HashTable");
-        add("java.util.Queue");
-    }};
-    public static final List<String> javaMapType = new ArrayList<>(){ {
-        add("java.util.Map");
-        add("java.util.HashMap");
-        add("java.util.LinkedHashMap");
-        add("java.util.concurrent.ConcurrentHashMap");
-    }};
-        public enum MessageTitle {
-        Info, Warning
+    public static final List<String> javaBaseCollectionType = new ArrayList<>() {
+        {
+            add("java.util.List");
+            add("java.util.ArrayList");
+            add("java.util.LinkedList");
+            add("java.util.Set");
+            add("java.util.HashSet");
+            add("java.util.HashTable");
+            add("java.util.Queue");
+        }
+    };
+    public static final List<String> javaMapType = new ArrayList<>() {
+        {
+            add("java.util.Map");
+            add("java.util.HashMap");
+            add("java.util.LinkedHashMap");
+            add("java.util.concurrent.ConcurrentHashMap");
+        }
+    };
+
+    public enum MessageTitle {
+        Info, Warning, Error
     }
+
+    public static Map<Integer, String> EXCEPTIONCODEMAP = new HashMap<>() {{
+        put(1, "please input correct ak sk!");
+        put(2, "No java file detected! please change your search root");
+        put(3, "No java api was found! please change your search root");
+    }};
 }

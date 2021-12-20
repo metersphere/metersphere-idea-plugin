@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +16,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.metersphere.AppSettingService;
+import org.metersphere.constants.PluginConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.HttpFutureUtils;
@@ -41,57 +41,47 @@ public class MeterSphereExporter implements IExporter {
     private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
 
     @Override
-    public boolean export(PsiElement psiElement) {
-        try {
-
-            if (!MSApiUtil.test(appSettingService.getState())) {
-                ProgressUtil.show(("please input correct ak sk!"));
-                return false;
-            }
-            List<PsiJavaFile> files = new LinkedList<>();
-            postmanExporter.getFile(psiElement, files);
-            files = files.stream().filter(f ->
-                    f instanceof PsiJavaFile
-            ).collect(Collectors.toList());
-            if (files.size() == 0) {
-                ProgressUtil.show(("No java file detected! please change your search root"));
-                return false;
-            }
-            List<PostmanModel> postmanModels = postmanExporter.transform(files, false, appSettingService.getState());
-            if (postmanModels.size() == 0) {
-                ProgressUtil.show(("No java api was found! please change your search root"));
-                return false;
-            }
-            File temp = File.createTempFile(UUID.randomUUID().toString(), null);
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("item", postmanModels);
-            JSONObject info = new JSONObject();
-            info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
-            String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : psiElement.getProject().getName();
-            info.put("name", exportName);
-            info.put("description", "exported at " + dateTime);
-            jsonObject.put("info", info);
-            bufferedWriter.write(new Gson().toJson(jsonObject));
-            bufferedWriter.flush();
-            bufferedWriter.close();
-
-            boolean r = uploadToServer(temp);
-            if (r) {
-                ProgressUtil.show(("Export to MeterSphere success!"));
-            } else {
-                ProgressUtil.show(("Export to MeterSphere fail!"));
-            }
-            if (temp.exists()) {
-                temp.delete();
-            }
-            return r;
-        } catch (Exception e) {
-            ProgressUtil.show(("Export to MeterSphere error:" + e.getMessage()));
-            logger.error(e);
-            return false;
+    public boolean export(PsiElement psiElement) throws IOException {
+        if (!MSApiUtil.test(appSettingService.getState())) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
         }
+        List<PsiJavaFile> files = new LinkedList<>();
+        postmanExporter.getFile(psiElement, files);
+        files = files.stream().filter(f ->
+                f instanceof PsiJavaFile
+        ).collect(Collectors.toList());
+        if (files.size() == 0) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(2));
+        }
+        List<PostmanModel> postmanModels = postmanExporter.transform(files, false, appSettingService.getState());
+        if (postmanModels.size() == 0) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
+        }
+        File temp = File.createTempFile(UUID.randomUUID().toString(), null);
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("item", postmanModels);
+        JSONObject info = new JSONObject();
+        info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
+        String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : psiElement.getProject().getName();
+        info.put("name", exportName);
+        info.put("description", "exported at " + dateTime);
+        jsonObject.put("info", info);
+        bufferedWriter.write(new Gson().toJson(jsonObject));
+        bufferedWriter.flush();
+        bufferedWriter.close();
+
+        boolean r = uploadToServer(temp);
+        if (r) {
+            ProgressUtil.show(("Export to MeterSphere success!"));
+        } else {
+            ProgressUtil.show(("Export to MeterSphere fail!"));
+        }
+        if (temp.exists()) {
+            temp.delete();
+        }
+        return r;
     }
 
     private boolean uploadToServer(File file) {
