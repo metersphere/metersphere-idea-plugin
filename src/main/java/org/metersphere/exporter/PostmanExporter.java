@@ -419,7 +419,9 @@ public class PostmanExporter implements IExporter {
             while (iterator.hasNext()) {
                 PsiDocToken token = iterator.next();
                 if (token.getTokenType().toString().equalsIgnoreCase("DOC_COMMENT_DATA")) {
-                    apiName = UTF8Util.toUTF8String(token.getText());
+                    if (StringUtils.isNotBlank(token.getText())) {
+                        apiName = UTF8Util.toUTF8String(token.getText());
+                    }
                     break;
                 }
             }
