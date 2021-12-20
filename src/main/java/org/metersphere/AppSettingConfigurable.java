@@ -1,10 +1,13 @@
 package org.metersphere;
 
+import com.alibaba.fastjson.JSONObject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.Nullable;
 import org.metersphere.gui.AppSettingComponent;
+import org.metersphere.state.AppSettingState;
 
 import javax.swing.*;
 
@@ -14,6 +17,8 @@ import javax.swing.*;
 public class AppSettingConfigurable implements Configurable {
     //main setting pane
     private AppSettingComponent appSettingComponent;
+    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+    private AppSettingState originalState;
 
     @Override
     public @NlsContexts.ConfigurableName String getDisplayName() {
@@ -24,16 +29,21 @@ public class AppSettingConfigurable implements Configurable {
     public @Nullable
     JComponent createComponent() {
         appSettingComponent = new AppSettingComponent();
+        originalState = JSONObject.parseObject(JSONObject.toJSONString(appSettingService.getState()), AppSettingState.class);
         return appSettingComponent.getSettingPanel();
     }
 
     @Override
     public boolean isModified() {
-        return false;
+        return true;
     }
 
     @Override
     public void apply() throws ConfigurationException {
+    }
 
+    @Override
+    public void cancel() {
+        appSettingService.loadState(originalState);
     }
 }
