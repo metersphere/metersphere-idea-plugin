@@ -739,9 +739,9 @@ public class PostmanExporter implements IExporter {
         Iterator<PsiAnnotation> it = annotations.iterator();
         while (it.hasNext()) {
             PsiAnnotation next = it.next();
-            if (next.getQualifiedName().contains("org.springframework.web.bind.annotation.RestController"))
+            if (next.getQualifiedName().equalsIgnoreCase("org.springframework.web.bind.annotation.RestController"))
                 r.put("rest", true);
-            if (next.getQualifiedName().contains("org.springframework.stereotype.Controller"))
+            if (next.getQualifiedName().equalsIgnoreCase("org.springframework.stereotype.Controller"))
                 r.put("general", true);
         }
         return r;
