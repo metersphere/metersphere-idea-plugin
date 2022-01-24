@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PostmanExporter implements IExporter {
-    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+    private final AppSettingService appSettingService = AppSettingService.getInstance();
 
     @Override
     public boolean export(PsiElement psiElement) {
@@ -758,7 +758,7 @@ public class PostmanExporter implements IExporter {
         String javaType = pe.getType().getCanonicalText();
         PsiClass psiClass = JavaPsiFacade.getInstance(pe.getProject()).findClass(pe.getType().getCanonicalText(), GlobalSearchScope.allScope(pe.getProject()));
         LinkedHashMap param = new LinkedHashMap();
-        AppSettingState state = ApplicationManager.getApplication().getComponent(AppSettingService.class).getState();
+        AppSettingState state = AppSettingService.getInstance().getState();
         int maxDeepth = state.getDeepth();
         int curDeepth = 1;
         //这个判断对多层集合嵌套的数据类型
@@ -813,7 +813,7 @@ public class PostmanExporter implements IExporter {
         String javaType = pe.getType().getCanonicalText();
         PsiClass psiClass = JavaPsiFacade.getInstance(pe.getProject()).findClass(pe.getType().getCanonicalText(), GlobalSearchScope.allScope(pe.getProject()));
         LinkedHashMap param = new LinkedHashMap();
-        AppSettingState state = ApplicationManager.getApplication().getComponent(AppSettingService.class).getState();
+        AppSettingState state = AppSettingService.getInstance().getState();
         int maxDeepth = state.getDeepth();
         int curDeepth = 1;
         //这个判断对多层集合嵌套的数据类型

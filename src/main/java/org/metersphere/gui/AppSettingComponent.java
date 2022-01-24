@@ -39,7 +39,7 @@ public class AppSettingComponent {
     private JTextField moduleName;
     private JCheckBox javadocCheckBox;
     private JTextField contextPath;
-    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+    private AppSettingService appSettingService = AppSettingService.getInstance();
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
 
