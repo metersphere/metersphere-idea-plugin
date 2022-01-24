@@ -29,7 +29,7 @@ import org.metersphere.AppSettingService;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.state.MSModule;
 import org.metersphere.state.MSProject;
-import org.metersphere.state.MSVersion;
+import org.metersphere.state.MSProjectVersion;
 import org.metersphere.utils.MSApiUtil;
 
 @Data
@@ -67,15 +67,12 @@ public class AppSettingComponent {
         if (appSettingState.getProjectNameList() != null) {
             appSettingState.getProjectNameList().forEach(p -> projectNameCB.addItem(p));
         }
-        if (appSettingState.getVersionOptions() != null) {
-            appSettingState.getVersionOptions()
+        if (appSettingState.getProjectVersionOptions() != null) {
+            appSettingState.getProjectVersionOptions()
                 .forEach(version -> projectVersionCB.addItem(version.getName()));
         }
         if (StringUtils.isNotBlank(appSettingState.getProjectId())) {
             projectNameCB.setSelectedItem(appSettingState.getProjectId());
-        }
-        if (StringUtils.isNotBlank(appSettingState.getProjectVersion())) {
-            projectVersionCB.setSelectedItem(appSettingState.getProjectVersion());
         }
         if (StringUtils.isNotBlank(appSettingState.getProjectVersion())) {
             projectVersionCB.setSelectedItem(appSettingState.getProjectVersion());
@@ -124,7 +121,8 @@ public class AppSettingComponent {
         });
         projectNameCB.addItemListener(itemEvent -> {
             if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (projectNameCB.getSelectedItem() != null && StringUtils.isNotBlank(projectNameCB.getSelectedItem().toString())) {
+                if (projectNameCB.getSelectedItem() != null
+                    && StringUtils.isNotBlank(projectNameCB.getSelectedItem().toString())) {
                     if (appSettingState.getProjectList().size() > 0) {
                         MSProject selectedProject = appSettingState.getProjectList()
                             .stream()
@@ -192,17 +190,17 @@ public class AppSettingComponent {
             JSONObject jsonObject = MSApiUtil.listProjectVersionBy(projectId, appSettingState);
             if (jsonObject != null && jsonObject.getBoolean("success")) {
                 String json = gson.toJson(jsonObject.getJSONArray("data"));
-                List<MSVersion> versionList = gson.fromJson(json, new TypeToken<List<MSVersion>>() {
+                List<MSProjectVersion> versionList = gson.fromJson(json, new TypeToken<List<MSProjectVersion>>() {
                 }.getType());
-                appSettingState.setVersionOptions(versionList);
+                appSettingState.setProjectVersionOptions(versionList);
             }
-            List<MSVersion> statedVersions = appSettingState.getVersionOptions();
+            List<MSProjectVersion> statedVersions = appSettingState.getProjectVersionOptions();
             if (CollectionUtils.isEmpty(statedVersions)) {
                 return;
             }
             //设置下拉选择框
             this.projectVersionCB.removeAllItems();
-            for (MSVersion version : appSettingState.getVersionOptions()) {
+            for (MSProjectVersion version : appSettingState.getProjectVersionOptions()) {
                 this.projectVersionCB.addItem(version.getName());
             }
         });

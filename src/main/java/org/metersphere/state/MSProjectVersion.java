@@ -1,6 +1,5 @@
 package org.metersphere.state;
 
-import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -8,7 +7,7 @@ import lombok.Data;
  * @date 2022-01-24
  */
 @Data
-public class MSVersion {
+public class MSProjectVersion {
 
     private String name;
     private String status;
