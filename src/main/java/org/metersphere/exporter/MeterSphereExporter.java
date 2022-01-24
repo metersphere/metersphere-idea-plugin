@@ -101,6 +101,7 @@ public class MeterSphereExporter implements IExporter {
         param.put("platform", "Postman");
         param.put("model", "definition");
         param.put("projectId", state.getProjectList().stream().filter(p -> p.getName().equalsIgnoreCase(state.getProjectName())).findFirst().get().getId());
+        param.put("versionId", state.getProjectVersion());
         HttpEntity formEntity = MultipartEntityBuilder.create().addBinaryBody("file", file, ContentType.APPLICATION_JSON, null)
                 .addBinaryBody("request", param.toJSONString().getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_JSON, null).build();
 
