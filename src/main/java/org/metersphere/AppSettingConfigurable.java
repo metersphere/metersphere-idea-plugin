@@ -15,9 +15,8 @@ import javax.swing.*;
  * 配置主类
  */
 public class AppSettingConfigurable implements Configurable {
-    //main setting pane
-    private AppSettingComponent appSettingComponent;
-    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+
+    private final AppSettingService appSettingService = AppSettingService.getInstance();
     private AppSettingState originalState;
 
     @Override
@@ -28,7 +27,8 @@ public class AppSettingConfigurable implements Configurable {
     @Override
     public @Nullable
     JComponent createComponent() {
-        appSettingComponent = new AppSettingComponent();
+        //main setting pane
+        AppSettingComponent appSettingComponent = new AppSettingComponent();
         originalState = JSONObject.parseObject(JSONObject.toJSONString(appSettingService.getState()), AppSettingState.class);
         return appSettingComponent.getSettingPanel();
     }

@@ -6,4 +6,5 @@ import lombok.Data;
 public class MSProject {
     private String name;
     private String id;
+    private Boolean versionEnable;
 }

@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
 
 public class MeterSphereExporter implements IExporter {
     private Logger logger = Logger.getInstance(MeterSphereExporter.class);
-    private PostmanExporter postmanExporter = new PostmanExporter();
-    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+    private final PostmanExporter postmanExporter = new PostmanExporter();
+    private final AppSettingService appSettingService = AppSettingService.getInstance();
 
     @Override
     public boolean export(PsiElement psiElement) throws IOException {
@@ -101,6 +101,7 @@ public class MeterSphereExporter implements IExporter {
         param.put("platform", "Postman");
         param.put("model", "definition");
         param.put("projectId", state.getProjectList().stream().filter(p -> p.getName().equalsIgnoreCase(state.getProjectName())).findFirst().get().getId());
+        param.put("versionId", state.getProjectVersion());
         HttpEntity formEntity = MultipartEntityBuilder.create().addBinaryBody("file", file, ContentType.APPLICATION_JSON, null)
                 .addBinaryBody("request", param.toJSONString().getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_JSON, null).build();
 

@@ -1,26 +1,36 @@
 package org.metersphere.gui;
 
+import static org.metersphere.utils.MSApiUtil.test;
+
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.Messages;
+import java.awt.event.ItemEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import lombok.Data;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.state.MSModule;
 import org.metersphere.state.MSProject;
+import org.metersphere.state.MSProjectVersion;
 import org.metersphere.utils.MSApiUtil;
-
-import javax.swing.*;
-import java.awt.event.*;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.metersphere.utils.MSApiUtil.test;
 
 @Data
 public class AppSettingComponent {
@@ -39,9 +49,8 @@ public class AppSettingComponent {
     private JTextField moduleName;
     private JCheckBox javadocCheckBox;
     private JTextField contextPath;
-    private JComboBox createVersionCB;
-    private JComboBox updateVersionCB;
-    private AppSettingService appSettingService = ApplicationManager.getApplication().getComponent(AppSettingService.class);
+    private JComboBox<String> projectVersionCB;
+    private AppSettingService appSettingService = AppSettingService.getInstance();
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
 
@@ -58,8 +67,15 @@ public class AppSettingComponent {
         if (appSettingState.getProjectNameList() != null) {
             appSettingState.getProjectNameList().forEach(p -> projectNameCB.addItem(p));
         }
+        if (appSettingState.getProjectVersionOptions() != null) {
+            appSettingState.getProjectVersionOptions()
+                .forEach(version -> projectVersionCB.addItem(version.getName()));
+        }
         if (StringUtils.isNotBlank(appSettingState.getProjectId())) {
             projectNameCB.setSelectedItem(appSettingState.getProjectId());
+        }
+        if (StringUtils.isNotBlank(appSettingState.getProjectVersion())) {
+            projectVersionCB.setSelectedItem(appSettingState.getProjectVersion());
         }
         if (appSettingState.getModuleNameList() != null) {
             appSettingState.getModuleNameList().forEach(p -> moduleNameCB.addItem(p));
@@ -123,10 +139,20 @@ public class AppSettingComponent {
         });
         projectNameCB.addItemListener(itemEvent -> {
             if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (projectNameCB.getSelectedItem() != null && StringUtils.isNotBlank(projectNameCB.getSelectedItem().toString())) {
+                if (projectNameCB.getSelectedItem() != null
+                    && StringUtils.isNotBlank(projectNameCB.getSelectedItem().toString())) {
                     if (appSettingState.getProjectList().size() > 0) {
-                        String pId = appSettingState.getProjectList().stream().filter(p -> (p.getName().equalsIgnoreCase(itemEvent.getItem().toString()))).findFirst().get().getId();
-                        initModule(pId);
+                        MSProject selectedProject = appSettingState.getProjectList()
+                            .stream()
+                            .filter(
+                                p -> (p.getName().equalsIgnoreCase(itemEvent.getItem().toString())))
+                            .findFirst()
+                            .orElseThrow();
+                        initModule(selectedProject.getId());
+                        // 开启了版本则改变版本列表状态
+                        if(Objects.equals(true, selectedProject.getVersionEnable())) {
+                            mutationProjectVersions(selectedProject.getId());
+                        }
                     }
                 }
             }
@@ -151,6 +177,14 @@ public class AppSettingComponent {
                 appSettingState.setExportModuleName(new String(moduleName.getText().trim().getBytes(StandardCharsets.UTF_8)));
             }
         });
+        projectVersionCB.addItemListener(itemEvent -> {
+            if (itemEvent.getStateChange() == ItemEvent.SELECTED
+                && projectVersionCB.getSelectedItem() != null
+                && StringUtils.isNotBlank(projectVersionCB.getSelectedItem().toString())) {
+                String versionName = itemEvent.getItem().toString();
+                appSettingState.setProjectVersion(versionName);
+            }
+        });
         contextPath.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -169,6 +203,34 @@ public class AppSettingComponent {
                 appSettingState.setUpdateVersionName(updateVersionCB.getSelectedItem().toString());
         });
 
+    }
+
+    /**
+     * 改变项目版本下拉列表的状态值
+     */
+    private void mutationProjectVersions(String projectId) {
+        CompletableFuture.runAsync(() -> {
+            AppSettingState appSettingState = appSettingService.getState();
+            if (appSettingState == null) {
+                return;
+            }
+            JSONObject jsonObject = MSApiUtil.listProjectVersionBy(projectId, appSettingState);
+            if (jsonObject != null && jsonObject.getBoolean("success")) {
+                String json = gson.toJson(jsonObject.getJSONArray("data"));
+                List<MSProjectVersion> versionList = gson.fromJson(json, new TypeToken<List<MSProjectVersion>>() {
+                }.getType());
+                appSettingState.setProjectVersionOptions(versionList);
+            }
+            List<MSProjectVersion> statedVersions = appSettingState.getProjectVersionOptions();
+            if (CollectionUtils.isEmpty(statedVersions)) {
+                return;
+            }
+            //设置下拉选择框
+            this.projectVersionCB.removeAllItems();
+            for (MSProjectVersion version : appSettingState.getProjectVersionOptions()) {
+                this.projectVersionCB.addItem(version.getName());
+            }
+        });
     }
 
     private boolean init() {

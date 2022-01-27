@@ -1,8 +1,11 @@
 package org.metersphere.utils;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.intellij.openapi.diagnostic.Logger;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -11,15 +14,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.jetbrains.annotations.NotNull;
 import org.metersphere.state.AppSettingState;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 public class MSApiUtil {
-    private static Logger logger = Logger.getInstance(MSApiUtil.class);
+    private static final Logger logger = Logger.getInstance(MSApiUtil.class);
 
     /**
      * 测试连接
@@ -97,6 +96,47 @@ public class MSApiUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * 根据选中的项目id获取项目版本
+     *
+     * @param appSettingState 应用配置状态管理器
+     * @return 如果成功查询到版本返回 response 对象,否则返回 {@code null}
+     */
+    public static JSONObject listProjectVersionBy(String projectId, AppSettingState appSettingState) {
+        if(StringUtils.isBlank(projectId)) {
+            return null;
+        }
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        try {
+            String url = String.format("%s/project/version/get-project-versions/%s",
+                appSettingState.getMeterSphereAddress(), projectId);
+            HttpGet httPost = new HttpGet(url);
+            httPost.addHeader("accessKey", appSettingState.getAccesskey());
+            httPost.addHeader("signature", getSinature(appSettingState));
+            CloseableHttpResponse response = httpClient.execute(httPost);
+            if (!isSuccessful(response)) {
+                return null;
+            }
+            return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+        } catch (Exception e) {
+            logger.error("list project versions failed", e);
+            return null;
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static boolean isSuccessful(@NotNull CloseableHttpResponse response) {
+        return response.getStatusLine() != null
+            && response.getStatusLine().getStatusCode() == 200;
     }
 
     /**

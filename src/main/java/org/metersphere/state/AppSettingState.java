@@ -18,8 +18,10 @@ public class AppSettingState {
 
     private List<String> projectNameList;
     private List<MSProject> projectList;
+    private List<MSProjectVersion> projectVersionOptions;
     private String projectId;
     private String projectName;
+    private String projectVersion;
 
     private List<MSModule> moduleList;
     private List<String> moduleNameList;

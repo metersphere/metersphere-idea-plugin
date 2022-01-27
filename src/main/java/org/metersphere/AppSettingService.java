@@ -1,5 +1,6 @@
 package org.metersphere;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -13,6 +14,10 @@ import org.metersphere.state.AppSettingState;
 @State(name = "metersphereState", storages = {@Storage("msstore.xml")})
 public class AppSettingService implements PersistentStateComponent<AppSettingState> {
     private AppSettingState appSettingState = new AppSettingState();
+
+    public static AppSettingService getInstance() {
+        return ApplicationManager.getApplication().getService(AppSettingService.class);
+    }
 
     @Override
     public @Nullable AppSettingState getState() {
