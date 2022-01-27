@@ -45,4 +45,16 @@ public class AppSettingState {
         }
         return this.meterSphereAddress;
     }
+
+    //版本
+    private List<MSProjectVersion> createVersionList;
+    private List<String> createVersionNameList;
+    private String createVersionId;
+    private String createVersionName;
+
+    //版本
+    private List<MSProjectVersion> updateVersionList;
+    private List<String> updateVersionNameList;
+    private String updateVersionId;
+    private String updateVersionName;
 }

@@ -199,4 +199,68 @@ public class MSApiUtil {
         return null;
     }
 
+    /**
+     * @param appSettingState
+     * @param projectId       项目ID
+     * @return
+     */
+    public static JSONObject getProjectVersionList(AppSettingState appSettingState, String projectId) {
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        try {
+            HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + "/project/version/list/1/1000");
+            httpPost.addHeader("accessKey", appSettingState.getAccesskey());
+            httpPost.addHeader("signature", getSinature(appSettingState));
+            JSONObject param = new JSONObject();
+            param.put("projectId", projectId);
+            StringEntity stringEntity = new StringEntity(param.toJSONString());
+            httpPost.setEntity(stringEntity);
+
+            CloseableHttpResponse response = httpClient.execute(httpPost);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+            }
+        } catch (Exception e) {
+            logger.error("getModuleList failed", e);
+            return null;
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param appSettingState
+     * @return
+     */
+    public static JSONObject getLicense(AppSettingState appSettingState) {
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        try {
+            HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/license/valid");
+            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
+            httpGet.addHeader("signature", getSinature(appSettingState));
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+            }
+        } catch (Exception e) {
+            logger.error("get license failed", e);
+            return null;
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
 }

@@ -91,6 +91,24 @@ public class AppSettingComponent {
             contextPath.setText(appSettingState.getContextPath().trim());
         }
         javadocCheckBox.setSelected(appSettingState.isJavadoc());
+
+        if (appSettingState.getCreateVersionList() != null) {
+            appSettingState.getCreateVersionList().forEach(p -> createVersionCB.addItem(p));
+        }
+        if (StringUtils.isNotBlank(appSettingState.getCreateVersionName())) {
+            createVersionCB.setSelectedItem(appSettingState.getCreateVersionName());
+        }
+        if (appSettingState.getUpdateVersionList() != null) {
+            appSettingState.getUpdateVersionList().forEach(p -> updateVersionCB.addItem(p));
+        }
+        if (StringUtils.isNotBlank(appSettingState.getUpdateVersionName())) {
+            updateVersionCB.setSelectedItem(appSettingState.getUpdateVersionName());
+        }
+
+        if (StringUtils.isNotBlank(appSettingState.getProjectId())) {
+            projectNameCB.setSelectedItem(appSettingState.getProjectId());
+        }
+
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
                 if (init())
@@ -176,6 +194,15 @@ public class AppSettingComponent {
         javadocCheckBox.addActionListener((actionEvent) -> {
             appSettingState.setJavadoc(javadocCheckBox.isSelected());
         });
+        createVersionCB.addActionListener(actionEvent -> {
+            if (createVersionCB.getItemCount() > 0)
+                appSettingState.setCreateVersionName(createVersionCB.getSelectedItem().toString());
+        });
+        updateVersionCB.addActionListener(actionEvent -> {
+            if (updateVersionCB.getItemCount() > 0)
+                appSettingState.setUpdateVersionName(updateVersionCB.getSelectedItem().toString());
+        });
+
     }
 
     /**
@@ -220,6 +247,8 @@ public class AppSettingComponent {
             appSettingState.setProjectNameList(appSettingState.getProjectList().stream().map(p -> (p.getName())).collect(Collectors.toList()));
             appSettingState.setProjectId(null);
             appSettingState.setProjectName(null);
+
+            JSONObject licenseObj = MSApiUtil.getLicense(appSettingState);
         } else {
             logger.error("get project failed!");
             return false;
@@ -263,5 +292,9 @@ public class AppSettingComponent {
 
     public JPanel getSettingPanel() {
         return this.mainSettingPanel;
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }
