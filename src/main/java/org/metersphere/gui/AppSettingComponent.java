@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.Messages;
 import lombok.Data;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.MSApiConstants;
@@ -20,7 +19,7 @@ import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
-
+import org.metersphere.utils.CollectionUtils;
 import static org.metersphere.utils.MSApiUtil.test;
 
 @Data
