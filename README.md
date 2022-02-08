@@ -1,12 +1,17 @@
 # metersphere-idea-plugin
 
-## 支持导出 HTTP 接口到 MeterSphere.  
-### Features： 
+## 支持导出 HTTP 接口到 MeterSphere.
+
+### Features：
+
 - Javadoc-based analysis,no additional annotations.
 - Automatically identify classes, generate api documents to MeterSphere.
 - Support list, set, collection and other data structures, and support nested generic parsing.
-- Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on json5.
-### Usage： 
+- Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on
+  json5.
+
+### Usage：
+
 - Locate the cursor to the package/project folder or class, right-click Export MeterSphere.
 - Support annotations：
    <p>
@@ -23,14 +28,18 @@
    org.springframework.web.bind.annotation.ResponseBody
    </p>
 
-### 特性： 
+### 特性：
+
 - 基于javadoc解析，无代码入侵
 - 自动识别类，生成接口定义到 MeterSphere
 - 支持List、Set、Collection等数据结构，支持嵌套泛型解析
 - 支持@ResponseBody等常用注解的解析
-### 用法： 
+
+### 用法：
+
 - 将光标定位到项目/包级目录或者打开类，鼠标右键单击"Export MeterSphere".
 - 自定义配置项： Preferences —> Other Settings —> MeterSphere
+
 <table tr=1>
 <thead>
 <td>
@@ -74,10 +83,18 @@ protocol
 </tr>
 <tr>
 <td>
+workspace
+</td>
+<td>
+工作空间
+</td>
+</tr>
+<tr>
+<td>
 project
 </td>
 <td>
-接口将要导入的项目
+项目
 </td>
 </tr>
 <tr>
@@ -104,9 +121,25 @@ deepth
 针对接口中含有复杂嵌套对象的解析深度
 </td>
 </tr>
+<tr>
+<td>
+version
+</td>
+<td>
+新增接口建立的版本号
+</td>
+</tr>
+<tr>
+<td>
+update-version
+</td>
+<td>
+覆盖接口所生成的版本号
+</td>
+</tr>
 </table>
 
-## Compatible IDE versions: 2018.3+
+## Compatible IDE versions: 2020.3+
 
 ## 问题反馈
 
