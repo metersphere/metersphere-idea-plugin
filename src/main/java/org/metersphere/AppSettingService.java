@@ -16,7 +16,7 @@ public class AppSettingService implements PersistentStateComponent<AppSettingSta
     private AppSettingState appSettingState = new AppSettingState();
 
     public static AppSettingService getInstance() {
-        return ApplicationManager.getApplication().getService(AppSettingService.class);
+        return ApplicationManager.getApplication().getComponent(AppSettingService.class);
     }
 
     @Override

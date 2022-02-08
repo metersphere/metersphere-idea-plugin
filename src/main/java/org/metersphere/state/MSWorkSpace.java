@@ -3,7 +3,7 @@ package org.metersphere.state;
 import lombok.Data;
 
 @Data
-public class MSModule {
+public class MSWorkSpace {
     private String name;
     private String id;
 

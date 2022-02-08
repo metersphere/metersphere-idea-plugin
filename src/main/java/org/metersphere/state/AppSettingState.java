@@ -10,26 +10,35 @@ import java.util.List;
  */
 @Data
 public class AppSettingState {
+    private String userId;
     private String meterSphereAddress;
     private String accesskey;
     private String secretkey;
     private List<String> apiTypeList;
     private String apiType = "http";
 
-    private List<String> projectNameList;
-    private List<MSProject> projectList;
-    private List<MSProjectVersion> projectVersionOptions;
-    private String projectId;
-    private String projectName;
-    private String projectVersion;
+    private List<MSWorkSpace> workSpaceOptions;
+    private MSWorkSpace workSpace;
 
-    private List<MSModule> moduleList;
-    private List<String> moduleNameList;
-    private String moduleId;
-    private String moduleName;
+    private List<MSProject> projectOptions;
+    private MSProject project;
+
+    //兼容低版本 ms 不支持 version 的导入
+    private boolean supportVersion;
+    //数据新增版本
+    private List<MSProjectVersion> projectVersionOptions;
+    private MSProjectVersion projectVersion;
+
+    //数据更新版本
+    private List<MSProjectVersion> updateVersionOptions;
+    private MSProjectVersion updateVersion;
+
+    private List<MSModule> moduleOptions;
+    private MSModule module;
+
     private String exportModuleName;
 
-    private String modeId = "http";
+    private String modeId;
     //嵌套对象参数解析的深度
     private Integer deepth = 1;
     //全体 url 前缀
@@ -45,16 +54,4 @@ public class AppSettingState {
         }
         return this.meterSphereAddress;
     }
-
-    //版本
-    private List<MSProjectVersion> createVersionList;
-    private List<String> createVersionNameList;
-    private String createVersionId;
-    private String createVersionName;
-
-    //版本
-    private List<MSProjectVersion> updateVersionList;
-    private List<String> updateVersionNameList;
-    private String updateVersionId;
-    private String updateVersionName;
 }

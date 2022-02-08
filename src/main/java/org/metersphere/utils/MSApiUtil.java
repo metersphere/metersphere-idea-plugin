@@ -2,10 +2,12 @@ package org.metersphere.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.intellij.openapi.diagnostic.Logger;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -105,13 +107,13 @@ public class MSApiUtil {
      * @return 如果成功查询到版本返回 response 对象,否则返回 {@code null}
      */
     public static JSONObject listProjectVersionBy(String projectId, AppSettingState appSettingState) {
-        if(StringUtils.isBlank(projectId)) {
+        if (StringUtils.isBlank(projectId)) {
             return null;
         }
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
             String url = String.format("%s/project/version/get-project-versions/%s",
-                appSettingState.getMeterSphereAddress(), projectId);
+                    appSettingState.getMeterSphereAddress(), projectId);
             HttpGet httPost = new HttpGet(url);
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSinature(appSettingState));
@@ -136,7 +138,7 @@ public class MSApiUtil {
 
     private static boolean isSuccessful(@NotNull CloseableHttpResponse response) {
         return response.getStatusLine() != null
-            && response.getStatusLine().getStatusCode() == 200;
+                && response.getStatusLine().getStatusCode() == 200;
     }
 
     /**
@@ -147,6 +149,38 @@ public class MSApiUtil {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
+            httPost.addHeader("accessKey", appSettingState.getAccesskey());
+            httPost.addHeader("signature", getSinature(appSettingState));
+            CloseableHttpResponse response = httpClient.execute(httPost);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+            }
+        } catch (Exception e) {
+            logger.error("getUserInfo failed", e);
+            return null;
+        } finally {
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取工作空间
+     *
+     * @param appSettingState
+     * @param userId
+     * @return
+     */
+    public static JSONObject getWorkSpaceList(AppSettingState appSettingState, String userId) {
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        try {
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace/" + userId);
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSinature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
@@ -204,24 +238,26 @@ public class MSApiUtil {
      * @param projectId       项目ID
      * @return
      */
-    public static JSONObject getProjectVersionList(AppSettingState appSettingState, String projectId) {
+    public static boolean getProjectVersionEnable(AppSettingState appSettingState, String projectId) {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + "/project/version/list/1/1000");
-            httpPost.addHeader("accessKey", appSettingState.getAccesskey());
-            httpPost.addHeader("signature", getSinature(appSettingState));
-            JSONObject param = new JSONObject();
-            param.put("projectId", projectId);
-            StringEntity stringEntity = new StringEntity(param.toJSONString());
-            httpPost.setEntity(stringEntity);
+            HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/project/version/enable/" + projectId);
+            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
+            httpGet.addHeader("signature", getSinature(appSettingState));
 
-            CloseableHttpResponse response = httpClient.execute(httpPost);
+            CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {
-                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+                JSONObject r = JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+                if (r.containsKey("success")) {
+                    if (r.getBoolean("success") && r.getBoolean("data") != null) {
+                        return r.getBoolean("data");
+                    }
+                }
+                return false;
             }
         } catch (Exception e) {
-            logger.error("getModuleList failed", e);
-            return null;
+            logger.error("getProjectVersionEnable failed", e);
+            return false;
         } finally {
             if (httpClient != null) {
                 try {
@@ -231,7 +267,7 @@ public class MSApiUtil {
                 }
             }
         }
-        return null;
+        return false;
     }
 
     /**
@@ -263,4 +299,10 @@ public class MSApiUtil {
         return null;
     }
 
+    public static String getModeId(String modeId) {
+        if ("COVER".equalsIgnoreCase(modeId)) {
+            return "fullCoverage";
+        }
+        return "incrementalMerge";
+    }
 }

@@ -22,7 +22,7 @@ public class ExporterFactory {
         if (element == null)
             element = event.getData(CommonDataKeys.PSI_ELEMENT);
         if (element == null)
-            Messages.showInfoMessage("no valid psi element find!", PluginConstants.MessageTitle.Info.name());
+            Messages.showInfoMessage("no valid psi element found!", PluginConstants.MessageTitle.Info.name());
         return exporterMap.get(source).export(element);
     }
 }

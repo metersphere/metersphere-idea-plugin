@@ -2,7 +2,6 @@ package org.metersphere.exporter;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
@@ -15,7 +14,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.jetbrains.annotations.NotNull;
 import org.metersphere.AppSettingService;
+import org.metersphere.constants.MSApiConstants;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
@@ -95,13 +96,7 @@ public class MeterSphereExporter implements IExporter {
         httpPost.setHeader("signature", MSApiUtil.getSinature(appSettingService.getState()));
         CloseableHttpResponse response = null;
 
-        JSONObject param = new JSONObject();
-        param.put("modeId", getModeId(state.getModeId()));
-        param.put("moduleId", state.getModuleList().stream().filter(p -> p.getName().equalsIgnoreCase(state.getModuleName())).findFirst().get().getId());
-        param.put("platform", "Postman");
-        param.put("model", "definition");
-        param.put("projectId", state.getProjectList().stream().filter(p -> p.getName().equalsIgnoreCase(state.getProjectName())).findFirst().get().getId());
-        param.put("versionId", state.getProjectVersion());
+        JSONObject param = buildParam(state);
         HttpEntity formEntity = MultipartEntityBuilder.create().addBinaryBody("file", file, ContentType.APPLICATION_JSON, null)
                 .addBinaryBody("request", param.toJSONString().getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_JSON, null).build();
 
@@ -134,10 +129,23 @@ public class MeterSphereExporter implements IExporter {
         return false;
     }
 
-    private String getModeId(String modeId) {
-        if ("覆盖".equalsIgnoreCase(modeId)) {
-            return "fullCoverage";
+    @NotNull
+    private JSONObject buildParam(AppSettingState state) {
+        JSONObject param = new JSONObject();
+        param.put("modeId", MSApiUtil.getModeId(state.getModeId()));
+        param.put("moduleId", state.getModule().getId());
+        param.put("platform", "Postman");
+        param.put("model", "definition");
+        param.put("projectId", state.getProject().getId());
+        if (state.getProjectVersion() != null && state.isSupportVersion()) {
+            param.put("versionId", state.getProjectVersion().getId());
         }
-        return "incrementalMerge";
+        if (MSApiUtil.getModeId(state.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_FULLCOVERAGE)) {
+            if (state.getUpdateVersion() != null && state.isSupportVersion()) {
+                param.put("updateVersionId", state.getUpdateVersion().getId());
+            }
+        }
+        return param;
     }
+
 }
