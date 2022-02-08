@@ -54,4 +54,18 @@ public class AppSettingState {
         }
         return this.meterSphereAddress;
     }
+
+    /**
+     * 清空
+     */
+    public void clear() {
+        projectOptions = null;
+        project = null;
+        moduleOptions = null;
+        module = null;
+        projectVersionOptions = null;
+        projectVersion = null;
+        updateVersionOptions = null;
+        updateVersion = null;
+    }
 }

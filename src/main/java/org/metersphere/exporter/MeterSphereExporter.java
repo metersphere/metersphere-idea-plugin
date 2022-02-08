@@ -133,6 +133,9 @@ public class MeterSphereExporter implements IExporter {
     private JSONObject buildParam(AppSettingState state) {
         JSONObject param = new JSONObject();
         param.put("modeId", MSApiUtil.getModeId(state.getModeId()));
+        if (state.getModule() == null) {
+            throw new RuntimeException("no module selected ! please check your rights");
+        }
         param.put("moduleId", state.getModule().getId());
         param.put("platform", "Postman");
         param.put("model", "definition");

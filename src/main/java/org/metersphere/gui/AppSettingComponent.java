@@ -86,6 +86,7 @@ public class AppSettingComponent {
         workspaceCB.addItemListener(itemEvent -> {
             if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
                 if (workspaceCB.getSelectedItem() != null) {
+                    appSettingState.clear();
                     appSettingState.setWorkSpace((MSWorkSpace) workspaceCB.getSelectedItem());
                     initProject(appSettingState, ((MSWorkSpace) workspaceCB.getSelectedItem()).getId());
                 }
@@ -129,12 +130,13 @@ public class AppSettingComponent {
         });
         modeId.addActionListener(actionEvent -> {
             appSettingState.setModeId(modeId.getSelectedItem().toString());
-            if (MSApiUtil.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_FULLCOVERAGE)) {
+            if (!MSApiUtil.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_FULLCOVERAGE)) {
                 updateVersionCB.setSelectedItem(null);
                 appSettingState.setUpdateVersion(null);
                 updateVersionCB.setEnabled(false);
             } else {
                 updateVersionCB.setEnabled(true);
+                projectVersionCB.setEnabled(true);
                 if (CollectionUtils.isNotEmpty(appSettingState.getUpdateVersionOptions())) {
                     updateVersionCB.setSelectedItem(appSettingState.getUpdateVersionOptions().get(0));
                 }
@@ -206,6 +208,17 @@ public class AppSettingComponent {
             updateVersionCB.setSelectedItem(appSettingState.getUpdateVersion());
         }
 
+        if (appSettingState.isSupportVersion()) {
+            projectVersionCB.setEnabled(true);
+        } else {
+            projectVersionCB.setEnabled(false);
+        }
+        if (appSettingState.getModeId().equalsIgnoreCase(MSApiConstants.UNCOVER)) {
+            updateVersionCB.setEnabled(false);
+        } else {
+            updateVersionCB.setEnabled(true);
+        }
+
         deepthCB.setSelectedItem(appSettingState.getDeepth().toString());
 
         if (StringUtils.isNotBlank(appSettingState.getContextPath())) {
@@ -235,24 +248,31 @@ public class AppSettingComponent {
             this.projectCB.addItem(s);
         }
         if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
-            boolean versionEnable = MSApiUtil.getProjectVersionEnable(appSettingState, appSettingState.getProjectOptions().get(0).getId());
-            appSettingState.setSupportVersion(versionEnable);
-            if (!versionEnable) {
-                projectVersionCB.setEnabled(false);
-                updateVersionCB.setEnabled(false);
-            } else {
-                projectVersionCB.setEnabled(true);
-                updateVersionCB.setEnabled(true);
-            }
+            checkVersionEnable(appSettingState, appSettingState.getProjectOptions().get(0).getId());
         }
         if (CollectionUtils.isEmpty(appSettingState.getProjectOptions())) {
             this.moduleCB.removeAllItems();
             appSettingState.setModule(null);
             this.projectVersionCB.removeAllItems();
+            this.updateVersionCB.removeAllItems();
             appSettingState.setProjectVersion(null);
             appSettingState.setUpdateVersion(null);
         }
         return true;
+    }
+
+    private void checkVersionEnable(AppSettingState appSettingState, String projectId) {
+        boolean versionEnable = MSApiUtil.getProjectVersionEnable(appSettingState, projectId);
+        appSettingState.setSupportVersion(versionEnable);
+        if (!versionEnable) {
+            projectVersionCB.setEnabled(false);
+            updateVersionCB.setEnabled(false);
+        } else {
+            projectVersionCB.setEnabled(true);
+            if (modeId.getSelectedItem().toString().equalsIgnoreCase(MSApiConstants.COVER)) {
+                updateVersionCB.setEnabled(true);
+            }
+        }
     }
 
     /**
@@ -283,6 +303,11 @@ public class AppSettingComponent {
         this.updateVersionCB.removeAllItems();
         for (MSProjectVersion version : appSettingState.getUpdateVersionOptions()) {
             this.updateVersionCB.addItem(version);
+        }
+        if (modeId.getSelectedItem().toString().equalsIgnoreCase(MSApiConstants.COVER)) {
+            updateVersionCB.setEnabled(true);
+        } else {
+            updateVersionCB.setEnabled(false);
         }
     }
 
@@ -320,6 +345,7 @@ public class AppSettingComponent {
     private boolean initModule(String msProjectId) {
         AppSettingState appSettingState = appSettingService.getState();
 
+        checkVersionEnable(appSettingState, msProjectId);
         //初始化模块
         JSONObject module = MSApiUtil.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
 
