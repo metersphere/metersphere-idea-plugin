@@ -451,7 +451,7 @@ public class PostmanExporter implements IExporter {
     }
 
     private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFormDataBeans(PsiParameter pe) {
-        AppSettingState state = ApplicationManager.getApplication().getComponent(AppSettingService.class).getState();
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         int maxDeepth = state.getDeepth();
         int curDeepth;
         PsiClass psiClass = JavaPsiFacade.getInstance(pe.getProject()).findClass(pe.getType().getCanonicalText(), GlobalSearchScope.allScope(pe.getProject()));

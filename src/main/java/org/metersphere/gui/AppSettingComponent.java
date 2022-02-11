@@ -19,7 +19,9 @@ import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+
 import org.metersphere.utils.CollectionUtils;
+
 import static org.metersphere.utils.MSApiUtil.test;
 
 @Data
@@ -212,7 +214,7 @@ public class AppSettingComponent {
         } else {
             projectVersionCB.setEnabled(false);
         }
-        if (appSettingState.getModeId().equalsIgnoreCase(MSApiConstants.UNCOVER)) {
+        if (StringUtils.equalsIgnoreCase(MSApiConstants.UNCOVER, appSettingState.getModeId())) {
             updateVersionCB.setEnabled(false);
         } else {
             updateVersionCB.setEnabled(true);

@@ -93,7 +93,7 @@
         <li><b>1.0.1</b> add context-path,xport-name,javadoc support.</li>
         <li><b>1.0.2</b> add response support. postman export,fix map jsonobject</li>
         <li><b>1.0.3</b> fix List<Map> format error</li>
-        <li><b>1.0.4</b> version support</li>
+        <li><b>1.0.5</b> version support</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
