@@ -210,14 +210,13 @@ public class AppSettingComponent {
         }
 
         if (appSettingState.isSupportVersion()) {
+            if (!StringUtils.equalsIgnoreCase(MSApiConstants.UNCOVER, appSettingState.getModeId())) {
+                updateVersionCB.setEnabled(true);
+            }
             projectVersionCB.setEnabled(true);
         } else {
             projectVersionCB.setEnabled(false);
-        }
-        if (StringUtils.equalsIgnoreCase(MSApiConstants.UNCOVER, appSettingState.getModeId())) {
             updateVersionCB.setEnabled(false);
-        } else {
-            updateVersionCB.setEnabled(true);
         }
 
         deepthCB.setSelectedItem(appSettingState.getDeepth().toString());

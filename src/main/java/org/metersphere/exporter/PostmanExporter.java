@@ -24,6 +24,7 @@ import org.metersphere.constants.PluginConstants;
 import org.metersphere.constants.SpringMappingConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
+import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.ProgressUtil;
 import org.metersphere.utils.UTF8Util;
 
@@ -667,7 +668,7 @@ public class PostmanExporter implements IExporter {
         for (PsiParameter psiParameter : parameter) {
             PsiAnnotation[] pAt = psiParameter.getAnnotations();
             if (pAt != null && pAt.length != 0) {
-                if (PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestBody")).size() > 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestPart")).size() > 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("PathVariable")).size() > 0) {
+                if (PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestBody")).size() == 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestPart")).size() == 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("PathVariable")).size() == 0) {
                     JSONObject stringParam = new JSONObject();
                     stringParam.put("key", psiParameter.getName());
                     stringParam.put("value", "");
@@ -724,6 +725,9 @@ public class PostmanExporter implements IExporter {
             PsiAnnotation annotation = mi.next();
             if (annotation.getQualifiedName().contains("Mapping")) {
                 Collection<String> mapUrls = PsiAnnotationUtil.getAnnotationValues(annotation, "value", String.class);
+                if (CollectionUtils.isEmpty(mapUrls)) {
+                    mapUrls = PsiAnnotationUtil.getAnnotationValues(annotation, "path", String.class);
+                }
                 if (mapUrls.size() > 0) {
                     return mapUrls.iterator().next();
                 }
