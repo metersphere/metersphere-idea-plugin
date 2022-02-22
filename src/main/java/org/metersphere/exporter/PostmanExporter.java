@@ -704,8 +704,12 @@ public class PostmanExporter implements IExporter {
         }
         for (String s : SpringMappingConstants.mapList) {
             if (mapAnn.getQualifiedName().equalsIgnoreCase(s)) {
-                return s.replace("org.springframework.web.bind.annotation.", "").replace("Mapping", "").toUpperCase();
+                method = s.replace("org.springframework.web.bind.annotation.", "").replace("Mapping", "").toUpperCase();
+                break;
             }
+        }
+        if ("Request".equalsIgnoreCase(method)) {
+            return "GET";
         }
         return "Unknown Method";
     }
