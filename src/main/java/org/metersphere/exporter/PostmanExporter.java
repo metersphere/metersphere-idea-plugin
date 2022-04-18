@@ -3,6 +3,7 @@ package org.metersphere.exporter;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -12,17 +13,19 @@ import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiClassReferenceType;
+import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import de.plushnikov.intellij.lombok.util.PsiAnnotationUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.constants.SpringMappingConstants;
 import org.metersphere.model.PostmanModel;
+import org.metersphere.model.PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.ProgressUtil;
@@ -39,6 +42,13 @@ import java.util.stream.Collectors;
 
 public class PostmanExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
+
+    private static final Pattern RequestBodyPattern = Pattern.compile("RequestBody");
+    private static final Pattern RequestPathPattern = Pattern.compile("PathVariable");
+    private static final Pattern FormDataPattern = Pattern.compile("RequestParam|RequestPart");
+    private static final List<String> FormDataAnnoPath = Lists.newArrayList("org.springframework.web.bind.annotation.RequestPart", "org.springframework.web.bind.annotation.RequestParam");
+
+    private static final Pattern RequestAnyPattern = Pattern.compile("RequestBody|RequestParam|RequestPart");
 
     @Override
     public boolean export(PsiElement psiElement) {
@@ -126,7 +136,7 @@ public class PostmanExporter implements IExporter {
                 PsiClass[] classes = f.getClasses();
                 if (classes.length == 0)
                     return;
-                model.setName(getApiName(f.getClasses()[0], state));
+                model.setName(getJavaDocName(f.getClasses()[0], state));
                 model.setDescription(model.getName());
                 List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                 boolean isRequest = false;
@@ -177,7 +187,7 @@ public class PostmanExporter implements IExporter {
                         if (mapO.isPresent()) {
                             PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
                             //方法名称
-                            itemBean.setName(getApiName(e1, state));
+                            itemBean.setName(getJavaDocName(e1, state));
                             PostmanModel.ItemBean.RequestBean requestBean = new PostmanModel.ItemBean.RequestBean();
                             //请求类型
                             requestBean.setMethod(getMethod(mapO.get()));
@@ -253,8 +263,10 @@ public class PostmanExporter implements IExporter {
                             PostmanModel.ItemBean.RequestBean.BodyBean bodyBean = new PostmanModel.ItemBean.RequestBean.BodyBean();
                             for (PsiParameter pe : parameterList.getParameters()) {
                                 PsiAnnotation[] pAt = pe.getAnnotations();
-                                if (pAt != null && pAt.length != 0) {
-                                    if (PsiAnnotationUtil.findAnnotations(pe, Pattern.compile("RequestBody")).size() > 0) {
+                                if (ArrayUtils.isNotEmpty(pAt)
+                                        // 必须包含MVC注解, 防止@Valid等注解影响判断
+                                        && CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(pe, RequestAnyPattern))) {
+                                    if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(pe, RequestBodyPattern))) {
                                         bodyBean.setMode("raw");
                                         bodyBean.setRaw(getRaw(pe));
 
@@ -267,9 +279,9 @@ public class PostmanExporter implements IExporter {
                                         //隐式
                                         addRestHeader(headerBeans);
                                     }
-                                    if (PsiAnnotationUtil.findAnnotations(pe, Pattern.compile("RequestPart")).size() > 0) {
+                                    if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(pe, FormDataPattern))) {
                                         bodyBean.setMode("formdata");
-                                        bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe));
+                                        bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe, e1));
                                         requestBean.setBody(bodyBean);
                                         //隐式
                                         addMultipartHeader(headerBeans);
@@ -277,16 +289,11 @@ public class PostmanExporter implements IExporter {
                                 } else {
                                     String javaType = pe.getType().getCanonicalText();
                                     if (!PluginConstants.simpleJavaType.contains(javaType) && !skipJavaTypes.contains(javaType)) {
-                                        bodyBean.setMode("raw");
-                                        bodyBean.setRaw(getRaw(pe));
-                                        PostmanModel.ItemBean.RequestBean.BodyBean.OptionsBean optionsBean = new PostmanModel.ItemBean.RequestBean.BodyBean.OptionsBean();
-                                        PostmanModel.ItemBean.RequestBean.BodyBean.OptionsBean.RawBean rawBean = new PostmanModel.ItemBean.RequestBean.BodyBean.OptionsBean.RawBean();
-                                        rawBean.setLanguage("json");
-                                        optionsBean.setRaw(rawBean);
-                                        bodyBean.setOptions(optionsBean);
+                                        bodyBean.setMode("formdata");
+                                        bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe, e1));
                                         requestBean.setBody(bodyBean);
                                         //隐式
-                                        addFormHeader(headerBeans);
+                                        addMultipartHeader(headerBeans);
                                     }
                                 }
                             }
@@ -407,7 +414,7 @@ public class PostmanExporter implements IExporter {
      * @param e1
      * @return
      */
-    private String getApiName(PsiDocCommentOwner e1, AppSettingState state) {
+    private String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state) {
         if (e1 == null)
             return "unknown module";
         String apiName = e1.getName();
@@ -430,46 +437,64 @@ public class PostmanExporter implements IExporter {
         return apiName;
     }
 
-    private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFromdata(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> formdata, PsiParameter pe) {
+    private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFromdata(List<FormDataBean> formdata, PsiParameter pe, PsiMethod psiMethod) {
         PsiAnnotation[] reqAnns = pe.getAnnotations();
-        PsiAnnotation reqAnn = Arrays.stream(reqAnns).filter(p -> p.getQualifiedName().contains("org.springframework.web.bind.annotation.RequestPart")).collect(Collectors.toList()).stream().findFirst().get();
-        String value = PsiAnnotationUtil.getAnnotationValue(reqAnn, String.class);
-        if (StringUtils.isBlank(value)) {
-            value = pe.getName();
-        }
+        String value = Arrays.stream(reqAnns).filter(p -> FormDataAnnoPath.contains(p.getQualifiedName())).collect(Collectors.toList()).stream().findFirst().map(reqAnn -> PsiAnnotationUtil.getAnnotationValue(reqAnn, String.class)).orElse(pe.getName());
         if (formdata == null) {
             formdata = new ArrayList<>();
         }
 
         String type = getPeFormType(pe);
-        if (type.equalsIgnoreCase("file"))
+        if (type.equalsIgnoreCase("file")) {
+            AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
             formdata.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(value, type, null, null));
-        else {
-            List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> dataBeans = getFormDataBeans(pe);
+        } else {
+            List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> dataBeans = getFormDataBeans(pe, psiMethod);
             formdata.addAll(dataBeans);
         }
         return formdata;
     }
 
-    private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFormDataBeans(PsiParameter pe) {
+    private List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFormDataBeans(PsiParameter pe, PsiMethod psiMethod) {
         AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         int maxDeepth = state.getDeepth();
         int curDeepth;
         PsiClass psiClass = JavaPsiFacade.getInstance(pe.getProject()).findClass(pe.getType().getCanonicalText(), GlobalSearchScope.allScope(pe.getProject()));
         List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param = new LinkedList<>();
         if (psiClass != null) {
+
+            if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
+                // 写在方法上的注释(直接在方法写java原生参数的情况)
+                HashMap<String, String> methodParamDocMap = new HashMap<>();
+                if (Objects.nonNull(psiMethod.getDocComment())) {
+                    for (PsiDocTag tag : psiMethod.getDocComment().getTags()) {
+                        PsiElement[] dataElements = tag.getDataElements();
+                        if (dataElements.length >= 2) {
+                            // 只处理标准Javadoc
+                            methodParamDocMap.put(dataElements[0].getText(), dataElements[1].getText());
+                        } else if (dataElements.length == 1) {
+                            // 只写 xx参数, 没有注释的情况
+                            methodParamDocMap.put(dataElements[0].getText(), "");
+                        }
+                    }
+                    // 如果是简单类型, 则直接返回
+                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(pe.getName(), "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getQualifiedName()), methodParamDocMap.get(pe.getName())));
+                    return param;
+                }
+            }
+
             PsiField[] fields = psiClass.getAllFields();
             curDeepth = 1;
             for (PsiField field : fields) {
                 if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))
-                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), null));
+                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), getJavaDocName(field, state)));
                     //这个判断对多层集合嵌套的数据类型
                 else if (isCollection(field)) {
                     getFormDataBeansCollection(param, field, field.getName() + "[0]", curDeepth, maxDeepth);
                 } else if (field.getType().getCanonicalText().contains("[]")) {
                     getFormDataBeansArray(param, field, field.getName() + "[0]", curDeepth, maxDeepth);
                 } else if (isMap(field)) {
-                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName() + ".key", "text", null, null));
+                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName() + ".key", "text", null, getJavaDocName(field, state)));
                 } else {
                     getFormDataBeansPojo(param, field, field.getName(), curDeepth, maxDeepth);
                 }
@@ -489,11 +514,12 @@ public class PostmanExporter implements IExporter {
     private void getFormDataBeansPojo(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
         if (curDeepth == maxDeepth)
             return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = getPsiClass(fatherField, "pojo");
         prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
-                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), ""));
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), getJavaDocName(psiClass, state)));
             } else {
                 //复杂对象类型遍历属性
                 PsiField[] fields = psiClass.getAllFields();
@@ -501,7 +527,7 @@ public class PostmanExporter implements IExporter {
                     if (skipJavaTypes.contains(field.getName().toLowerCase()))
                         continue;
                     if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
-                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), ""));
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), getJavaDocName(psiClass, state)));
                     else {
                         //容器
                         String pf = prefixField + "." + field.getName() + "[0]";
@@ -523,11 +549,12 @@ public class PostmanExporter implements IExporter {
     private void getFormDataBeansArray(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
         if (curDeepth == maxDeepth)
             return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = getPsiClass(fatherField, "array");
         prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
-                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), ""));
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), getJavaDocName(psiClass, state)));
             } else {
                 //复杂对象类型遍历属性
                 PsiField[] fields = psiClass.getAllFields();
@@ -535,7 +562,7 @@ public class PostmanExporter implements IExporter {
                     if (skipJavaTypes.contains(field.getName().toLowerCase()))
                         continue;
                     if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
-                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), ""));
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), getJavaDocName(field, state)));
                     else {
                         //容器
                         String pf = prefixField + "." + field.getName() + "[0]";
@@ -557,11 +584,12 @@ public class PostmanExporter implements IExporter {
     private void getFormDataBeansCollection(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
         if (curDeepth == maxDeepth)
             return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = getPsiClass(fatherField, "collection");
         prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
-                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), ""));
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), getJavaDocName(psiClass, state)));
             } else {
                 //复杂对象类型遍历属性
                 PsiField[] fields = psiClass.getAllFields();
@@ -569,7 +597,7 @@ public class PostmanExporter implements IExporter {
                     if (skipJavaTypes.contains(field.getName().toLowerCase()))
                         continue;
                     if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
-                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), ""));
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), getJavaDocName(psiClass, state)));
                     else {
                         //容器
                         String pf = prefixField + "." + field.getName() + "[0]";
@@ -667,8 +695,9 @@ public class PostmanExporter implements IExporter {
         }
         for (PsiParameter psiParameter : parameter) {
             PsiAnnotation[] pAt = psiParameter.getAnnotations();
-            if (pAt != null && pAt.length != 0) {
-                if (PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestBody")).size() == 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestPart")).size() == 0 && PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("PathVariable")).size() == 0) {
+            if (ArrayUtils.isNotEmpty(pAt)) {
+                if (CollectionUtils.isEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, RequestAnyPattern))
+                        && CollectionUtils.isEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, RequestPathPattern))) {
                     JSONObject stringParam = new JSONObject();
                     stringParam.put("key", psiParameter.getName());
                     stringParam.put("value", "");
