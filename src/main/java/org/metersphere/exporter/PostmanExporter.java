@@ -45,7 +45,8 @@ public class PostmanExporter implements IExporter {
 
     private static final Pattern RequestBodyPattern = Pattern.compile("RequestBody");
     private static final Pattern RequestPathPattern = Pattern.compile("PathVariable");
-    private static final Pattern FormDataPattern = Pattern.compile("RequestParam|RequestPart");
+    private static final Pattern FormDataPattern = Pattern.compile("RequestParam");
+    private static final Pattern MultiPartFormDataPattern = Pattern.compile("RequestPart");
     private static final List<String> FormDataAnnoPath = Lists.newArrayList("org.springframework.web.bind.annotation.RequestPart", "org.springframework.web.bind.annotation.RequestParam");
 
     private static final Pattern RequestAnyPattern = Pattern.compile("RequestBody|RequestParam|RequestPart");
@@ -279,7 +280,7 @@ public class PostmanExporter implements IExporter {
                                         //隐式
                                         addRestHeader(headerBeans);
                                     }
-                                    if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(pe, FormDataPattern))) {
+                                    if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(pe, MultiPartFormDataPattern))) {
                                         bodyBean.setMode("formdata");
                                         bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe, e1));
                                         requestBean.setBody(bodyBean);
@@ -293,7 +294,7 @@ public class PostmanExporter implements IExporter {
                                         bodyBean.setFormdata(getFromdata(bodyBean.getFormdata(), pe, e1));
                                         requestBean.setBody(bodyBean);
                                         //隐式
-                                        addMultipartHeader(headerBeans);
+                                        addFormHeader(headerBeans);
                                     }
                                 }
                             }
