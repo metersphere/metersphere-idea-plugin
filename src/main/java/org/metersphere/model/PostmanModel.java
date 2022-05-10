@@ -34,6 +34,8 @@ public class PostmanModel implements Serializable {
                 private String mode;
                 private OptionsBean options;
                 private String raw;
+                // postman 实际没有该参数，增加只是为了方便 ms 导入
+                private String jsonSchema;
                 private List<FormDataBean> formdata;
 
                 @Data
@@ -89,6 +91,8 @@ public class PostmanModel implements Serializable {
             private String name;
             private String body;
             private String status;
+            // postman 实际没有该参数，增加只是为了方便 ms 导入
+            private String jsonSchema;
             private List<HeaderBeanXX> header;
 
             @Data

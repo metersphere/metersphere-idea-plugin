@@ -31,7 +31,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class MeterSphereExporter implements IExporter {
@@ -52,7 +54,7 @@ public class MeterSphereExporter implements IExporter {
         if (files.size() == 0) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(2));
         }
-        List<PostmanModel> postmanModels = postmanExporter.transform(files, false, appSettingService.getState());
+        List<PostmanModel> postmanModels = postmanExporter.transform(files, false, true, appSettingService.getState());
         if (postmanModels.size() == 0) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
         }

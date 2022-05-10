@@ -54,7 +54,7 @@
 apiServer
 </td>
 <td>
-MeterSphere api 服务器地址
+MeterSphere API 服务器地址
 </td>
 </tr>
 <tr>
@@ -115,7 +115,7 @@ mode
 </tr>
 <tr>
 <td>
-deepth
+object-deepth
 </td>
 <td>
 针对接口中含有复杂嵌套对象的解析深度
@@ -135,6 +135,30 @@ update-version
 </td>
 <td>
 覆盖接口所生成的版本号
+</td>
+</tr>
+<tr>
+<td>
+context-path
+</td>
+<td>
+接口路径前缀
+</td>
+</tr>
+<tr>
+<td>
+export-name
+</td>
+<td>
+导出的模块名称
+</td>
+</tr>
+<tr>
+<td>
+javadoc
+</td>
+<td>
+支持读取接口/类名前注释的 javadoc 作为接口名称
 </td>
 </tr>
 </table>

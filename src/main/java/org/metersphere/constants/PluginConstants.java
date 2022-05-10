@@ -65,6 +65,33 @@ public class PluginConstants {
         put("Map", new JSONObject());
     }};
 
+    public static final Map<String, String> simpleJavaTypeJsonSchemaMap = new HashMap<>() {{
+        put("int", "number");
+        put("java.lang.Integer", "number");
+        put("short", "number");
+        put("java.lang.Short", "number");
+        put("byte", "number");
+        put("java.lang.Byte", "number");
+        put("long", "number");
+        put("java.lang.Long", "number");
+        put("char", "string");
+        put("java.lang.Character", "string");
+        put("float", "number");
+        put("java.lang.Float", "number");
+        put("double", "number");
+        put("java.lang.Double", "number");
+        put("boolean", "boolean");
+        put("java.lang.Boolean", "boolean");
+        put("java.lang.String", "string");
+        put("String", "string");
+        put("com.alibaba.fastjson.JSONObject", "object");
+        put("JSONObject", "object");
+        put("com.google.gson.JsonObject", "object");
+        put("JsonObject", "object");
+        put("java.util.Map", "object");
+        put("Map", "object");
+    }};
+
     public static final List<String> javaBaseCollectionType = new ArrayList<>() {
         {
             add("java.util.List");
