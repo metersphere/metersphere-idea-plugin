@@ -13,6 +13,7 @@ import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -853,14 +854,29 @@ public class PostmanExporter implements IExporter {
                     else {
                         //复杂对象
                         //容器
-                        if (field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">")) {
+                        if (isCollection(field)) {
                             param.put(field.getName(), new ArrayList<>() {{
-                                // 不支持 json schema
-                                add(getFields(getPsiClass(field, "collection"), curDeepth, maxDeepth, new JSONObject(), basePath + "/" + field.getName()));
+                                JSONObject item = createProperty("array", field, null, basePath + "/" + field.getName());
+                                JSONArray items = new JSONArray();
+                                JSONObject obj = null;
+                                JSONObject prop = new JSONObject();
+                                String javaType = ((PsiClassReferenceType) field.getType()).getParameters()[0].getCanonicalText();
+                                if (PluginConstants.simpleJavaType.contains(javaType)) {
+                                    obj = createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(javaType), PsiTypesUtil.getPsiClass(((PsiClassReferenceType) field.getType()).getParameters()[0]), null, basePath + "/" + field.getName() + "/items");
+                                } else {
+                                    obj = createProperty("object", field, null, basePath + "/" + field.getName() + "/items");
+                                    obj.put("properties", prop);
+                                }
+                                items.add(obj);
+                                item.put("items", items);
+                                add(getFields(getPsiClass(field, "collection"), curDeepth, maxDeepth, prop, basePath + "/" + field.getName()));
+                                properties.put(field.getName(), item);
                             }});
                         } else if (field.getType().getCanonicalText().contains("[]")) {//数组
                             param.put(field.getName(), getJSONArray(field, curDeepth, maxDeepth, items, basePath + "/" + field.getName() + "/items"));
                             properties.put(field.getName(), createProperty("array", field, items, basePath + "/" + field.getName()));
+                        } else if (isMap(field)) {
+                            setRawMap(param, field);
                         } else {//普通对象
                             JSONObject item = createProperty("object", field, null, "/" + field.getName());
                             JSONObject pros = new JSONObject();
@@ -998,12 +1014,27 @@ public class PostmanExporter implements IExporter {
                         //容器
                         if (field.getType().getCanonicalText().contains("<") && field.getType().getCanonicalText().contains(">")) {
                             param.put(field.getName(), new ArrayList<>() {{
-// 不支持 json schema
-                                add(getFields(getPsiClass(field, "collection"), curDeepth, maxDeepth, new JSONObject(), basePath + "/" + field.getName()));
+                                JSONObject item = createProperty("array", field, null, basePath + "/" + field.getName());
+                                JSONArray items = new JSONArray();
+                                JSONObject obj = null;
+                                JSONObject prop = new JSONObject();
+                                String javaType = ((PsiClassReferenceType) field.getType()).getParameters()[0].getCanonicalText();
+                                if (PluginConstants.simpleJavaType.contains(javaType)) {
+                                    obj = createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(javaType), PsiTypesUtil.getPsiClass(((PsiClassReferenceType) field.getType()).getParameters()[0]), null, basePath + "/" + field.getName() + "/items");
+                                } else {
+                                    obj = createProperty("object", field, null, basePath + "/" + field.getName() + "/items");
+                                    obj.put("properties", prop);
+                                }
+                                items.add(obj);
+                                item.put("items", items);
+                                add(getFields(getPsiClass(field, "collection"), curDeepth, maxDeepth, prop, basePath + "/" + field.getName()));
+                                properties.put(field.getName(), item);
                             }});
                         } else if (field.getType().getCanonicalText().contains("[]")) {//数组
                             param.put(field.getName(), getJSONArray(field, curDeepth, maxDeepth, items, basePath + "/" + field.getName() + "/items"));
                             properties.put(field.getName(), createProperty("array", field, items, basePath + "/" + field.getName()));
+                        } else if (isMap(field)) {
+                            setRawMap(param, field);
                         } else {//普通对象
                             JSONObject item = createProperty("object", field, null, "/" + field.getName());
                             JSONObject pros = new JSONObject();
@@ -1041,13 +1072,20 @@ public class PostmanExporter implements IExporter {
         return resultMap;
     }
 
+    private void setRawMap(LinkedHashMap param, PsiField field) {
+        LinkedHashMap fieldMap = new LinkedHashMap();
+        getRawMap(fieldMap, field, null, null);
+        param.put(field.getName(), fieldMap);
+    }
+
     private void getRawMap(LinkedHashMap param, PsiField field, JSONObject properties, String parentPath) {
-        if (!field.getType().getCanonicalText().contains("<")) {
-            param.put(field.getName(), new JSONObject());
+        PsiType[] types = ((PsiClassReferenceType) field.getType()).getParameters();
+        if (types.length != 2) {
+            param.put(new JSONObject(), new JSONObject());
             return;
         }
-        String keyJavaType = field.getType().getPresentableText().split("<")[1].split(",")[0];
-        String valueType = field.getType().getPresentableText().split("<")[1].split(",")[1].replace(">", "");
+        String keyJavaType = ((PsiClassReferenceType) field.getType()).getParameters()[0].getPresentableText();
+        String valueType = ((PsiClassReferenceType) field.getType()).getParameters()[1].getPresentableText();
         if (PluginConstants.simpleJavaType.contains(keyJavaType)) {
             if (PluginConstants.simpleJavaType.contains(valueType))
                 param.put(PluginConstants.simpleJavaTypeValue.get(keyJavaType), PluginConstants.simpleJavaTypeValue.get(valueType));
@@ -1063,12 +1101,13 @@ public class PostmanExporter implements IExporter {
     }
 
     private void getRawMap(LinkedHashMap param, PsiTypeElement field, JSONObject properties, String parentPath) {
-        if (!field.getType().getCanonicalText().contains("<")) {
-            param.put(field.getText(), new JSONObject());
+        PsiType[] types = ((PsiClassReferenceType) field.getType()).getParameters();
+        if (types.length != 2) {
+            param.put(new JSONObject(), new JSONObject());
             return;
         }
-        String keyJavaType = field.getType().getPresentableText().split("<")[1].split(",")[0];
-        String valueType = field.getType().getPresentableText().split("<")[1].split(",")[1].replace(">", "");
+        String keyJavaType = ((PsiClassReferenceType) field.getType()).getParameters()[0].getPresentableText();
+        String valueType = ((PsiClassReferenceType) field.getType()).getParameters()[1].getPresentableText();
         if (PluginConstants.simpleJavaType.contains(keyJavaType)) {
             if (PluginConstants.simpleJavaType.contains(valueType))
                 param.put(PluginConstants.simpleJavaTypeValue.get(keyJavaType), PluginConstants.simpleJavaTypeValue.get(valueType));
@@ -1084,8 +1123,13 @@ public class PostmanExporter implements IExporter {
     }
 
     private void getRawMap(LinkedHashMap param, PsiParameter pe, JSONObject properties, String parentPath) {
-        String keyJavaType = pe.getType().getPresentableText().split("<")[1].split(",")[0].trim();
-        String valueType = pe.getType().getPresentableText().split("<")[1].split(",")[1].replace(">", "").trim();
+        PsiType[] types = ((PsiClassReferenceType) pe.getType()).getParameters();
+        if (types.length != 2) {
+            param.put(new JSONObject(), new JSONObject());
+            return;
+        }
+        String keyJavaType = ((PsiClassReferenceType) pe.getType()).getParameters()[0].getPresentableText();
+        String valueType = ((PsiClassReferenceType) pe.getType()).getParameters()[1].getPresentableText();
         if (PluginConstants.simpleJavaType.contains(keyJavaType)) {
             if (PluginConstants.simpleJavaType.contains(valueType)) {
                 param.put(PluginConstants.simpleJavaTypeValue.get(keyJavaType), PluginConstants.simpleJavaTypeValue.get(valueType));
@@ -1194,7 +1238,7 @@ public class PostmanExporter implements IExporter {
     private JSONArray getJSONArray(PsiField field, int curDeepth, int maxDeepth, JSONArray items, String parentPath) {
         JSONArray r = new JSONArray();
         JSONObject item = new JSONObject();
-        String qualifiedName = field.getType().getCanonicalText().replace("[]", "");
+        String qualifiedName = field.getType().getDeepComponentType().getCanonicalText();
         if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
             r.add(PluginConstants.simpleJavaTypeValue.get(qualifiedName));
             items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), field, null, parentPath + "/"));
@@ -1216,10 +1260,10 @@ public class PostmanExporter implements IExporter {
     private JSONArray getJSONArray(PsiTypeElement field, int curDeepth, int maxDeepth, JSONArray items, String parentPath) {
         JSONArray r = new JSONArray();
         JSONObject item = new JSONObject();
-        String qualifiedName = field.getType().getCanonicalText().replace("[]", "");
+        String qualifiedName = field.getType().getDeepComponentType().getCanonicalText();
         if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
             r.add(PluginConstants.simpleJavaTypeValue.get(qualifiedName));
-            items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), PsiTypesUtil.getPsiClass(field.getType()), null, parentPath + "/"));
+            items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), PsiTypesUtil.getPsiClass(field.getType().getDeepComponentType()), null, parentPath + "/"));
         } else {
             if (curDeepth == maxDeepth)
                 return new JSONArray();
@@ -1237,10 +1281,10 @@ public class PostmanExporter implements IExporter {
     private JSONArray getJSONArray(PsiParameter field, int curDeepth, int maxDeepth, JSONArray items, String parentPath) {
         JSONArray r = new JSONArray();
         JSONObject item = createProperty("object", field, null, parentPath);
-        String qualifiedName = field.getType().getCanonicalText().replace("[]", "");
+        String qualifiedName = field.getType().getDeepComponentType().getCanonicalText();
         if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
             r.add(PluginConstants.simpleJavaTypeValue.get(qualifiedName));
-            items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), PsiTypesUtil.getPsiClass(field.getType()), null, parentPath + "/"));
+            items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), PsiTypesUtil.getPsiClass(field.getType().getDeepComponentType()), null, parentPath + "/"));
         } else {
             if (curDeepth == maxDeepth)
                 return new JSONArray();
@@ -1281,7 +1325,11 @@ public class PostmanExporter implements IExporter {
                     return new JSONObject();
                 }
                 if (isCollection(field)) {
-                    param.put(field.getName(), getFields(getPsiClass(field, "collection"), curDeepth + 1, maxDeepth, properties, basePath + "/" + field.getName()));
+                    JSONArray items = new JSONArray();
+                    properties.put("items", items);
+                    //集合类型都是列表
+                    getJSONArray(field, curDeepth + 1, maxDeepth, items, basePath + "/" + field.getName());
+                    param.put(field.getName(), getFields(getPsiClass(field, "collection"), curDeepth + 1, maxDeepth, new JSONObject(), basePath + "/" + field.getName()));
                 } else if (field.getType().getCanonicalText().contains("[]")) {
                     //数组
                     JSONArray items = new JSONArray();
