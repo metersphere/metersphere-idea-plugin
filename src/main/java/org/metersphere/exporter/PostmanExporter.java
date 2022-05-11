@@ -901,7 +901,7 @@ public class PostmanExporter implements IExporter {
         JSONObject pro = new JSONObject();
         pro.put("type", type);
         String description = getJavaDocName(pe, ApplicationManager.getApplication().getService(AppSettingService.class).getState());
-        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName())) {
+        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName()) && !StringUtils.equalsIgnoreCase(description, pe.getName())) {
             pro.put("description", description);
         }
         if (items != null) {
@@ -918,7 +918,7 @@ public class PostmanExporter implements IExporter {
         JSONObject pro = new JSONObject();
         pro.put("type", type);
         String description = getJavaDocName(PsiTypesUtil.getPsiClass(pe.getType()), ApplicationManager.getApplication().getService(AppSettingService.class).getState());
-        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName())) {
+        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName()) && !StringUtils.equalsIgnoreCase(description, pe.getName())) {
             pro.put("description", description);
         }
         if (items != null) {
@@ -941,7 +941,7 @@ public class PostmanExporter implements IExporter {
         JSONObject pro = new JSONObject();
         pro.put("type", type);
         String description = getJavaDocName(pe, ApplicationManager.getApplication().getService(AppSettingService.class).getState());
-        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName())) {
+        if (StringUtils.isNotBlank(description) && !PluginConstants.simpleJavaType.contains(pe.getName()) && !StringUtils.equalsIgnoreCase(description, pe.getName())) {
             pro.put("description", description);
         }
         if (items != null) {
