@@ -94,7 +94,7 @@
         <li><b>1.0.2</b> add response support. postman export,fix map jsonobject</li>
         <li><b>1.0.3</b> fix List<Map> format error</li>
         <li><b>1.0.5</b> version support</li>
-        <li><b>1.0.6</b> detect javadoc, add formal parameter</li>
+        <li><b>1.0.6</b> detect javadoc, add formal parameter,generic request response type</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>

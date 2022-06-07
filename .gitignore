@@ -2,3 +2,5 @@ build
 gradle
 .gradle
 .idea
+/out/production/resources/META-INF/plugin.xml
+/out/production/resources/META-INF/pluginIcon.svg
