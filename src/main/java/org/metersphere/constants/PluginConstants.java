@@ -121,4 +121,15 @@ public class PluginConstants {
         put(2, "No java file detected! please change your search root");
         put(3, "No java api was found! please change your search root");
     }};
+
+    public static Map<String, String> PACKAGETYPESMAP = new HashMap<>() {{
+        put("int", "java.lang.Integer");
+        put("long", "java.lang.Long");
+        put("double", "java.lang.Double");
+        put("float", "java.lang.Float");
+        put("short", "java.lang.Short");
+        put("byte", "java.lang.Byte");
+        put("boolean", "java.lang.Boolean");
+        put("char", "java.lang.String");
+    }};
 }

@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PsiTypeUtil {
-    private static final String genericPatternString = "(.*)<(.*)>";
+    private static final String genericPatternString = "(.*)(<(.*)>)?()";
     private static final Pattern genericPattern = Pattern.compile(genericPatternString);
 
 
@@ -46,16 +46,8 @@ public class PsiTypeUtil {
      * @return
      */
     public static boolean isGenericType(PsiType pe) {
-        if (pe.getCanonicalText().matches(genericPatternString)) {
-            Matcher m = genericPattern.matcher(pe.getCanonicalText());
-            if (m.find()) {
-                String outterQualifiedName = m.group(2);
-                for (String s : PluginConstants.javaBaseCollectionType) {
-                    if (outterQualifiedName.startsWith(s)) {
-                        return false;
-                    }
-                }
-            }
+        if (pe instanceof PsiClassType) {
+            if (((PsiClassType) pe).getParameterCount() > 0)
             return true;
         }
         return false;

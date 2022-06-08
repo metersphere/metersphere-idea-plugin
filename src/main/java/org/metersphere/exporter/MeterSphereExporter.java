@@ -88,6 +88,7 @@ public class MeterSphereExporter implements IExporter {
     private boolean uploadToServer(File file) {
         ProgressUtil.show((String.format("Start to sync to MeterSphere Server")));
         CloseableHttpClient httpclient = HttpFutureUtils.getOneHttpClient();
+
         AppSettingState state = appSettingService.getState();
         String url = state.getMeterSphereAddress() + "/api/definition/import";
         HttpPost httpPost = new HttpPost(url);// 创建httpPost
@@ -95,7 +96,6 @@ public class MeterSphereExporter implements IExporter {
         httpPost.setHeader("accesskey", appSettingService.getState().getAccesskey());
         httpPost.setHeader("signature", MSApiUtil.getSinature(appSettingService.getState()));
         CloseableHttpResponse response = null;
-
         JSONObject param = buildParam(state);
         HttpEntity formEntity = MultipartEntityBuilder.create().addBinaryBody("file", file, ContentType.APPLICATION_JSON, null)
                 .addBinaryBody("request", param.toJSONString().getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_JSON, null).build();

@@ -44,6 +44,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.metersphere.constants.PluginConstants.PACKAGETYPESMAP;
+
+
 public class PostmanExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
 
@@ -1005,11 +1008,26 @@ public class PostmanExporter implements IExporter {
 //        properties.put(field.getText(), createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(valueType), field, null, parentPath + "/" + field.getName()));
     }
 
+    private PsiClass getGenericClass(PsiType type, PsiClass psiClass) {
+        PsiTypeParameter[] parameters = PsiTypesUtil.getPsiClass(type).getTypeParameters();
+        PsiType[] allTypes = ((PsiClassReferenceType) type).getParameters();
+        int index = 0;
+        for (PsiTypeParameter p : parameters) {
+            if (p.getName().equalsIgnoreCase(psiClass.getName())) {
+                return PsiTypesUtil.getPsiClass(allTypes[index]);
+            }
+            index++;
+        }
+        return null;
+    }
+
     private void getGeneric(LinkedHashMap param, PsiType type, String paramName, JSONObject properties, String parentPath, Project project) {
-        String qualifiedName = type.getCanonicalText();
-        PsiClass keyClass = PsiTypeUtil.getGenericClass(qualifiedName, 1, project);
-        PsiClass valueClass = PsiTypeUtil.getGenericClass(qualifiedName, 2, project);
-        PsiField fields[] = keyClass.getAllFields();
+        int genericCount = ((PsiClassReferenceType) type).getParameterCount();
+        PsiClass outerClass = PsiTypesUtil.getPsiClass(type);
+        if (outerClass == null) {
+            return;
+        }
+        PsiField fields[] = outerClass.getAllFields();
         for (PsiField f : fields) {
             PsiClass filedClass = PsiTypesUtil.getPsiClass(f.getType());
             if (filedClass != null) {
@@ -1017,13 +1035,17 @@ public class PostmanExporter implements IExporter {
                     param.put(f.getName(), PluginConstants.simpleJavaTypeValue.get(filedClass.getQualifiedName()));
                 } else {
 
-                    //泛型
+                    //泛型 todo 判断比较粗糙
                     if (filedClass.getFields().length == 0) {
                         JSONObject item = createProperty("object", filedClass, null, parentPath + "/" + filedClass.getName());
                         JSONObject pros = new JSONObject();
                         item.put("properties", pros);
                         properties.put(f.getName(), item);
-                        param.put(f.getName(), getFields(valueClass, 1, 2, pros, parentPath + "/" + paramName + "/" + f.getName()));
+                        PsiClass genericClass = getGenericClass(type, filedClass);
+                        if (genericClass == null) {
+                            continue;
+                        }
+                        param.put(f.getName(), getFields(genericClass, 1, 2, pros, parentPath + "/" + paramName + "/" + f.getName()));
                     } else {
                         JSONObject item = createProperty("object", filedClass, null, parentPath + "/" + filedClass.getName());
                         JSONObject pros = new JSONObject();
@@ -1050,7 +1072,11 @@ public class PostmanExporter implements IExporter {
         String qualifiedName = field.getDeepComponentType().getCanonicalText();
         if (PluginConstants.simpleJavaType.contains(qualifiedName)) {
             r.add(PluginConstants.simpleJavaTypeValue.get(qualifiedName));
-            items.add(createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(qualifiedName), JavaPsiFacade.getInstance(project).findClass(field.getCanonicalText(), GlobalSearchScope.allScope(project)), null, parentPath + "/"));
+            PsiClass psiClass = PsiTypeUtil.getPsiClass(field.getDeepComponentType(), project, "");
+            if (psiClass == null) {
+                psiClass = JavaPsiFacade.getInstance(project).findClass(PACKAGETYPESMAP.get(field.getDeepComponentType().getCanonicalText()), GlobalSearchScope.allScope(project));
+            }
+            items.add(createProperty("array", psiClass, null, parentPath + "/"));
         } else {
             if (curDeepth == maxDeepth) {
                 return new JSONArray();
