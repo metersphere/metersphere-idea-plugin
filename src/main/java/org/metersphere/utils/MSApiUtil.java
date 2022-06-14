@@ -180,7 +180,7 @@ public class MSApiUtil {
     public static JSONObject getWorkSpaceList(AppSettingState appSettingState, String userId) {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace/" + userId);
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace/");
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSinature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
