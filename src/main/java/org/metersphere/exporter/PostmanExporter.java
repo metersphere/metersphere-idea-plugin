@@ -817,7 +817,7 @@ public class PostmanExporter implements IExporter {
         int maxDeepth = state.getDeepth();
         int curDeepth = 1;
         JSONObject jsonSchema = new JSONObject();
-        String schemaType = javaType.contains("[]") ? "array" : "object";
+        String schemaType = PsiTypeUtil.isCollection(pe) ? "array" : "object";
         jsonSchema.put("type", schemaType);
         jsonSchema.put("$id", "http://example.com/root.json");
         jsonSchema.put("title", "The Root Schema");
@@ -885,9 +885,7 @@ public class PostmanExporter implements IExporter {
             //复杂对象
             //容器
             if (PsiTypeUtil.isCollection(pe)) {
-                JSONArray arr = new JSONArray();
-                arr.add(getFields(PsiTypeUtil.getPsiClass(pe, project, "collection"), curDeepth, maxDeepth, properties, basePath));
-                resultMap.put("raw", arr.toJSONString());
+                resultMap.put("raw", getJSONArray(pe, curDeepth, maxDeepth, items, baseItemsPath, project).toJSONString());
             } else if (javaType.contains("[]"))//数组
                 resultMap.put("raw", getJSONArray(pe, curDeepth, maxDeepth, items, baseItemsPath, project).toJSONString());
             else if (PsiTypeUtil.isMap(pe)) {
@@ -1017,14 +1015,19 @@ public class PostmanExporter implements IExporter {
         PsiField fields[] = outerClass.getAllFields();
         for (PsiField f : fields) {
             PsiClass filedClass = PsiTypesUtil.getPsiClass(f.getType());
+            if (filedClass == null) {
+                filedClass = JavaPsiFacade.getInstance(project).findClass(PACKAGETYPESMAP.get(f.getType().getCanonicalText()), GlobalSearchScope.allScope(project));
+            }
             if (filedClass != null) {
                 if (PluginConstants.simpleJavaType.contains(filedClass.getQualifiedName())) {
                     param.put(f.getName(), PluginConstants.simpleJavaTypeValue.get(filedClass.getQualifiedName()));
+                    JSONObject item = createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(filedClass.getQualifiedName()), filedClass, null, parentPath + "/" + f.getName());
+                    properties.put(f.getName(), item);
                 } else {
 
                     //泛型 todo 判断比较粗糙
                     if (filedClass.getFields().length == 0) {
-                        JSONObject item = createProperty("object", filedClass, null, parentPath + "/" + filedClass.getName());
+                        JSONObject item = createProperty("array", filedClass, null, parentPath + "/" + f.getName());
                         JSONObject pros = new JSONObject();
                         item.put("properties", pros);
                         properties.put(f.getName(), item);
@@ -1032,7 +1035,13 @@ public class PostmanExporter implements IExporter {
                         if (genericType == null) {
                             continue;
                         }
-                        param.put(f.getName(), getFields(PsiTypesUtil.getPsiClass(genericType), 1, 2, pros, parentPath + "/" + paramName + "/" + f.getName()));
+                        if (PsiTypeUtil.isCollection(genericType)) {
+                            JSONArray items = new JSONArray();
+                            item.put("items", items);
+                            param.put(f.getName(), getJSONArray(genericType, 1, 2, items, parentPath + "/" + f.getName() + "/items", f.getProject()));
+                        } else if (PsiTypeUtil.isGenericType(genericType)) {
+                            param.put(f.getName(), getFields(PsiTypesUtil.getPsiClass(genericType), 1, 2, pros, parentPath + "/" + f.getName() + "/properties"));
+                        }
                     } else {
                         JSONObject item = createProperty("object", filedClass, null, parentPath + "/" + filedClass.getName());
                         JSONObject pros = new JSONObject();
@@ -1073,6 +1082,16 @@ public class PostmanExporter implements IExporter {
                 item = createProperty("object", psiClass, null, parentPath + "/properties");
                 items.add(item);
                 r.add(getFields(psiClass, curDeepth + 1, maxDeepth, item, parentPath + "/properties"));
+            } else {
+                PsiType[] types = ((PsiClassReferenceType) field).getParameters();
+                if (types.length == 1) {
+                    PsiClass subClass = PsiTypeUtil.getPsiClass(types[0], project, "");
+                    item = createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(subClass.getQualifiedName()), subClass, null, parentPath + "/properties");
+                    JSONObject pros = new JSONObject();
+                    item.put("properties", pros);
+                    items.add(item);
+                    r.add(getFields(subClass, curDeepth + 1, maxDeepth, pros, parentPath + "/properties"));
+                }
             }
         }
 
