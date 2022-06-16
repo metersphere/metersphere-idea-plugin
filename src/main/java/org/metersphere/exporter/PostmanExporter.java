@@ -1083,10 +1083,13 @@ public class PostmanExporter implements IExporter {
                 items.add(item);
                 r.add(getFields(psiClass, curDeepth + 1, maxDeepth, item, parentPath + "/properties"));
             } else {
-                PsiType[] types = ((PsiClassReferenceType) field).getParameters();
+                PsiType[] types = field instanceof PsiClassType ? ((PsiClassType) field).getParameters() : field instanceof PsiArrayType ? new PsiType[]{field} : new PsiType[]{};
                 if (types.length == 1) {
                     PsiClass subClass = PsiTypeUtil.getPsiClass(types[0], project, "");
-                    item = createProperty(PluginConstants.simpleJavaTypeJsonSchemaMap.get(subClass.getQualifiedName()), subClass, null, parentPath + "/properties");
+                    if (subClass == null) {
+                        return r;
+                    }
+                    item = createProperty(Optional.ofNullable(PluginConstants.simpleJavaTypeJsonSchemaMap.get(subClass.getQualifiedName())).orElse("object"), subClass, null, parentPath + "/properties");
                     JSONObject pros = new JSONObject();
                     item.put("properties", pros);
                     items.add(item);

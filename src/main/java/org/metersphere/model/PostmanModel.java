@@ -89,7 +89,7 @@ public class PostmanModel implements Serializable {
             private String _postman_previewtype;
             private int responseTime;
             private String name;
-            private String body;
+            private Object body;
             private String status;
             // postman 实际没有该参数，增加只是为了方便 ms 导入
             private String jsonSchema;

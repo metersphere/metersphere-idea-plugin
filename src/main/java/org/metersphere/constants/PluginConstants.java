@@ -67,13 +67,13 @@ public class PluginConstants {
 
     public static final Map<String, String> simpleJavaTypeJsonSchemaMap = new HashMap<>() {{
         put("int", "number");
-        put("java.lang.Integer", "number");
-        put("short", "number");
-        put("java.lang.Short", "number");
-        put("byte", "number");
-        put("java.lang.Byte", "number");
-        put("long", "number");
-        put("java.lang.Long", "number");
+        put("java.lang.Integer", "integer");
+        put("short", "integer");
+        put("java.lang.Short", "integer");
+        put("byte", "integer");
+        put("java.lang.Byte", "integer");
+        put("long", "integer");
+        put("java.lang.Long", "integer");
         put("char", "string");
         put("java.lang.Character", "string");
         put("float", "number");
