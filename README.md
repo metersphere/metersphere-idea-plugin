@@ -161,6 +161,14 @@ javadoc
 支持读取接口/类名前注释的 javadoc 作为接口名称
 </td>
 </tr>
+<tr>
+<td>
+coverModule
+</td>
+<td>
+选择覆盖的同时是否一并更新旧接口的模块
+</td>
+</tr>
 </table>
 
 ## Compatible IDE versions: 2020.3+

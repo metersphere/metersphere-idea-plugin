@@ -12,6 +12,7 @@ import org.metersphere.exporter.ExporterFactory;
 import org.metersphere.utils.ProgressUtil;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,7 +41,7 @@ public abstract class CommonAction extends AnAction {
         if (r.get())
             Messages.showInfoMessage("Export to MeterSphere success!", PluginConstants.MessageTitle.Info.name());
         else
-            Messages.showInfoMessage("Export to MeterSphere fail! " + exception.get().getMessage(), PluginConstants.MessageTitle.Error.name());
+            Messages.showInfoMessage("Export to MeterSphere fail! " + Optional.ofNullable(exception.get()).orElse(new Throwable("")).getMessage(), PluginConstants.MessageTitle.Error.name());
     }
 
     protected void exportDirectly(String source, AnActionEvent event) {

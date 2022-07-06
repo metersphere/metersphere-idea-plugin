@@ -44,6 +44,7 @@ public class AppSettingComponent {
     private JComboBox<MSProjectVersion> projectVersionCB;
     private JComboBox workspaceCB;
     private JComboBox updateVersionCB;
+    private JCheckBox coverModule;
     private AppSettingService appSettingService = AppSettingService.getInstance();
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
@@ -135,13 +136,21 @@ public class AppSettingComponent {
                 updateVersionCB.setSelectedItem(null);
                 appSettingState.setUpdateVersion(null);
                 updateVersionCB.setEnabled(false);
+                //不覆盖的时候，覆盖路径也设置为 false
+                coverModule.setSelected(false);
+                coverModule.setEnabled(false);
             } else {
                 updateVersionCB.setEnabled(true);
                 projectVersionCB.setEnabled(true);
+                //覆盖模块设置为启用
+                coverModule.setEnabled(true);
                 if (CollectionUtils.isNotEmpty(appSettingState.getUpdateVersionOptions())) {
                     updateVersionCB.setSelectedItem(appSettingState.getUpdateVersionOptions().get(0));
                 }
             }
+        });
+        coverModule.addActionListener(actionEvent -> {
+            appSettingState.setCoverModule(coverModule.isSelected());
         });
         deepthCB.addActionListener(actionEvent ->
                 appSettingState.setDeepth(Integer.valueOf(deepthCB.getSelectedItem().toString())));
@@ -225,6 +234,7 @@ public class AppSettingComponent {
             contextPath.setText(appSettingState.getContextPath().trim());
         }
         javadocCheckBox.setSelected(appSettingState.isJavadoc());
+        coverModule.setSelected(appSettingState.isCoverModule());
     }
 
     private boolean initProject(AppSettingState appSettingState, String workspaceId) {

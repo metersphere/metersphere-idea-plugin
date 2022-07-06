@@ -68,6 +68,7 @@ public class MeterSphereExporter implements IExporter {
         String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : psiElement.getProject().getName();
         info.put("name", exportName);
         info.put("description", "exported at " + dateTime);
+        info.put("_postman_id", UUID.randomUUID().toString());
         jsonObject.put("info", info);
         bufferedWriter.write(new Gson().toJson(jsonObject));
         bufferedWriter.flush();
@@ -147,7 +148,13 @@ public class MeterSphereExporter implements IExporter {
             if (state.getUpdateVersion() != null && state.isSupportVersion()) {
                 param.put("updateVersionId", state.getUpdateVersion().getId());
             }
+            if (state.isCoverModule()) {
+                param.put("coverModule", true);
+            } else {
+                param.put("coverModule", false);
+            }
         }
+        param.put("protocol", "HTTP");
         return param;
     }
 

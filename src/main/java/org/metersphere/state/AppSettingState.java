@@ -38,6 +38,7 @@ public class AppSettingState {
 
     private String exportModuleName;
 
+    //覆盖或者不覆盖 fullCoverage/incrementalMerge
     private String modeId;
     //嵌套对象参数解析的深度
     private Integer deepth = 1;
@@ -45,6 +46,8 @@ public class AppSettingState {
     private String contextPath;
     //是否支持读取 javadoc
     private boolean javadoc = true;
+    //是否覆盖模块 coverModule
+    private boolean coverModule = true;
 
     public String getMeterSphereAddress() {
         if (StringUtils.isNotBlank(this.meterSphereAddress)) {
