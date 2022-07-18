@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -15,6 +16,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
+import com.intellij.psi.impl.source.tree.java.PsiNameValuePairImpl;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -712,17 +714,26 @@ public class PostmanExporter implements IExporter {
         for (PsiParameter psiParameter : parameter) {
             PsiAnnotation[] pAt = psiParameter.getAnnotations();
             if (ArrayUtils.isNotEmpty(pAt)) {
-                if (CollectionUtils.isEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, RequestAnyPattern))
-                        && CollectionUtils.isEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, RequestPathPattern))) {
-                    JSONObject stringParam = new JSONObject();
-                    stringParam.put("key", psiParameter.getName());
-                    stringParam.put("value", "");
-                    stringParam.put("equals", true);
-                    stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
-                    r.add(stringParam);
-                } else {
-                    if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
-                        requestBean.setMethod("POST");
+                //requestParam
+                if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, FormDataPattern))) {
+                    String javaType = psiParameter.getType().getCanonicalText();
+                    if (PluginConstants.simpleJavaType.contains(javaType)) {
+                        JSONObject stringParam = new JSONObject();
+                        stringParam.put("key", getAnnotationName("RequestParam", "value", psiParameter));
+                        stringParam.put("value", "");
+                        stringParam.put("equals", true);
+                        stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
+                        r.add(stringParam);
+                    } else {
+                        /**
+                         * todo 复杂的 requestParam 类型 /foo?id=1,2
+                         * class foo{
+                         *     private long[] id;
+                         * }
+                         */
+                        if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
+                            requestBean.setMethod("POST");
+                    }
                 }
             } else {
                 String javaType = psiParameter.getType().getCanonicalText();
@@ -740,6 +751,33 @@ public class PostmanExporter implements IExporter {
             }
         }
         return r;
+    }
+
+    /**
+     * 获取 注解里面的 desc 比如 RequestParam("页数") int page
+     *
+     * @param annotationName
+     * @param attributeName
+     * @param psiParameter
+     * @return
+     */
+    private String getAnnotationName(String annotationName, String attributeName, PsiParameter psiParameter) {
+        PsiAnnotation annotations[] = psiParameter.getAnnotations();
+        if (annotations != null && annotations.length > 0) {
+            for (PsiAnnotation an : annotations) {
+                if (an.getQualifiedName().contains(annotationName)) {
+                    for (JvmAnnotationAttribute valuePair : an.getAttributes()) {
+                        if (valuePair instanceof PsiNameValuePair) {
+                            PsiNameValuePair valuePair1 = (PsiNameValuePair) valuePair;
+                            if (valuePair1.getAttributeName().equalsIgnoreCase(attributeName)) {
+                                return valuePair1.getLiteralValue();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return psiParameter.getName();
     }
 
     public String getMethod(PsiAnnotation mapAnn) {

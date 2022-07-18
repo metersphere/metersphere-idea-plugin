@@ -96,6 +96,7 @@
         <li><b>1.0.5</b> version support</li>
         <li><b>1.0.6</b> detect javadoc, add formal parameter,generic request response type</li>
         <li><b>1.0.7</b> add coverModule</li>
+        <li><b>1.0.8</b> fix multi RequestParam</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
