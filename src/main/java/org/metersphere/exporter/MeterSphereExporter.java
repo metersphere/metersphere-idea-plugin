@@ -3,7 +3,6 @@ package org.metersphere.exporter;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -31,10 +30,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class MeterSphereExporter implements IExporter {
     private Logger logger = Logger.getInstance(MeterSphereExporter.class);
@@ -42,18 +39,7 @@ public class MeterSphereExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
 
     @Override
-    public boolean export(PsiElement psiElement) throws IOException {
-        if (!MSApiUtil.test(appSettingService.getState())) {
-            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
-        }
-        List<PsiJavaFile> files = new LinkedList<>();
-        postmanExporter.getFile(psiElement, files);
-        files = files.stream().filter(f ->
-                f instanceof PsiJavaFile
-        ).collect(Collectors.toList());
-        if (files.size() == 0) {
-            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(2));
-        }
+    public boolean export(List<PsiJavaFile> files) throws IOException {
         List<PostmanModel> postmanModels = postmanExporter.transform(files, false, true, appSettingService.getState());
         if (postmanModels.size() == 0) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
@@ -65,7 +51,7 @@ public class MeterSphereExporter implements IExporter {
         JSONObject info = new JSONObject();
         info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
         String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : psiElement.getProject().getName();
+        String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : files.get(0).getProject().getName();
         info.put("name", exportName);
         info.put("description", "exported at " + dateTime);
         info.put("_postman_id", UUID.randomUUID().toString());

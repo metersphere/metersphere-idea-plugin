@@ -1,6 +1,6 @@
 package org.metersphere.model;
 
-import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -12,18 +12,16 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
+import org.metersphere.AppSettingService;
 import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.FieldUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
- * 对 idea 中 java 属性的封装
+ * 对 idea 中 java 属性/字段的封装
  */
 @Data
 public class FieldWrapper {
@@ -39,7 +37,7 @@ public class FieldWrapper {
     //该参数的父类
     private FieldWrapper parent;
     //该参数的子类
-    private List<FieldWrapper> children;
+    private List<FieldWrapper> children = new LinkedList<>();
 
     private Project project;
 
@@ -49,8 +47,16 @@ public class FieldWrapper {
     //代码生成配置
     private AppSettingState appSettingState;
 
+    //字段注释
+    private String desc;
+
+    public FieldWrapper() {
+
+    }
+
     public FieldWrapper(String name, PsiType type, FieldWrapper parent) {
         this.name = name;
+        this.annotations = Arrays.asList(type.getAnnotations());
         this.psiType = type;
         if (FieldUtil.isNormalType(type)) {
             this.type = JavaTypeEnum.ENUM;
@@ -60,9 +66,10 @@ public class FieldWrapper {
             this.type = JavaTypeEnum.OBJECT;
         }
         this.project = type.getResolveScope().getProject();
-        this.appSettingState = ServiceManager.getService(project, AppSettingState.class);
+        this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         this.genericTypeMap = resolveGenerics(type);
         this.parent = parent;
+        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(type), appSettingState);
         resolveChildren();
     }
 
@@ -185,6 +192,11 @@ public class FieldWrapper {
                 children.add(fieldInfo);
             }
         }
+    }
+
+    @Override
+    public String toString(){
+        return "FieldWrapper [name=" + name +", parent=" + Optional.ofNullable(parent).orElse(new FieldWrapper()).getName() + "]";
     }
 
 }

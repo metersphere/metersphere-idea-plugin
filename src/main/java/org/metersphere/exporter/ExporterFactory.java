@@ -5,16 +5,23 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiJavaFile;
+import org.metersphere.AppSettingService;
 import org.metersphere.constants.PluginConstants;
+import org.metersphere.utils.MSApiUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExporterFactory {
+    private static AppSettingService appSettingService = AppSettingService.getInstance();
     private static Map<String, IExporter> exporterMap = new HashMap<>() {{
         put(PluginConstants.EXPORTER_POSTMAN, new PostmanExporter());
-        put(PluginConstants.EXPORTER_MS, new MeterSphereExporter());
+        put(PluginConstants.EXPORTER_MS, new V2Exporter());
     }};
 
     public static boolean export(String source, AnActionEvent event) throws IOException {
@@ -23,6 +30,19 @@ public class ExporterFactory {
             element = event.getData(CommonDataKeys.PSI_ELEMENT);
         if (element == null)
             Messages.showInfoMessage("no valid psi element found!", PluginConstants.MessageTitle.Info.name());
-        return exporterMap.get(source).export(element);
+
+//        if (!MSApiUtil.test(appSettingService.getState())) {
+//            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
+//        }
+        List<PsiJavaFile> files = new LinkedList<>();
+        PostmanExporter.getFile(element, files);
+        files = files.stream().filter(f ->
+                f instanceof PsiJavaFile
+        ).collect(Collectors.toList());
+        if (files.size() == 0) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(2));
+        }
+
+        return exporterMap.get(source).export(files);
     }
 }

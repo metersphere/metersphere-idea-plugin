@@ -31,6 +31,7 @@ import org.metersphere.constants.PluginConstants;
 import org.metersphere.constants.SpringMappingConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.model.PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean;
+import org.metersphere.model.RequestWrapper;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.ProgressUtil;
@@ -61,17 +62,8 @@ public class PostmanExporter implements IExporter {
     private static final Pattern RequestAnyPattern = Pattern.compile("RequestBody|RequestParam|RequestPart");
 
     @Override
-    public boolean export(PsiElement psiElement) {
+    public boolean export(List<PsiJavaFile> files) {
         try {
-            List<PsiJavaFile> files = new LinkedList<>();
-            getFile(psiElement, files);
-            files = files.stream().filter(f ->
-                    f instanceof PsiJavaFile
-            ).collect(Collectors.toList());
-            if (files.size() == 0) {
-                Messages.showInfoMessage("No java file detected! please change your search root", infoTitle());
-                return false;
-            }
             List<PostmanModel> postmanModels = transform(files, true, false, appSettingService.getState());
             if (postmanModels.size() == 0) {
                 Messages.showInfoMessage("No java api was found! please change your search root", infoTitle());
@@ -80,7 +72,7 @@ public class PostmanExporter implements IExporter {
             FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(false, true, false, false, false, false);
             fileChooserDescriptor.setDescription("Choose the location you want to export");
             FileChooserDialog fileChooserDialog = FileChooserFactory.getInstance().createFileChooser(fileChooserDescriptor, null, null);
-            VirtualFile file[] = fileChooserDialog.choose(psiElement.getProject(), new VirtualFile[]{});
+            VirtualFile file[] = fileChooserDialog.choose(files.get(0).getProject(), new VirtualFile[]{});
             if (file.length == 0) {
                 Messages.showInfoMessage("No directory selected", infoTitle());
                 return false;
@@ -94,7 +86,7 @@ public class PostmanExporter implements IExporter {
             JSONObject info = new JSONObject();
             info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
             String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            info.put("name", psiElement.getProject().getName());
+            info.put("name", files.get(0).getProject().getName());
             info.put("description", "exported at " + dateTime);
             jsonObject.put("info", info);
             bufferedWriter.write(new Gson().toJson(jsonObject));
@@ -110,11 +102,11 @@ public class PostmanExporter implements IExporter {
     }
 
     @NotNull
-    public String infoTitle() {
+    public static String infoTitle() {
         return PluginConstants.MessageTitle.Info.name();
     }
 
-    public List<PsiJavaFile> getFile(PsiElement psiElement, List<PsiJavaFile> files) {
+    public static List<PsiJavaFile> getFile(PsiElement psiElement, List<PsiJavaFile> files) {
         if (psiElement instanceof PsiDirectory) {
             Arrays.stream(psiElement.getChildren()).forEach(p -> {
                 if (p instanceof PsiJavaFile) {
@@ -148,7 +140,6 @@ public class PostmanExporter implements IExporter {
                     return;
                 model.setName(getJavaDocName(f.getClasses()[0], state));
                 model.setDescription(model.getName());
-                List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                 boolean isRequest = false;
                 boolean restController = false;
                 String basePath = "";
@@ -186,7 +177,7 @@ public class PostmanExporter implements IExporter {
                         else
                             basePath = state.getContextPath().replaceFirst("/", "");
                     }
-
+                    List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                     Collection<PsiMethod> methodCollection = PsiTreeUtil.findChildrenOfType(controllerClass, PsiMethod.class);
                     Iterator<PsiMethod> methodIterator = methodCollection.iterator();
                     while (methodIterator.hasNext()) {
@@ -432,7 +423,7 @@ public class PostmanExporter implements IExporter {
      * @param e1
      * @return
      */
-    private String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state) {
+    public static String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state) {
         if (e1 == null)
             return "unknown module";
         String apiName = e1.getName();
@@ -824,7 +815,7 @@ public class PostmanExporter implements IExporter {
         return null;
     }
 
-    public Map<String, Boolean> containsAnnotation(Collection<PsiAnnotation> annotations) {
+    public static Map<String, Boolean> containsAnnotation(Collection<PsiAnnotation> annotations) {
         Map r = new HashMap();
         r.put("rest", false);
         r.put("general", false);

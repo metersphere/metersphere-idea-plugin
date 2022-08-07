@@ -49,6 +49,12 @@ public class AppSettingState {
     //是否覆盖模块 coverModule
     private boolean coverModule = true;
 
+    //临时变量
+    //是否加入 basePath
+    private boolean withBasePath;
+    //是否生成 json-schema 供 ms 使用
+    private boolean withJsonSchema;
+
     public String getMeterSphereAddress() {
         if (StringUtils.isNotBlank(this.meterSphereAddress)) {
             if (this.meterSphereAddress.endsWith("/")) {

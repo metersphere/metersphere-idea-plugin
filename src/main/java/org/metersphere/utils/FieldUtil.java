@@ -1,14 +1,25 @@
 package org.metersphere.utils;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.psi.*;
+import com.intellij.psi.javadoc.PsiDocToken;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
+import de.plushnikov.intellij.lombok.util.PsiAnnotationUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.metersphere.constants.JacksonAnnotation;
-import org.metersphere.constants.SwaggerAnnotation;
-import org.metersphere.constants.WebAnnotation;
+import org.jetbrains.annotations.NotNull;
+import org.metersphere.constants.*;
 import org.metersphere.model.FieldWrapper;
+import org.metersphere.model.PostmanModel;
+import org.metersphere.state.AppSettingState;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class FieldUtil {
 
@@ -201,6 +212,265 @@ public class FieldUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * 优先 javadoc，如果没有就方法名称
+     *
+     * @param e1
+     * @return
+     */
+    public static String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state) {
+        if (e1 == null)
+            return "unknown module";
+        String apiName = e1.getName();
+        if (!state.isJavadoc()) {
+            return apiName;
+        }
+        Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
+        if (tokens.size() > 0) {
+            Iterator<PsiDocToken> iterator = tokens.iterator();
+            while (iterator.hasNext()) {
+                PsiDocToken token = iterator.next();
+                if (token.getTokenType().toString().equalsIgnoreCase("DOC_COMMENT_DATA")) {
+                    if (StringUtils.isNotBlank(token.getText())) {
+                        apiName = UTF8Util.toUTF8String(token.getText()).trim();
+                    }
+                    break;
+                }
+            }
+        }
+
+        return apiName;
+    }
+
+    public static String getMethod(PsiAnnotation mapAnn) {
+        String method = PsiAnnotationUtil.getAnnotationValue(mapAnn, "method", String.class);
+        if (StringUtils.isNotBlank(method)) {
+            return method;
+        }
+        for (String s : SpringMappingConstants.mapList) {
+            if (mapAnn.getQualifiedName().equalsIgnoreCase(s)) {
+                method = s.replace("org.springframework.web.bind.annotation.", "").replace("Mapping", "").toUpperCase();
+                if ("Request".equalsIgnoreCase(method)) {
+                    return "GET";
+                }
+                return method;
+            }
+        }
+
+        return "Unknown Method";
+    }
+
+    public static Optional<PsiAnnotation> findMappingAnn(PsiMethod e1, Class<PsiAnnotation> psiAnnotationClass) {
+        Collection<PsiAnnotation> annotations = PsiTreeUtil.findChildrenOfType(e1, PsiAnnotation.class);
+        return annotations.stream().filter(a -> a.getQualifiedName().contains("Mapping")).findFirst();
+    }
+
+    public static Map<String, Boolean> existRequetAnnotation(Collection<PsiAnnotation> annotations) {
+        Map r = new HashMap();
+        r.put("rest", false);
+        r.put("general", false);
+        Iterator<PsiAnnotation> it = annotations.iterator();
+        while (it.hasNext()) {
+            PsiAnnotation next = it.next();
+            if (next.getQualifiedName().equalsIgnoreCase("org.springframework.web.bind.annotation.RestController"))
+                r.put("rest", true);
+            if (next.getQualifiedName().equalsIgnoreCase("org.springframework.stereotype.Controller"))
+                r.put("general", true);
+        }
+        return r;
+    }
+
+    public static Map<String, String> getParamMap(PsiMethod e1, AppSettingState state) {
+        if (e1 == null)
+            return new HashMap<>();
+        if (!state.isJavadoc()) {
+            return new HashMap<>();
+        }
+        Map<String, String> r = new HashMap<>();
+        Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
+        if (tokens.size() > 0) {
+            Iterator<PsiDocToken> iterator = tokens.iterator();
+            while (iterator.hasNext()) {
+                PsiDocToken token = iterator.next();
+                if (token.getTokenType().toString().equalsIgnoreCase("DOC_TAG_NAME") && token.getText().equalsIgnoreCase("@param")) {
+                    PsiDocToken paramEn = iterator.next();
+                    PsiDocToken paramZh = iterator.next();
+                    if (StringUtils.isNoneBlank(paramEn.getText(), paramZh.getText())) {
+                        r.put(UTF8Util.toUTF8String(paramEn.getText()), UTF8Util.toUTF8String(paramZh.getText()));
+                    }
+                }
+            }
+        }
+        return r;
+    }
+
+    public static String getUrlFromAnnotation(PsiMethod method) {
+        Collection<PsiAnnotation> mappingAn = PsiTreeUtil.findChildrenOfType(method, PsiAnnotation.class);
+        Iterator<PsiAnnotation> mi = mappingAn.iterator();
+        while (mi.hasNext()) {
+            PsiAnnotation annotation = mi.next();
+            if (annotation.getQualifiedName().contains("Mapping")) {
+                Collection<String> mapUrls = PsiAnnotationUtil.getAnnotationValues(annotation, "value", String.class);
+                if (CollectionUtils.isEmpty(mapUrls)) {
+                    mapUrls = PsiAnnotationUtil.getAnnotationValues(annotation, "path", String.class);
+                }
+                if (mapUrls.size() > 0) {
+                    return mapUrls.iterator().next();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static List<String> getPath(String urlStr, String basePath) {
+        String[] urls = urlStr.split("/");
+        if (StringUtils.isNotBlank(basePath))
+            urls = (basePath + "/" + urlStr).split("/");
+        Pattern p = Pattern.compile("\\{(\\w+)\\}");
+        return Arrays.stream(urls).map(s -> {
+            Matcher m = p.matcher(s);
+            while (m.find()) {
+                s = ":" + m.group(1);
+            }
+            return s;
+        }).filter(s -> StringUtils.isNotBlank(s)).collect(Collectors.toList());
+    }
+
+    public static List<?> getQuery(PsiMethod e1, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
+        List<JSONObject> r = new ArrayList<>();
+        PsiParameterList parametersList = e1.getParameterList();
+        PsiParameter[] parameter = parametersList.getParameters();
+        if (requestBean.getMethod().equalsIgnoreCase("REQUEST") && parameter.length == 0) {
+            requestBean.setMethod("GET");
+        }
+        for (PsiParameter psiParameter : parameter) {
+            PsiAnnotation[] pAt = psiParameter.getAnnotations();
+            if (ArrayUtils.isNotEmpty(pAt)) {
+                //requestParam
+                if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestParam")))) {
+                    String javaType = psiParameter.getType().getCanonicalText();
+                    if (PluginConstants.simpleJavaType.contains(javaType)) {
+                        JSONObject stringParam = new JSONObject();
+                        stringParam.put("key", getAnnotationName("RequestParam", "value", psiParameter));
+                        stringParam.put("value", "");
+                        stringParam.put("equals", true);
+                        stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
+                        r.add(stringParam);
+                    } else {
+                        /**
+                         * todo 复杂的 requestParam 类型 /foo?id=1,2
+                         * class foo{
+                         *     private long[] id;
+                         * }
+                         */
+                        if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
+                            requestBean.setMethod("POST");
+                    }
+                }
+            } else {
+                String javaType = psiParameter.getType().getCanonicalText();
+                if (PluginConstants.simpleJavaType.contains(javaType)) {
+                    JSONObject stringParam = new JSONObject();
+                    stringParam.put("key", psiParameter.getName());
+                    stringParam.put("value", "");
+                    stringParam.put("equals", true);
+                    stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
+                    r.add(stringParam);
+                } else {
+                    if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
+                        requestBean.setMethod("POST");
+                }
+            }
+        }
+        return r;
+    }
+
+    public static List<?> getVariable(List<String> path, Map<String, String> paramJavaDoc) {
+        JSONArray variables = new JSONArray();
+        for (String s : path) {
+            if (s.startsWith(":")) {
+                JSONObject var = new JSONObject();
+                var.put("key", s.substring(1));
+                var.put("description", paramJavaDoc.get(s.substring(1)));
+                variables.add(var);
+            }
+        }
+        if (variables.size() > 0)
+            return variables;
+        return null;
+    }
+
+    public static void addFormHeader(List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans) {
+        addHeader(headerBeans, "application/x-www-form-urlencoded");
+    }
+
+    public static void addHeader(List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans, String contentType) {
+        for (PostmanModel.ItemBean.RequestBean.HeaderBean headerBean : headerBeans) {
+            if (headerBean.getKey().equalsIgnoreCase("Content-Type")) {
+                headerBean.setKey("Content-Type");
+                headerBean.setValue(contentType);
+                headerBean.setType("text");
+                return;
+            }
+        }
+        PostmanModel.ItemBean.RequestBean.HeaderBean headerBean = new PostmanModel.ItemBean.RequestBean.HeaderBean();
+        headerBean.setKey("Content-Type");
+        headerBean.setValue(contentType);
+        headerBean.setType("text");
+        headerBeans.add(headerBean);
+    }
+
+    public static void addRestHeader(List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans) {
+        addHeader(headerBeans, "application/json");
+    }
+
+    public static void addMultipartHeader(List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans) {
+        addHeader(headerBeans, "multipart/form-data");
+    }
+
+    public static List<PostmanModel.ItemBean.RequestBean.HeaderBean> removeDuplicate
+            (List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans) {
+        if (headerBeans != null && headerBeans.size() > 1) {
+            headerBeans = headerBeans.stream().distinct().collect(Collectors.toList());
+        }
+        return headerBeans;
+    }
+
+    public static PsiElement findModifierInList(@NotNull PsiModifierList modifierList, String modifier) {
+        PsiElement[] children = modifierList.getChildren();
+        for (PsiElement child : children) {
+            if (child.getText().contains(modifier)) return child;
+        }
+        return null;
+    }
+
+    /**
+     * 获取 注解里面的 desc 比如 RequestParam("页数") int page
+     *
+     * @param annotationName
+     * @param attributeName
+     * @param psiParameter
+     * @return
+     */
+    private static String getAnnotationName(String annotationName, String attributeName, PsiParameter psiParameter) {
+        PsiAnnotation annotations[] = psiParameter.getAnnotations();
+        if (annotations != null && annotations.length > 0) {
+            for (PsiAnnotation an : annotations) {
+                if (an.getQualifiedName().contains(annotationName)) {
+                    for (JvmAnnotationAttribute valuePair : an.getAttributes()) {
+                        if (valuePair instanceof PsiNameValuePair) {
+                            PsiNameValuePair valuePair1 = (PsiNameValuePair) valuePair;
+                            if (valuePair1.getAttributeName().equalsIgnoreCase(attributeName)) {
+                                return valuePair1.getLiteralValue();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return psiParameter.getName();
     }
 }
 
