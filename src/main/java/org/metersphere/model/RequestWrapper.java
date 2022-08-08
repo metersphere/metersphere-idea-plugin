@@ -1,5 +1,6 @@
 package org.metersphere.model;
 
+import com.alibaba.fastjson.JSONObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -45,7 +46,7 @@ public class RequestWrapper {
         this.returnStr = method.getReturnType().getCanonicalText();
         this.methodName = method.getName();
         this.requestFieldList = resolveRequestFieldList(method);
-        this.response = new FieldWrapper(method.getReturnType().getPresentableText(), method.getReturnType(), null);
+        this.response = new FieldWrapper(method, method.getReturnType(), null);
         this.paramStr = thisMethod.getParameterList().getText();
         this.returnStr = thisMethod.getReturnType().getCanonicalText();
     }
@@ -54,7 +55,7 @@ public class RequestWrapper {
         List<FieldWrapper> fieldWrappers = new LinkedList<>();
         PsiParameter[] parameters = method.getParameterList().getParameters();
         for (PsiParameter parameter : parameters) {
-            fieldWrappers.add(new FieldWrapper(parameter.getName(), parameter.getType(), null));
+            fieldWrappers.add(new FieldWrapper(parameter, null));
         }
         return fieldWrappers;
     }
@@ -65,6 +66,8 @@ public class RequestWrapper {
 
         PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
         itemBean.setName(FieldUtil.getJavaDocName(thisMethod, appSettingState));
+        appSettingState.setWithBasePath(true);
+        appSettingState.setWithJsonSchema(true);
         PostmanModel.ItemBean.RequestBean requestBean = new PostmanModel.ItemBean.RequestBean();
         itemBean.setRequest(requestBean);
         Optional<PsiAnnotation> mappingOp = FieldUtil.findMappingAnn(thisMethod, PsiAnnotation.class);
@@ -162,7 +165,9 @@ public class RequestWrapper {
                 }
             }
         }
+
         requestBean.setBody(bodyBean);
+        itemBean.setResponse(getResponseBean(itemBean));
         return itemBean;
     }
 
@@ -173,8 +178,60 @@ public class RequestWrapper {
                 .findFirst();
     }
 
+    private List<PostmanModel.ItemBean.ResponseBean> getResponseBean(PostmanModel.ItemBean itemBean) {
+        PostmanModel.ItemBean.ResponseBean responseBean = new PostmanModel.ItemBean.ResponseBean();
+        responseBean.setName(itemBean.getName() + "-Example");
+        responseBean.setStatus("OK");
+        responseBean.setCode(200);
+        responseBean.setHeader(getResponseHeader(itemBean));
+        responseBean.set_postman_previewlanguage("json");
+        responseBean.setOriginalRequest(JSONObject.parseObject(JSONObject.toJSONString(itemBean.getRequest()), PostmanModel.ItemBean.ResponseBean.OriginalRequestBean.class));
+
+        responseBean.setBody(JsonUtil.buildJson5(this.response));
+        if (this.appSettingState.isWithJsonSchema()) {
+            responseBean.setJsonSchema(JsonUtil.buildJsonSchema(this.response));
+        }
+        return new ArrayList<>() {{
+            add(responseBean);
+        }};
+    }
+
     @Override
     public String toString() {
         return ReflectionToStringBuilder.toString(this);
+    }
+
+    private List<PostmanModel.ItemBean.ResponseBean.HeaderBeanXX> getResponseHeader(PostmanModel.ItemBean itemBean) {
+        List<PostmanModel.ItemBean.ResponseBean.HeaderBeanXX> headers = new ArrayList<>();
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h1 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h1.setKey("date");
+        h1.setName("date");
+        h1.setValue("Thu, 02 Dec 2021 06:26:59 GMT");
+        h1.setDescription("The date and time that the message was sent");
+        headers.add(h1);
+
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h2 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h2.setKey("server");
+        h2.setName("server");
+        h2.setValue("Apache-Coyote/1.1");
+        h2.setDescription("A name for the server");
+        headers.add(h2);
+
+        PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h3 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+        h3.setKey("transfer-encoding");
+        h3.setName("transfer-encoding");
+        h3.setValue("chunked");
+        h3.setDescription("The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity.");
+        headers.add(h3);
+
+
+        if (itemBean.getRequest().getHeader() != null && itemBean.getRequest().getHeader().stream().filter(s -> s.getKey().equalsIgnoreCase("Content-Type")).count() > 0) {
+            PostmanModel.ItemBean.ResponseBean.HeaderBeanXX h4 = new PostmanModel.ItemBean.ResponseBean.HeaderBeanXX();
+            h4.setKey("content-type");
+            h4.setName("content-type");
+            h4.setValue(itemBean.getRequest().getHeader().stream().filter(s -> s.getKey().equalsIgnoreCase("Content-Type")).findFirst().orElse(new PostmanModel.ItemBean.RequestBean.HeaderBean()).getValue());
+            headers.add(h4);
+        }
+        return headers;
     }
 }

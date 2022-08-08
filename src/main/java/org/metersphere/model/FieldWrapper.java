@@ -32,7 +32,7 @@ public class FieldWrapper {
     private boolean required;
     //psi类型
     private PsiType psiType;
-    //参数本身类型 object array 泛型
+    //参数本身类型 object array 普通枚举类型
     private JavaTypeEnum type;
     //该参数的父类
     private FieldWrapper parent;
@@ -54,22 +54,50 @@ public class FieldWrapper {
 
     }
 
-    public FieldWrapper(String name, PsiType type, FieldWrapper parent) {
-        this.name = name;
-        this.annotations = Arrays.asList(type.getAnnotations());
-        this.psiType = type;
-        if (FieldUtil.isNormalType(type)) {
+    public FieldWrapper(PsiParameter parameter, FieldWrapper parent) {
+        this.name = parameter.getName();
+        this.annotations = Arrays.asList(parameter.getAnnotations());
+        this.psiType = parameter.getType();
+        if (FieldUtil.isNormalType(this.psiType)) {
             this.type = JavaTypeEnum.ENUM;
-        } else if (FieldUtil.isIterableType(type)) {
+        } else if (FieldUtil.isIterableType(this.psiType)) {
             this.type = JavaTypeEnum.ARRAY;
         } else {
             this.type = JavaTypeEnum.OBJECT;
         }
-        this.project = type.getResolveScope().getProject();
+        this.project = this.psiType.getResolveScope().getProject();
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
-        this.genericTypeMap = resolveGenerics(type);
+        this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
-        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(type), appSettingState);
+        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
+        resolveChildren();
+    }
+
+    public FieldWrapper(PsiMethod method, PsiType type, FieldWrapper parent) {
+        this(type, parent);
+        this.name = method.getName();
+        this.annotations = Arrays.asList(method.getAnnotations());
+    }
+
+    public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent) {
+        this(type, parent);
+        this.name = fieldName;
+    }
+
+    public FieldWrapper(PsiType type, FieldWrapper parent) {
+        this.psiType = type;
+        if (FieldUtil.isNormalType(this.psiType)) {
+            this.type = JavaTypeEnum.ENUM;
+        } else if (FieldUtil.isIterableType(this.psiType)) {
+            this.type = JavaTypeEnum.ARRAY;
+        } else {
+            this.type = JavaTypeEnum.OBJECT;
+        }
+        this.project = this.psiType.getResolveScope().getProject();
+        this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
+        this.genericTypeMap = resolveGenerics(this.psiType);
+        this.parent = parent;
+        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
         resolveChildren();
     }
 
@@ -130,7 +158,7 @@ public class FieldWrapper {
             if (FieldUtil.isNormalType(componentType.getPresentableText()) || FieldUtil.isMapType(componentType)) {
                 return;
             }
-            FieldWrapper fieldInfo = new FieldWrapper(componentType.getPresentableText(), componentType, this);
+            FieldWrapper fieldInfo = new FieldWrapper(componentType, this);
             children = fieldInfo.children;
             return;
         }
@@ -143,7 +171,7 @@ public class FieldWrapper {
                 }
                 //兼容泛型
                 PsiType realType = resolveGeneric(iterableType);
-                FieldWrapper fieldInfo = new FieldWrapper(realType.getPresentableText(), realType, this);
+                FieldWrapper fieldInfo = new FieldWrapper(realType, this);
                 children = fieldInfo.children;
                 return;
             }
@@ -166,8 +194,7 @@ public class FieldWrapper {
                             .getPsi().getViewProvider().getVirtualFile().toString()
                             .replace(".jar!", "-sources.jar!");
                     sourcePath = sourcePath.substring(0, sourcePath.length() - 5) + "java";
-                    VirtualFile virtualFile =
-                            VirtualFileManager.getInstance().findFileByUrl(sourcePath);
+                    VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(sourcePath);
                     if (virtualFile != null) {
                         FileViewProvider fileViewProvider = new SingleRootFileViewProvider(PsiManager.getInstance(project), virtualFile);
                         PsiFile psiFile1 = new PsiJavaFileImpl(fileViewProvider);
@@ -195,8 +222,8 @@ public class FieldWrapper {
     }
 
     @Override
-    public String toString(){
-        return "FieldWrapper [name=" + name +", parent=" + Optional.ofNullable(parent).orElse(new FieldWrapper()).getName() + "]";
+    public String toString() {
+        return "FieldWrapper [name=" + name + ", parent=" + Optional.ofNullable(parent).orElse(new FieldWrapper()).getName() + "]";
     }
 
 }

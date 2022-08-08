@@ -18,12 +18,12 @@ public class V2Exporter implements IExporter {
 
     @Override
     public boolean export(List<PsiJavaFile> files) throws IOException {
-        List<PostmanModel> postmanModels = transform(files, true, false, appSettingService.getState());
+        List<PostmanModel> postmanModels = transform(files, appSettingService.getState());
 
         return false;
     }
 
-    public List<PostmanModel> transform(List<PsiJavaFile> files, boolean withBasePath, boolean withJsonSchema, AppSettingState state) {
+    public List<PostmanModel> transform(List<PsiJavaFile> files, AppSettingState state) {
         List<PostmanModel> models = new LinkedList<>();
         files.forEach(f -> {
             logger.info(f.getText() + "...........");

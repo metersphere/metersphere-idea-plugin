@@ -1,12 +1,16 @@
 package org.metersphere.utils;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
+import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
+import org.metersphere.constants.PluginConstants;
 import org.metersphere.model.FieldWrapper;
 
 import java.lang.reflect.Modifier;
@@ -15,6 +19,7 @@ import java.util.*;
 public class JsonUtil {
 
     private static final Gson gson = new GsonBuilder().excludeFieldsWithModifiers(Modifier.STATIC, Modifier.FINAL).setPrettyPrinting().create();
+    private static final AppSettingService appSettingService = AppSettingService.getInstance();
 
     public static String buildPrettyJson(List<FieldWrapper> children) {
         return gson.toJson(getStringObjectMap(children));
@@ -136,13 +141,60 @@ public class JsonUtil {
     }
 
     public static String buildJsonSchema(FieldWrapper bodyField) {
+
+        JSONObject jsonSchema = new JSONObject();
+        JavaTypeEnum schemaType = bodyField.getType();
+        jsonSchema.put("type", schemaType == JavaTypeEnum.ARRAY ? "array" : "object");
+        jsonSchema.put("$id", "http://example.com/root.json");
+        jsonSchema.put("title", "The Root Schema");
+        jsonSchema.put("hidden", true);
+        jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
+        JSONObject properties = new JSONObject();
+        JSONArray items = new JSONArray();
+        String basePath = "#/properties";
+        String baseItemsPath = "#/items";
+
         if (JavaTypeEnum.ENUM.equals(bodyField.getType())) {
-            return FieldUtil.getValue(bodyField).toString();
+            properties.put(bodyField.getName(), createProperty(bodyField, null, basePath));
+            jsonSchema.put("properties", properties);
         }
-        Map<String, Object> stringObjectMap = getStringObjectMap(bodyField.getChildren());
         if (JavaTypeEnum.ARRAY.equals(bodyField.getType())) {
-            return gson.toJson(Collections.singletonList(stringObjectMap));
+            FieldWrapper realField = bodyField.getChildren().get(0);
+            jsonSchema.put("items", createProperty(realField, items, baseItemsPath));
         }
-        return gson.toJson(stringObjectMap);
+
+        if (JavaTypeEnum.OBJECT.equals(bodyField.getType())) {
+            for (FieldWrapper fieldWrapper : bodyField.getChildren()) {
+                properties.put(fieldWrapper.getName(), createProperty(fieldWrapper, null, basePath));
+            }
+            jsonSchema.put("properties", properties);
+        }
+        return gson.toJson(jsonSchema);
+    }
+
+    private static JSONObject createProperty(FieldWrapper fieldWrapper, JSONArray items, String basePath) {
+        JSONObject pro = new JSONObject();
+        pro.put("type", items == null ? PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getPresentableText()) : "array");
+        if (StringUtils.isNotBlank(fieldWrapper.getDesc()) && !PluginConstants.simpleJavaType.contains(fieldWrapper.getPsiType().getPresentableText()) && !StringUtils.equalsIgnoreCase(fieldWrapper.getDesc(), fieldWrapper.getPsiType().getPresentableText())) {
+            pro.put("description", fieldWrapper.getDesc());
+        }
+        if (items != null) {
+            if (JavaTypeEnum.ARRAY == fieldWrapper.getType()) {
+                items.add(createProperty(fieldWrapper.getChildren().get(0), new JSONArray(), basePath + "/" + fieldWrapper.getName()));
+            }
+            pro.put("items", items);
+        }
+        pro.put("title", "The " + fieldWrapper.getName() + " Schema");
+        pro.put("$id", basePath + "/" + fieldWrapper.getName());
+        pro.put("hidden", true);
+
+        setMockObj(pro);
+        return pro;
+    }
+
+    private static void setMockObj(JSONObject pro) {
+        JSONObject mock = new JSONObject();
+        mock.put("mock", "");
+        pro.put("mock", mock);
     }
 }
