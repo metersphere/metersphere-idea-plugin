@@ -31,9 +31,9 @@ public class ExporterFactory {
         if (element == null)
             Messages.showInfoMessage("no valid psi element found!", PluginConstants.MessageTitle.Info.name());
 
-//        if (!MSApiUtil.test(appSettingService.getState())) {
-//            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
-//        }
+        if (!MSApiUtil.test(appSettingService.getState())) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
+        }
         List<PsiJavaFile> files = new LinkedList<>();
         PostmanExporter.getFile(element, files);
         files = files.stream().filter(f ->

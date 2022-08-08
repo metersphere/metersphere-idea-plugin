@@ -140,41 +140,51 @@ public class JsonUtil {
         }
     }
 
-    public static String buildJsonSchema(FieldWrapper bodyField) {
-
-        JSONObject jsonSchema = new JSONObject();
-        JavaTypeEnum schemaType = bodyField.getType();
-        jsonSchema.put("type", schemaType == JavaTypeEnum.ARRAY ? "array" : "object");
-        jsonSchema.put("$id", "http://example.com/root.json");
-        jsonSchema.put("title", "The Root Schema");
-        jsonSchema.put("hidden", true);
-        jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
-        JSONObject properties = new JSONObject();
-        JSONArray items = new JSONArray();
-        String basePath = "#/properties";
-        String baseItemsPath = "#/items";
+    public static void buildJsonSchema(FieldWrapper bodyField, JSONObject properties, JSONArray items, String basePath, String baseItemsPath) {
 
         if (JavaTypeEnum.ENUM.equals(bodyField.getType())) {
             properties.put(bodyField.getName(), createProperty(bodyField, null, basePath));
-            jsonSchema.put("properties", properties);
         }
         if (JavaTypeEnum.ARRAY.equals(bodyField.getType())) {
             FieldWrapper realField = bodyField.getChildren().get(0);
-            jsonSchema.put("items", createProperty(realField, items, baseItemsPath));
+            items.add(createProperty(realField, null, baseItemsPath));
         }
 
         if (JavaTypeEnum.OBJECT.equals(bodyField.getType())) {
+            JSONObject proObj = createProperty(bodyField, null, basePath);
+            properties.put(bodyField.getName(), proObj);
+            JSONObject subProperties = new JSONObject();
+            proObj.put("properties", subProperties);
+
             for (FieldWrapper fieldWrapper : bodyField.getChildren()) {
-                properties.put(fieldWrapper.getName(), createProperty(fieldWrapper, null, basePath));
+                switch (fieldWrapper.getType()) {
+                    case ENUM:
+                    case OBJECT:
+                        JSONObject pro = createProperty(fieldWrapper, null, basePath + "/#/properties/" + fieldWrapper.getName());
+                        subProperties.put(fieldWrapper.getName(), pro);
+                        if (CollectionUtils.isNotEmpty(fieldWrapper.getChildren())) {
+                            for (FieldWrapper child : fieldWrapper.getChildren()) {
+                                buildJsonSchema(child, pro, null, basePath + "/#/properties/" + child.getName(), baseItemsPath);
+                            }
+                        }
+                        break;
+                    case ARRAY:
+                        FieldWrapper innerField = fieldWrapper.getChildren().get(0);
+//
+//                        JSONObject pro = createProperty(fieldWrapper, null, basePath);
+//
+//                        JSONArray subItems = new JSONArray();
+//                        createProperty(bodyField, subItems, basePath + "/#/items");
+//                        buildJsonSchema(fieldWrapper, subProperties, items, basePath, baseItemsPath);
+                        break;
+                }
             }
-            jsonSchema.put("properties", properties);
         }
-        return gson.toJson(jsonSchema);
     }
 
     private static JSONObject createProperty(FieldWrapper fieldWrapper, JSONArray items, String basePath) {
         JSONObject pro = new JSONObject();
-        pro.put("type", items == null ? PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getPresentableText()) : "array");
+        pro.put("type", items == null ? PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getPresentableText()) == null ? "object" : "array" : "array");
         if (StringUtils.isNotBlank(fieldWrapper.getDesc()) && !PluginConstants.simpleJavaType.contains(fieldWrapper.getPsiType().getPresentableText()) && !StringUtils.equalsIgnoreCase(fieldWrapper.getDesc(), fieldWrapper.getPsiType().getPresentableText())) {
             pro.put("description", fieldWrapper.getDesc());
         }

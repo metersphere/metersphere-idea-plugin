@@ -1,5 +1,6 @@
 package org.metersphere.model;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.*;
@@ -9,6 +10,7 @@ import lombok.Data;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
+import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.constants.WebAnnotation;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.FieldUtil;
@@ -161,7 +163,24 @@ public class RequestWrapper {
             if (bodyFieldOp.isPresent()) {
                 bodyBean.setRaw(JsonUtil.buildJson5(bodyFieldOp.get()));
                 if (appSettingState.isWithJsonSchema()) {
-                    bodyBean.setJsonSchema(JsonUtil.buildJsonSchema(bodyFieldOp.get()));
+                    JSONObject jsonSchema = new JSONObject();
+                    JavaTypeEnum schemaType = bodyFieldOp.get().getType();
+                    jsonSchema.put("type", schemaType == JavaTypeEnum.ARRAY ? "array" : "object");
+                    jsonSchema.put("$id", "http://example.com/root.json");
+                    jsonSchema.put("title", "The Root Schema");
+                    jsonSchema.put("hidden", true);
+                    jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
+                    JSONObject properties = new JSONObject();
+                    JSONArray items = new JSONArray();
+                    String bPath = "#/properties";
+                    String baseItemsPath = "#/items";
+                    if (schemaType == JavaTypeEnum.ARRAY) {
+                        jsonSchema.put("items", items);
+                    } else {
+                        jsonSchema.put("properties", properties);
+                    }
+                    JsonUtil.buildJsonSchema(bodyFieldOp.get(), properties, items, bPath, baseItemsPath);
+                    bodyBean.setJsonSchema(jsonSchema.toJSONString());
                 }
             }
         }
@@ -189,7 +208,19 @@ public class RequestWrapper {
 
         responseBean.setBody(JsonUtil.buildJson5(this.response));
         if (this.appSettingState.isWithJsonSchema()) {
-            responseBean.setJsonSchema(JsonUtil.buildJsonSchema(this.response));
+            JSONObject jsonSchema = new JSONObject();
+            JavaTypeEnum schemaType = this.response.getType();
+            jsonSchema.put("type", schemaType == JavaTypeEnum.ARRAY ? "array" : "object");
+            jsonSchema.put("$id", "http://example.com/root.json");
+            jsonSchema.put("title", "The Root Schema");
+            jsonSchema.put("hidden", true);
+            jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
+            JSONObject properties = new JSONObject();
+            JSONArray items = new JSONArray();
+            String basePath = "#/properties";
+            String baseItemsPath = "#/items";
+            JsonUtil.buildJsonSchema(this.response, properties, items, basePath, baseItemsPath);
+            responseBean.setJsonSchema(jsonSchema.toJSONString());
         }
         return new ArrayList<>() {{
             add(responseBean);
