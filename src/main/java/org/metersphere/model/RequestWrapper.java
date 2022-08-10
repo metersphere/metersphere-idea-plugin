@@ -48,7 +48,7 @@ public class RequestWrapper {
         this.returnStr = method.getReturnType().getCanonicalText();
         this.methodName = method.getName();
         this.requestFieldList = resolveRequestFieldList(method);
-        this.response = new FieldWrapper(method, method.getReturnType(), null);
+        this.response = new FieldWrapper("directRoot", method.getReturnType(), null, 0);
         this.paramStr = thisMethod.getParameterList().getText();
         this.returnStr = thisMethod.getReturnType().getCanonicalText();
     }
@@ -57,7 +57,7 @@ public class RequestWrapper {
         List<FieldWrapper> fieldWrappers = new LinkedList<>();
         PsiParameter[] parameters = method.getParameterList().getParameters();
         for (PsiParameter parameter : parameters) {
-            fieldWrappers.add(new FieldWrapper(parameter, null));
+            fieldWrappers.add(new FieldWrapper(parameter, null, 0));
         }
         return fieldWrappers;
     }
@@ -68,11 +68,12 @@ public class RequestWrapper {
 
         PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
         itemBean.setName(FieldUtil.getJavaDocName(thisMethod, appSettingState));
-        appSettingState.setWithBasePath(true);
-        appSettingState.setWithJsonSchema(true);
         PostmanModel.ItemBean.RequestBean requestBean = new PostmanModel.ItemBean.RequestBean();
         itemBean.setRequest(requestBean);
         Optional<PsiAnnotation> mappingOp = FieldUtil.findMappingAnn(thisMethod, PsiAnnotation.class);
+        if(!mappingOp.isPresent()){
+            return null;
+        }
         requestBean.setMethod(FieldUtil.getMethod(mappingOp.get()));
         PsiModifierList controllerModi = PsiTreeUtil.findChildOfType(controllerClass, PsiModifierList.class);
         List<PsiAnnotation> annotations = PsiTreeUtil.findChildrenOfType(controllerModi, PsiAnnotation.class).stream().filter(a -> a.getQualifiedName().contains("RequestMapping")).collect(Collectors.toList());
@@ -161,7 +162,7 @@ public class RequestWrapper {
             bodyBean.setMode("raw");
             Optional<FieldWrapper> bodyFieldOp = getRequestBodyParam(this.getRequestFieldList());
             if (bodyFieldOp.isPresent()) {
-                bodyBean.setRaw(JsonUtil.buildJson5(bodyFieldOp.get()));
+                bodyBean.setRaw(JsonUtil.buildJson5(bodyFieldOp.get(), 0));
                 if (appSettingState.isWithJsonSchema()) {
                     JSONObject jsonSchema = new JSONObject();
                     JavaTypeEnum schemaType = bodyFieldOp.get().getType();
@@ -206,7 +207,7 @@ public class RequestWrapper {
         responseBean.set_postman_previewlanguage("json");
         responseBean.setOriginalRequest(JSONObject.parseObject(JSONObject.toJSONString(itemBean.getRequest()), PostmanModel.ItemBean.ResponseBean.OriginalRequestBean.class));
 
-        responseBean.setBody(JsonUtil.buildJson5(this.response));
+        responseBean.setBody(JsonUtil.buildJson5(this.response, 0));
         if (this.appSettingState.isWithJsonSchema()) {
             JSONObject jsonSchema = new JSONObject();
             JavaTypeEnum schemaType = this.response.getType();
@@ -219,6 +220,11 @@ public class RequestWrapper {
             JSONArray items = new JSONArray();
             String basePath = "#/properties";
             String baseItemsPath = "#/items";
+            if (schemaType == JavaTypeEnum.ARRAY) {
+                jsonSchema.put("items", items);
+            } else {
+                jsonSchema.put("properties", properties);
+            }
             JsonUtil.buildJsonSchema(this.response, properties, items, basePath, baseItemsPath);
             responseBean.setJsonSchema(jsonSchema.toJSONString());
         }

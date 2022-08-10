@@ -472,5 +472,24 @@ public class FieldUtil {
         }
         return psiParameter.getName();
     }
+
+    /**
+     * 是否是链表结构
+     *
+     * @return
+     */
+    public static boolean isSelfReference(PsiType selfType) {
+        PsiClass psiClass = PsiUtil.resolveClassInType(selfType);
+        if (psiClass == null) {
+            return false;
+        }
+        PsiField[] fields = psiClass.getFields();
+        for (PsiField field : fields) {
+            if (field.getType() == selfType) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 

@@ -21,7 +21,7 @@ public class ExporterFactory {
     private static AppSettingService appSettingService = AppSettingService.getInstance();
     private static Map<String, IExporter> exporterMap = new HashMap<>() {{
         put(PluginConstants.EXPORTER_POSTMAN, new PostmanExporter());
-        put(PluginConstants.EXPORTER_MS, new V2Exporter());
+        put(PluginConstants.EXPORTER_MS, new MeterSphereExporter());
     }};
 
     public static boolean export(String source, AnActionEvent event) throws IOException {

@@ -1,15 +1,7 @@
 package org.metersphere.model;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.compiled.ClsClassImpl;
-import com.intellij.psi.impl.java.stubs.impl.PsiJavaFileStubImpl;
-import com.intellij.psi.impl.source.PsiJavaFileImpl;
-import com.intellij.psi.stubs.StubElement;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.metersphere.AppSettingService;
@@ -39,8 +31,6 @@ public class FieldWrapper {
     //该参数的子类
     private List<FieldWrapper> children = new LinkedList<>();
 
-    private Project project;
-
     //泛型名称与实际类型对应关系
     private Map<PsiTypeParameter, PsiType> genericTypeMap;
 
@@ -50,11 +40,14 @@ public class FieldWrapper {
     //字段注释
     private String desc;
 
+    //记录一个属性被解析的次数 防止链表无限解析
+    public static ThreadLocal<Map<String, Integer>> fieldResolveCountMap = new ThreadLocal<>();
+
     public FieldWrapper() {
 
     }
 
-    public FieldWrapper(PsiParameter parameter, FieldWrapper parent) {
+    public FieldWrapper(PsiParameter parameter, FieldWrapper parent, int curDeepth) {
         this.name = parameter.getName();
         this.annotations = Arrays.asList(parameter.getAnnotations());
         this.psiType = parameter.getType();
@@ -65,26 +58,25 @@ public class FieldWrapper {
         } else {
             this.type = JavaTypeEnum.OBJECT;
         }
-        this.project = this.psiType.getResolveScope().getProject();
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
         this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
-        resolveChildren();
+        resolveChildren(curDeepth + 1);
     }
 
-    public FieldWrapper(PsiMethod method, PsiType type, FieldWrapper parent) {
-        this(type, parent);
+    public FieldWrapper(PsiMethod method, PsiType type, FieldWrapper parent, int curDeepth) {
+        this(type, parent, curDeepth);
         this.name = method.getName();
         this.annotations = Arrays.asList(method.getAnnotations());
     }
 
-    public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent) {
-        this(type, parent);
+    public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent, int curDeepth) {
+        this(type, parent, curDeepth);
         this.name = fieldName;
     }
 
-    public FieldWrapper(PsiType type, FieldWrapper parent) {
+    public FieldWrapper(PsiType type, FieldWrapper parent, int curDeepth) {
         this.psiType = type;
         if (FieldUtil.isNormalType(this.psiType)) {
             this.type = JavaTypeEnum.ENUM;
@@ -93,12 +85,11 @@ public class FieldWrapper {
         } else {
             this.type = JavaTypeEnum.OBJECT;
         }
-        this.project = this.psiType.getResolveScope().getProject();
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
         this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
-        resolveChildren();
+        resolveChildren(curDeepth + 1);
     }
 
     /**
@@ -131,10 +122,21 @@ public class FieldWrapper {
         if (psiType instanceof PsiArrayType) {
             return new HashMap<>();
         }
+        if (fieldResolveCountMap.get() == null) {
+            fieldResolveCountMap.set(new HashMap<>());
+        }
+        fieldResolveCountMap.get().put(psiType.getPresentableText(), fieldResolveCountMap.get().get(psiType.getPresentableText()) == null ? 0 : fieldResolveCountMap.get().get(psiType.getPresentableText()) + 1);
+
         if (psiType instanceof PsiClassType) {
             PsiClassType psiClassType = (PsiClassType) psiType;
             PsiType[] realParameters = psiClassType.getParameters();
+            if (psiClassType.resolve() == null) {
+                return new HashMap<>();
+            }
             PsiTypeParameter[] formParameters = psiClassType.resolve().getTypeParameters();
+            if (fieldResolveCountMap.get().get(psiType.getPresentableText()) > 10 && realParameters.length > 0) {
+                return new HashMap<>();
+            }
             int i = 0;
             Map<PsiTypeParameter, PsiType> map = new HashMap<>();
             for (PsiType realParameter : realParameters) {
@@ -146,7 +148,10 @@ public class FieldWrapper {
         return new HashMap<>();
     }
 
-    public void resolveChildren() {
+    public void resolveChildren(int curDeepth) {
+        if (curDeepth > 1) {
+            return;
+        }
         PsiType psiType = this.psiType;
         if (FieldUtil.isNormalType(psiType.getPresentableText())) {
             //基础类或基础包装类没有子域
@@ -158,7 +163,7 @@ public class FieldWrapper {
             if (FieldUtil.isNormalType(componentType.getPresentableText()) || FieldUtil.isMapType(componentType)) {
                 return;
             }
-            FieldWrapper fieldInfo = new FieldWrapper(componentType, this);
+            FieldWrapper fieldInfo = new FieldWrapper(componentType, this, curDeepth + 1);
             children = fieldInfo.children;
             return;
         }
@@ -171,7 +176,7 @@ public class FieldWrapper {
                 }
                 //兼容泛型
                 PsiType realType = resolveGeneric(iterableType);
-                FieldWrapper fieldInfo = new FieldWrapper(realType, this);
+                FieldWrapper fieldInfo = new FieldWrapper("collection", realType, this, curDeepth + 1);
                 children = fieldInfo.children;
                 return;
             }
@@ -186,22 +191,6 @@ public class FieldWrapper {
             if (psiClass == null) {
                 return;
             }
-            //兼容第三方jar包
-            if (psiClass instanceof ClsClassImpl) {
-                StubElement parentStub = ((ClsClassImpl) psiClass).getStub().getParentStub();
-                if (parentStub instanceof PsiJavaFileStubImpl) {
-                    String sourcePath = ((PsiJavaFileStubImpl) parentStub)
-                            .getPsi().getViewProvider().getVirtualFile().toString()
-                            .replace(".jar!", "-sources.jar!");
-                    sourcePath = sourcePath.substring(0, sourcePath.length() - 5) + "java";
-                    VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(sourcePath);
-                    if (virtualFile != null) {
-                        FileViewProvider fileViewProvider = new SingleRootFileViewProvider(PsiManager.getInstance(project), virtualFile);
-                        PsiFile psiFile1 = new PsiJavaFileImpl(fileViewProvider);
-                        psiClass = PsiTreeUtil.findChildOfAnyType(psiFile1.getOriginalElement(), PsiClass.class);
-                    }
-                }
-            }
             for (PsiField psiField : psiClass.getAllFields()) {
                 if (ExcludeFieldConstants.skipJavaTypes.contains(psiField.getName().toLowerCase())) {
                     continue;
@@ -215,7 +204,7 @@ public class FieldWrapper {
                 PsiType fieldType = psiField.getType();
                 //兼容泛型
                 PsiType realFieldType = resolveGeneric(fieldType);
-                FieldWrapper fieldInfo = new FieldWrapper(psiField.getName(), realFieldType, this);
+                FieldWrapper fieldInfo = new FieldWrapper(psiField.getName(), realFieldType, this, curDeepth + 1);
                 children.add(fieldInfo);
             }
         }

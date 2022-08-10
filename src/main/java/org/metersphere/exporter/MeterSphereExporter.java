@@ -37,10 +37,14 @@ public class MeterSphereExporter implements IExporter {
     private Logger logger = Logger.getInstance(MeterSphereExporter.class);
     private final PostmanExporter postmanExporter = new PostmanExporter();
     private final AppSettingService appSettingService = AppSettingService.getInstance();
+    private final V2Exporter v2exporter = new V2Exporter();
 
     @Override
     public boolean export(List<PsiJavaFile> files) throws IOException {
-        List<PostmanModel> postmanModels = postmanExporter.transform(files, false, true, appSettingService.getState());
+        appSettingService.getState().setWithJsonSchema(true);
+        appSettingService.getState().setWithBasePath(false);
+
+        List<PostmanModel> postmanModels = v2exporter.transform(files, appSettingService.getState());
         if (postmanModels.size() == 0) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
         }
