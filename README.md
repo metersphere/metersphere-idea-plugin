@@ -35,6 +35,10 @@
 - 支持List、Set、Collection等数据结构，支持嵌套泛型解析
 - 支持@ResponseBody等常用注解的解析
 
+### 安装方式：
+- 直接在 idea -> Settings -> plugins -> Marketplace 搜索 MeterSphere 在线安装
+- [下载离线包](https://plugins.jetbrains.com/plugin/18097-metersphere/versions)  
+  idea -> Settings -> plugins -> 选择下载的插件 -> Install Plugin from Disk
 ### 用法：
 
 - 将光标定位到项目/包级目录或者打开类，鼠标右键单击"Export MeterSphere".
