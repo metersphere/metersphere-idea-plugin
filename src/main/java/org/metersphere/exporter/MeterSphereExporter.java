@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MeterSphereExporter implements IExporter {
     private Logger logger = Logger.getInstance(MeterSphereExporter.class);
@@ -40,7 +41,7 @@ public class MeterSphereExporter implements IExporter {
     private final V2Exporter v2exporter = new V2Exporter();
 
     @Override
-    public boolean export(List<PsiJavaFile> files) throws IOException {
+    public boolean export(List<PsiJavaFile> files) throws Throwable {
         appSettingService.getState().setWithJsonSchema(true);
         appSettingService.getState().setWithBasePath(false);
 
@@ -63,12 +64,10 @@ public class MeterSphereExporter implements IExporter {
         bufferedWriter.write(new Gson().toJson(jsonObject));
         bufferedWriter.flush();
         bufferedWriter.close();
-
-        boolean r = uploadToServer(temp);
-        if (r) {
-            ProgressUtil.show(("Export to MeterSphere success!"));
-        } else {
-            ProgressUtil.show(("Export to MeterSphere fail!"));
+        AtomicReference<Throwable> throwableAtomicReference = new AtomicReference<>();
+        boolean r = uploadToServer(temp, throwableAtomicReference);
+        if (!r) {
+            throw throwableAtomicReference.get();
         }
         if (temp.exists()) {
             temp.delete();
@@ -76,7 +75,7 @@ public class MeterSphereExporter implements IExporter {
         return r;
     }
 
-    private boolean uploadToServer(File file) {
+    private boolean uploadToServer(File file, AtomicReference<Throwable> throwableAtomicReference) {
         ProgressUtil.show((String.format("Start to sync to MeterSphere Server")));
         CloseableHttpClient httpclient = HttpFutureUtils.getOneHttpClient();
 
@@ -99,21 +98,25 @@ public class MeterSphereExporter implements IExporter {
             if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED) {
                 return true;
             } else {
+                throwableAtomicReference.set(new RuntimeException(response.getStatusLine().getReasonPhrase()));
                 return false;
             }
         } catch (Exception e) {
+            throwableAtomicReference.set(e);
             logger.error("上传至 MS 失败！", e);
         } finally {
             if (response != null) {
                 try {
                     response.close();
                 } catch (IOException e) {
+                    throwableAtomicReference.set(e);
                     logger.error("关闭 response 失败！", e);
                 }
             }
             try {
                 httpclient.close();
             } catch (IOException e) {
+                throwableAtomicReference.set(e);
                 logger.error("关闭 httpclient 失败！", e);
             }
         }

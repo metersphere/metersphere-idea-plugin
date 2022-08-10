@@ -26,11 +26,10 @@ public abstract class CommonAction extends AnAction {
         AtomicReference<Throwable> exception = new AtomicReference<>();
         ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
             try {
-                ApplicationManager.getApplication().runReadAction((ThrowableComputable<Boolean, Throwable>) () -> {
+                ApplicationManager.getApplication().runReadAction((ThrowableComputable<Void, Throwable>) () -> {
                     ProgressUtil.show(("begin exporting..."));
-                    if (!ExporterFactory.export(source, event))
-                        throw new RuntimeException("failed");
-                    return true;
+                    ExporterFactory.export(source, event);
+                    return null;
                 });
             } catch (Throwable throwable) {
                 exception.set(throwable);
@@ -47,8 +46,8 @@ public abstract class CommonAction extends AnAction {
     protected void exportDirectly(String source, AnActionEvent event) {
         try {
             ExporterFactory.export(source, event);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
     }
 

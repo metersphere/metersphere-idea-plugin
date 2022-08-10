@@ -2,7 +2,6 @@ package org.metersphere.exporter;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
@@ -10,7 +9,6 @@ import org.metersphere.AppSettingService;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.utils.MSApiUtil;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +22,7 @@ public class ExporterFactory {
         put(PluginConstants.EXPORTER_MS, new MeterSphereExporter());
     }};
 
-    public static boolean export(String source, AnActionEvent event) throws IOException {
+    public static boolean export(String source, AnActionEvent event) throws Throwable {
         PsiElement element = event.getData(CommonDataKeys.PSI_FILE);
         if (element == null)
             element = event.getData(CommonDataKeys.PSI_ELEMENT);

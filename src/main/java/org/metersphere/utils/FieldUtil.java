@@ -220,11 +220,11 @@ public class FieldUtil {
      * @param e1
      * @return
      */
-    public static String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state) {
+    public static String getJavaDocName(PsiDocCommentOwner e1, AppSettingState state, boolean useDefaultName) {
         if (e1 == null)
-            return "unknown module";
+            return "";
         String apiName = e1.getName();
-        if (!state.isJavadoc()) {
+        if (!state.isJavadoc() && useDefaultName) {
             return apiName;
         }
         Collection<PsiDocToken> tokens = PsiTreeUtil.findChildrenOfType(e1.getDocComment(), PsiDocToken.class);
@@ -241,6 +241,9 @@ public class FieldUtil {
             }
         }
 
+        if (!useDefaultName) {
+            return StringUtils.equalsIgnoreCase(apiName, e1.getName()) ? "" : apiName;
+        }
         return apiName;
     }
 

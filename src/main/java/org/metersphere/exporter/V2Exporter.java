@@ -49,7 +49,7 @@ public class V2Exporter implements IExporter {
                     return;
                 }
 
-                model.setName(FieldUtil.getJavaDocName(f.getClasses()[0], state));
+                model.setName(FieldUtil.getJavaDocName(f.getClasses()[0], state, true));
                 model.setDescription(model.getName());
                 List<PostmanModel.ItemBean> itemBeans = new LinkedList<>();
                 Collection<PsiMethod> methodCollection = PsiTreeUtil.findChildrenOfType(controllerClass, PsiMethod.class);

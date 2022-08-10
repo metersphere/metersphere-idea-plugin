@@ -67,11 +67,11 @@ public class RequestWrapper {
         String basePath = "";
 
         PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
-        itemBean.setName(FieldUtil.getJavaDocName(thisMethod, appSettingState));
+        itemBean.setName(FieldUtil.getJavaDocName(thisMethod, appSettingState, true));
         PostmanModel.ItemBean.RequestBean requestBean = new PostmanModel.ItemBean.RequestBean();
         itemBean.setRequest(requestBean);
         Optional<PsiAnnotation> mappingOp = FieldUtil.findMappingAnn(thisMethod, PsiAnnotation.class);
-        if(!mappingOp.isPresent()){
+        if (!mappingOp.isPresent()) {
             return null;
         }
         requestBean.setMethod(FieldUtil.getMethod(mappingOp.get()));

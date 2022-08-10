@@ -61,7 +61,7 @@ public class FieldWrapper {
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
-        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
+        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState, false);
         resolveChildren(curDeepth + 1);
     }
 
@@ -79,7 +79,7 @@ public class FieldWrapper {
     public FieldWrapper(PsiField field, PsiType type, FieldWrapper parent, int curDeepth) {
         this(type, parent, curDeepth);
         this.name = field.getName();
-        this.desc = FieldUtil.getJavaDocName(field, appSettingState);
+        this.desc = FieldUtil.getJavaDocName(field, appSettingState, false);
     }
 
     public FieldWrapper(PsiType type, FieldWrapper parent, int curDeepth) {
@@ -94,7 +94,7 @@ public class FieldWrapper {
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
-        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState);
+        this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState, false);
         resolveChildren(curDeepth + 1);
     }
 
