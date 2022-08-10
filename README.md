@@ -37,8 +37,8 @@
 
 ### 安装方式：
 - 直接在 idea -> Settings -> plugins -> Marketplace 搜索 MeterSphere 在线安装
-- 下载离线包 https://plugins.jetbrains.com/plugin/18097-metersphere/versions  
-  idea -> Settings -> plugins -> Install Plugin from Disk
+- [下载离线包](https://plugins.jetbrains.com/plugin/18097-metersphere/versions)  
+  idea -> Settings -> plugins -> 选择下载的插件 -> Install Plugin from Disk
 ### 用法：
 
 - 将光标定位到项目/包级目录或者打开类，鼠标右键单击"Export MeterSphere".
