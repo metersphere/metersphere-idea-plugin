@@ -76,6 +76,12 @@ public class FieldWrapper {
         this.name = fieldName;
     }
 
+    public FieldWrapper(PsiField field, PsiType type, FieldWrapper parent, int curDeepth) {
+        this(type, parent, curDeepth);
+        this.name = field.getName();
+        this.desc = FieldUtil.getJavaDocName(field, appSettingState);
+    }
+
     public FieldWrapper(PsiType type, FieldWrapper parent, int curDeepth) {
         this.psiType = type;
         if (FieldUtil.isNormalType(this.psiType)) {
@@ -204,12 +210,17 @@ public class FieldWrapper {
                 PsiType fieldType = psiField.getType();
                 //兼容泛型
                 PsiType realFieldType = resolveGeneric(fieldType);
-                FieldWrapper fieldInfo = new FieldWrapper(psiField.getName(), realFieldType, this, curDeepth + 1);
+                FieldWrapper fieldInfo = new FieldWrapper(psiField, realFieldType, this, curDeepth + 1);
                 children.add(fieldInfo);
             }
         }
     }
 
+    /**
+     * 重写toString 防止stackoverflow
+     *
+     * @return
+     */
     @Override
     public String toString() {
         return "FieldWrapper [name=" + name + ", parent=" + Optional.ofNullable(parent).orElse(new FieldWrapper()).getName() + "]";
