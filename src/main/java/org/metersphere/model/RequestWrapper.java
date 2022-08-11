@@ -180,7 +180,7 @@ public class RequestWrapper {
                     } else {
                         jsonSchema.put("properties", properties);
                     }
-                    JsonUtil.buildJsonSchema(bodyFieldOp.get(), properties, items, bPath, baseItemsPath);
+                    JsonUtil.buildJsonSchema(bodyFieldOp.get(), properties, items, bPath, baseItemsPath, 0);
                     bodyBean.setJsonSchema(jsonSchema.toJSONString());
                 }
             }
@@ -225,7 +225,7 @@ public class RequestWrapper {
             } else {
                 jsonSchema.put("properties", properties);
             }
-            JsonUtil.buildJsonSchema(this.response, properties, items, basePath, baseItemsPath);
+            JsonUtil.buildJsonSchema(this.response, properties, items, basePath, baseItemsPath, 0);
             responseBean.setJsonSchema(jsonSchema.toJSONString());
         }
         return new ArrayList<>() {{

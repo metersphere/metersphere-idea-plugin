@@ -78,7 +78,7 @@ public class JsonUtil {
         for (FieldWrapper fieldInfo : children) {
             descList.add(buildDesc(fieldInfo));
             if (!JavaTypeEnum.ENUM.equals(fieldInfo.getType())) {
-                if (curDeepth <= state.getDeepth()) {
+                if (curDeepth <= state.getDeepth() + 2) {
                     descList.addAll(buildFieldDescList(fieldInfo.getChildren(), curDeepth + 1));
                 }
             }
@@ -97,7 +97,7 @@ public class JsonUtil {
             }
             descList.add(buildDesc(fieldInfo));
         } else {
-            if (curDeepth <= state.getDeepth()) {
+            if (curDeepth <= state.getDeepth() + 2) {
                 descList.addAll(buildFieldDescList(fieldInfo.getChildren(), curDeepth + 1));
             }
         }
@@ -120,7 +120,7 @@ public class JsonUtil {
         if (fieldInfos == null) {
             return map;
         }
-        if (curDeepth <= state.getDeepth()) {
+        if (curDeepth < state.getDeepth() + 3) {
             for (FieldWrapper fieldInfo : fieldInfos) {
                 buildJsonValue(map, fieldInfo, curDeepth + 1);
             }
@@ -154,8 +154,21 @@ public class JsonUtil {
         }
     }
 
-    public static void buildJsonSchema(FieldWrapper bodyField, JSONObject properties, JSONArray items, String basePath, String baseItemsPath) {
+    /**
+     * 构建 jsonschema
+     *
+     * @param bodyField     当前解析的字段
+     * @param properties    jsonschema 的 properties 字段
+     * @param items         jsonschema 的 items 字段
+     * @param basePath      properties 的路径
+     * @param baseItemsPath items 的路径
+     * @param curDeepth     对象当前解析深度
+     */
+    public static void buildJsonSchema(FieldWrapper bodyField, JSONObject properties, JSONArray items, String basePath, String baseItemsPath, int curDeepth) {
 
+        if (curDeepth > state.getDeepth()) {
+            return;
+        }
         if (JavaTypeEnum.ENUM.equals(bodyField.getType())) {
             properties.put(bodyField.getName(), createProperty(bodyField, null, basePath));
         }
@@ -190,8 +203,12 @@ public class JsonUtil {
                             subProperties.put(fieldWrapper.getName(), schemaObject);
                             JSONArray proItems = new JSONArray();
                             if (CollectionUtils.isNotEmpty(fieldWrapper.getChildren())) {
+                                JSONObject grandSonPropertis = new JSONObject();
+                                schemaObject.put("properties", grandSonPropertis);
+                                basePath = root ? basePath + "/" + fieldWrapper.getName() : basePath + "/#/properties/" + bodyField.getName() + "/#/properties/" + fieldWrapper.getName();
+                                baseItemsPath = root ? baseItemsPath + "/" + fieldWrapper.getName() : basePath + "/#/items/" + bodyField.getName() + "/#/items/" + fieldWrapper.getName();
                                 for (FieldWrapper child : fieldWrapper.getChildren()) {
-                                    buildJsonSchema(child, schemaObject, proItems, basePath + "/#/properties/" + child.getName(), baseItemsPath);
+                                    buildJsonSchema(child, grandSonPropertis, proItems, basePath + bodyField.getName() + "/#/properties/" + child.getName(), baseItemsPath, curDeepth + 2);
                                 }
                             }
                             break;
@@ -203,9 +220,10 @@ public class JsonUtil {
                                 subItemPath = fieldWrapper.getName() + "/" + baseItemsPath;
                             }
 
+                            JSONObject schemaArrayObj = createProperty(fieldWrapper, null, subBasePath);
+                            subProperties.put(fieldWrapper.getName(), schemaArrayObj);
+
                             if (CollectionUtils.isNotEmpty(fieldWrapper.getChildren())) {
-                                JSONObject schemaArrayObj = createProperty(fieldWrapper, null, subBasePath);
-                                subProperties.put(fieldWrapper.getName(), schemaArrayObj);
                                 FieldWrapper innerField = fieldWrapper.getChildren().get(0);
                                 JSONObject arrayObj = createProperty("object", innerField, null, subItemPath);
                                 JSONObject arrayObjPro = new JSONObject();
@@ -216,13 +234,12 @@ public class JsonUtil {
                                 JSONArray arrayItems = new JSONArray();
                                 if (CollectionUtils.isNotEmpty(innerField.getChildren())) {
                                     for (FieldWrapper child : innerField.getChildren()) {
-                                        buildJsonSchema(child, arrayObj, arrayItems, basePath + "/#/properties/" + child.getName(), baseItemsPath + "/" + bodyField.getName() + "/#/items");
+                                        buildJsonSchema(child, arrayObj, arrayItems, basePath + "/#/properties/" + child.getName(), baseItemsPath + "/" + bodyField.getName() + "/#/items", curDeepth + 2);
                                     }
                                 }
                                 arrayItems.add(arrayObj);
                                 schemaArrayObj.put("items", arrayItems);
                             }
-
                             break;
                     }
                 }
