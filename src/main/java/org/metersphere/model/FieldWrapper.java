@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
+import org.apache.commons.collections.MapUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
@@ -109,7 +110,7 @@ public class FieldWrapper {
             return null;
         }
         Map<PsiTypeParameter, PsiType> map;
-        if (this.parent != null) {
+        if (MapUtils.isEmpty(this.genericTypeMap) && this.parent != null) {
             map = this.parent.genericTypeMap;
         } else {
             map = this.genericTypeMap;

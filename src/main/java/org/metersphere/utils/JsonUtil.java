@@ -120,7 +120,7 @@ public class JsonUtil {
         if (fieldInfos == null) {
             return map;
         }
-        if (curDeepth < state.getDeepth() + 3) {
+        if (curDeepth < state.getDeepth() + 4) {
             for (FieldWrapper fieldInfo : fieldInfos) {
                 buildJsonValue(map, fieldInfo, curDeepth + 1);
             }

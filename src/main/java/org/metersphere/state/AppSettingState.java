@@ -41,7 +41,7 @@ public class AppSettingState {
     //覆盖或者不覆盖 fullCoverage/incrementalMerge
     private String modeId;
     //嵌套对象参数解析的深度
-    private Integer deepth = 1;
+    private Integer deepth = 3;
     //全体 url 前缀
     private String contextPath;
     //是否支持读取 javadoc
