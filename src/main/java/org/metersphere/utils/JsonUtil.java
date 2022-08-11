@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.metersphere.AppSettingService;
@@ -67,7 +68,9 @@ public class JsonUtil {
         if (fieldInfo == null) {
             return null;
         }
-        return buildJson5(buildPrettyJson(fieldInfo, curDeepth + 1), buildFieldDescList(fieldInfo, curDeepth + 1));
+        return buildPrettyJson(fieldInfo, curDeepth + 1);
+        //::todo 解析
+//        return buildJson5(buildPrettyJson(fieldInfo, curDeepth + 1), buildFieldDescList(fieldInfo, curDeepth + 1));
     }
 
     private static List<String> buildFieldDescList(List<FieldWrapper> children, int curDeepth) {
@@ -97,9 +100,7 @@ public class JsonUtil {
             }
             descList.add(buildDesc(fieldInfo));
         } else {
-            if (curDeepth <= state.getDeepth() + 2) {
-                descList.addAll(buildFieldDescList(fieldInfo.getChildren(), curDeepth + 1));
-            }
+            descList.addAll(buildFieldDescList(fieldInfo.getChildren(), curDeepth + 1));
         }
         return descList;
     }
@@ -140,7 +141,9 @@ public class JsonUtil {
             PsiClass psiClass = PsiUtil.resolveClassInType(fieldInfo.getPsiType());
             String innerType = fieldInfo.getPsiType() instanceof PsiArrayType ? ((PsiArrayType) fieldInfo.getPsiType()).getComponentType().getPresentableText() :
                     PsiUtil.substituteTypeParameter(fieldInfo.getPsiType(), psiClass, 0, true).getPresentableText();
-            map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? new HashMap<>() : FieldUtil.normalTypes.get(innerType)));
+            PsiType innerPsiType = fieldInfo.getGenericTypeMap().entrySet().iterator().next().getValue();
+            FieldWrapper innerFieldWrapper = new FieldWrapper(innerPsiType, fieldInfo, curDeepth + 1);
+            map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? getStringObjectMap(innerFieldWrapper.getChildren(), curDeepth + 1) : FieldUtil.normalTypes.get(innerType)));
             return;
         }
         if (fieldInfo.getChildren() == null) {

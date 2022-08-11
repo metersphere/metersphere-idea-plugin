@@ -2,9 +2,11 @@ package org.metersphere.model;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.*;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
@@ -60,8 +62,8 @@ public class FieldWrapper {
             this.type = JavaTypeEnum.OBJECT;
         }
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
-        this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
+        this.genericTypeMap = resolveGenerics(this.psiType);
         this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState, false);
         resolveChildren(curDeepth + 1);
     }
@@ -93,8 +95,8 @@ public class FieldWrapper {
             this.type = JavaTypeEnum.OBJECT;
         }
         this.appSettingState = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
-        this.genericTypeMap = resolveGenerics(this.psiType);
         this.parent = parent;
+        this.genericTypeMap = resolveGenerics(this.psiType);
         this.desc = FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState, false);
         resolveChildren(curDeepth + 1);
     }
@@ -125,7 +127,7 @@ public class FieldWrapper {
         return psiType;
     }
 
-    private static Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
+    private Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
         if (psiType instanceof PsiArrayType) {
             return new HashMap<>();
         }
@@ -147,12 +149,31 @@ public class FieldWrapper {
             int i = 0;
             Map<PsiTypeParameter, PsiType> map = new HashMap<>();
             for (PsiType realParameter : realParameters) {
-                map.put(formParameters[i], realParameter);
+                map.put(formParameters[i], getRealParameter(realParameter));
                 i++;
             }
             return map;
         }
         return new HashMap<>();
+    }
+
+    /**
+     * 多级泛型嵌套可能得到的参数不是真正的参数
+     *
+     * @param realParameter
+     * @return
+     */
+    private PsiType getRealParameter(PsiType realParameter) {
+
+        PsiClass realClass = JavaPsiFacade.getInstance(psiType.getResolveScope().getProject()).findClass(realParameter.getCanonicalText(), GlobalSearchScope.allScope(psiType.getResolveScope().getProject()));
+        if (realClass == null && parent != null && MapUtils.isNotEmpty(parent.genericTypeMap)) {
+            for (Map.Entry<PsiTypeParameter, PsiType> entry : parent.genericTypeMap.entrySet()) {
+                if (StringUtils.equalsIgnoreCase(entry.getKey().getName(), realParameter.getPresentableText())) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return realParameter;
     }
 
     public void resolveChildren(int curDeepth) {
@@ -178,7 +199,7 @@ public class FieldWrapper {
         if (psiType instanceof PsiClassType) {
             //如果是集合类型
             if (FieldUtil.isCollectionType(psiType)) {
-                PsiType iterableType = PsiUtil.extractIterableTypeParameter(psiType, false);
+                PsiType iterableType = getRealParameter(PsiUtil.extractIterableTypeParameter(psiType, false));
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText()) || FieldUtil.isMapType(iterableType)) {
                     return;
                 }
