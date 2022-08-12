@@ -142,9 +142,14 @@ public class JsonUtil {
             PsiClass psiClass = PsiUtil.resolveClassInType(fieldInfo.getPsiType());
             String innerType = fieldInfo.getPsiType() instanceof PsiArrayType ? ((PsiArrayType) fieldInfo.getPsiType()).getComponentType().getPresentableText() :
                     PsiUtil.substituteTypeParameter(fieldInfo.getPsiType(), psiClass, 0, true).getPresentableText();
-            PsiType innerPsiType = fieldInfo.getGenericTypeMap().entrySet().iterator().next().getValue();
-            FieldWrapper innerFieldWrapper = new FieldWrapper(innerPsiType, fieldInfo, curDeepth + 1);
-            map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? getStringObjectMap(innerFieldWrapper.getChildren(), curDeepth + 1) : FieldUtil.normalTypes.get(innerType)));
+            PsiType innerPsiType = null;
+            if (MapUtils.isNotEmpty(fieldInfo.getGenericTypeMap())) {
+                innerPsiType = fieldInfo.getGenericTypeMap().entrySet().iterator().next().getValue();
+                FieldWrapper innerFieldWrapper = new FieldWrapper(innerPsiType, fieldInfo, curDeepth + 1);
+                map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? getStringObjectMap(innerFieldWrapper.getChildren(), curDeepth + 1) : FieldUtil.normalTypes.get(innerType)));
+            } else {
+                map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? new HashMap<>() : FieldUtil.normalTypes.get(innerType)));
+            }
             return;
         }
         if (fieldInfo.getChildren() == null) {
