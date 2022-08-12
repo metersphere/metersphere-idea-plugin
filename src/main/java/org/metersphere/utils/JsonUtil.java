@@ -8,6 +8,7 @@ import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
@@ -157,115 +158,6 @@ public class JsonUtil {
         }
     }
 
-    /**
-     * 构建 jsonschema
-     *
-     * @param bodyField     当前解析的字段
-     * @param properties    jsonschema 的 properties 字段
-     * @param items         jsonschema 的 items 字段
-     * @param basePath      properties 的路径
-     * @param baseItemsPath items 的路径
-     * @param curDeepth     对象当前解析深度
-     */
-    public static void buildJsonSchema(FieldWrapper bodyField, JSONObject properties, JSONArray items, String basePath, String baseItemsPath, int curDeepth) {
-
-        if (curDeepth > state.getDeepth()) {
-            return;
-        }
-        if (JavaTypeEnum.ENUM.equals(bodyField.getType())) {
-            properties.put(bodyField.getName(), createProperty(bodyField, null, basePath));
-        }
-        if (JavaTypeEnum.ARRAY.equals(bodyField.getType())) {
-            if (CollectionUtils.isNotEmpty(bodyField.getChildren())) {
-                if (bodyField.getChildren().size() == 0) {
-                    FieldWrapper realField = bodyField.getChildren().get(0);
-                    items.add(createProperty(realField, null, baseItemsPath));
-                } else {
-                    JSONObject obj = createProperty("object", new FieldWrapper(), null, baseItemsPath);
-                    JSONObject objPro = new JSONObject();
-                    for (FieldWrapper child : bodyField.getChildren()) {
-                        objPro.put(child.getName(), createProperty(child, null, basePath));
-                    }
-                    obj.put("properties", objPro);
-                    items.add(obj);
-                }
-            } else {
-                items.add(createProperty("object", bodyField, null, baseItemsPath));
-            }
-        }
-
-        if (JavaTypeEnum.OBJECT.equals(bodyField.getType())) {
-            JSONObject proObj = createProperty(bodyField, null, basePath);
-            JSONObject subProperties = new JSONObject();
-            boolean root = false;
-            if (!StringUtils.equalsIgnoreCase(bodyField.getName(), "directRoot")) {
-                //处理返回值的时候直接存到properties
-                properties.put(bodyField.getName(), proObj);
-                proObj.put("properties", subProperties);
-            } else {
-                subProperties = properties;
-                root = true;
-            }
-
-            if (CollectionUtils.isNotEmpty(bodyField.getChildren())) {
-                for (FieldWrapper fieldWrapper : bodyField.getChildren()) {
-                    switch (fieldWrapper.getType()) {
-                        case ENUM:
-                        case OBJECT:
-                            JSONObject schemaObject = createProperty(fieldWrapper, null, basePath + "/" + bodyField.getName() + "/#/properties");
-                            subProperties.put(fieldWrapper.getName(), schemaObject);
-                            JSONArray proItems = new JSONArray();
-                            if (CollectionUtils.isNotEmpty(fieldWrapper.getChildren())) {
-                                JSONObject grandSonPropertis = new JSONObject();
-                                schemaObject.put("properties", grandSonPropertis);
-                                basePath = root ? basePath + "/" + fieldWrapper.getName() : basePath + "/#/properties/" + bodyField.getName() + "/#/properties/" + fieldWrapper.getName();
-                                baseItemsPath = root ? baseItemsPath + "/" + fieldWrapper.getName() : basePath + "/#/items/" + bodyField.getName() + "/#/items/" + fieldWrapper.getName();
-                                for (FieldWrapper child : fieldWrapper.getChildren()) {
-                                    buildJsonSchema(child, grandSonPropertis, proItems, basePath + bodyField.getName() + "/#/properties/" + child.getName(), baseItemsPath, curDeepth + 2);
-                                    if (proItems.size() != 0) {
-                                        JSONObject pro = createProperty(child, null, basePath + bodyField.getName() + "/#/properties/" + child.getName());
-                                        grandSonPropertis.put(child.getName(), pro);
-                                        pro.put("items", proItems);
-                                        pro.put("type", "array");
-                                    }
-                                }
-                            }
-                            break;
-                        case ARRAY:
-                            String subBasePath = basePath + "/" + bodyField.getName() + "/#/properties";
-                            String subItemPath = baseItemsPath + "/" + bodyField.getName();
-                            if (root) {
-                                subBasePath = fieldWrapper.getName() + "/" + basePath;
-                                subItemPath = fieldWrapper.getName() + "/" + baseItemsPath;
-                            }
-
-                            JSONObject schemaArrayObj = createProperty(fieldWrapper, null, subBasePath);
-                            subProperties.put(fieldWrapper.getName(), schemaArrayObj);
-
-                            if (CollectionUtils.isNotEmpty(fieldWrapper.getChildren())) {
-                                FieldWrapper innerField = fieldWrapper.getChildren().get(0);
-                                JSONObject arrayObj = createProperty("object", innerField, null, subItemPath);
-                                JSONObject arrayObjPro = new JSONObject();
-                                for (FieldWrapper child : fieldWrapper.getChildren()) {
-                                    arrayObjPro.put(child.getName(), createProperty(child, null, subBasePath + "/#/properties"));
-                                }
-                                arrayObj.put("properties", arrayObjPro);
-                                JSONArray arrayItems = new JSONArray();
-                                if (CollectionUtils.isNotEmpty(innerField.getChildren())) {
-                                    for (FieldWrapper child : innerField.getChildren()) {
-                                        buildJsonSchema(child, arrayObj, arrayItems, basePath + "/#/properties/" + child.getName(), baseItemsPath + "/" + bodyField.getName() + "/#/items", curDeepth + 2);
-                                    }
-                                }
-                                arrayItems.add(arrayObj);
-                                schemaArrayObj.put("items", arrayItems);
-                            }
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
     private static JSONObject createProperty(FieldWrapper fieldWrapper, JSONArray items, String basePath) {
         JSONObject pro = new JSONObject();
         if (fieldWrapper.getType() != null) {
@@ -298,5 +190,87 @@ public class JsonUtil {
         JSONObject mock = new JSONObject();
         mock.put("mock", "");
         pro.put("mock", mock);
+    }
+
+    /**
+     * 构建 items 数组
+     *
+     * @param field         当前解析的字段
+     * @param baseItemsPath 的路径
+     * @param curDeepth     对象当前解析深度
+     * @return
+     */
+
+    public static Object buildJsonSchemaItems(FieldWrapper field, String baseItemsPath, int curDeepth) {
+        JSONArray items = new JSONArray();
+        if (curDeepth > state.getDeepth()) {
+            return items;
+        }
+
+        if (CollectionUtils.isNotEmpty(field.getChildren())) {
+            if (field.getChildren().size() == 1) {
+                FieldWrapper realField = field.getChildren().get(0);
+                items.add(createProperty(realField, null, baseItemsPath));
+            } else {
+                JSONObject obj = createProperty("object", field, null, baseItemsPath);
+                JSONObject objPro = new JSONObject();
+                for (FieldWrapper child : field.getChildren()) {
+                    objPro.put(child.getName(), buildJsonSchemaProperties(child, baseItemsPath, curDeepth + 1));
+                }
+                obj.put("properties", objPro);
+                items.add(obj);
+            }
+        }
+
+        return items;
+    }
+
+    /**
+     * 构建 jsonschema
+     *
+     * @param child              当前解析的字段
+     * @param basePropertiesPath properties 的路径
+     * @param curDeepth          对象当前解析深度
+     */
+    public static Object buildJsonSchemaProperties(FieldWrapper child, String basePropertiesPath, int curDeepth) {
+        if (curDeepth > state.getDeepth()) {
+            return new JSONObject();
+        }
+        JSONObject fatherObj = createProperty(child, null, basePropertiesPath);
+        JSONObject fatherProperties = new JSONObject();
+
+        switch (child.getType()) {
+            case ENUM:
+                fatherProperties.put(child.getName(), createProperty(child, null, basePropertiesPath));
+                break;
+            case OBJECT:
+                if (CollectionUtils.isNotEmpty(child.getChildren())) {
+                    for (FieldWrapper childChild : child.getChildren()) {
+                        fatherProperties.put(childChild.getName(), buildJsonSchemaProperties(childChild, basePropertiesPath + "/#/properties", curDeepth + 1));
+                    }
+                    if (MapUtils.isNotEmpty(fatherProperties)) {
+                        fatherObj.put("properties", fatherProperties);
+                    }
+                }
+                break;
+            case ARRAY:
+                if (CollectionUtils.isNotEmpty(child.getChildren())) {
+                    //数组或者集合类型 取第一个孩子节点为内置类型
+                    if (child.getChildren().size() == 1) {
+                        FieldWrapper arrayTypeField = child.getChildren().get(0);
+                        JSONObject arraySchemaObj = createProperty(arrayTypeField, null, basePropertiesPath + "/#/items");
+                        JSONArray arraySchemaArray = new JSONArray();
+                        arraySchemaArray.add(arraySchemaObj);
+                        fatherObj.put("items", arraySchemaArray);
+                    } else {
+                        fatherObj.put("items", buildJsonSchemaItems(child, basePropertiesPath + "/#/items", curDeepth + 1));
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        return fatherObj;
     }
 }

@@ -7,12 +7,14 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import de.plushnikov.intellij.lombok.util.PsiAnnotationUtil;
 import lombok.Data;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.constants.WebAnnotation;
 import org.metersphere.state.AppSettingState;
+import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.FieldUtil;
 import org.metersphere.utils.JsonUtil;
 import org.metersphere.utils.ProgressUtil;
@@ -172,15 +174,20 @@ public class RequestWrapper {
                     jsonSchema.put("hidden", true);
                     jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
                     JSONObject properties = new JSONObject();
-                    JSONArray items = new JSONArray();
                     String bPath = "#/properties";
                     String baseItemsPath = "#/items";
                     if (schemaType == JavaTypeEnum.ARRAY) {
-                        jsonSchema.put("items", items);
+                        jsonSchema.put("items", JsonUtil.buildJsonSchemaItems(this.response, baseItemsPath, 0));
                     } else {
+                        if (CollectionUtils.isNotEmpty(this.response.getChildren())) {
+                            for (FieldWrapper child : this.response.getChildren()) {
+                                properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, bPath, 0));
+                            }
+                        }
+                    }
+                    if (MapUtils.isNotEmpty(properties)) {
                         jsonSchema.put("properties", properties);
                     }
-                    JsonUtil.buildJsonSchema(bodyFieldOp.get(), properties, items, bPath, baseItemsPath, 0);
                     bodyBean.setJsonSchema(jsonSchema.toJSONString());
                 }
             }
@@ -217,15 +224,20 @@ public class RequestWrapper {
             jsonSchema.put("hidden", true);
             jsonSchema.put("$schema", "http://json-schema.org/draft-07/schema#");
             JSONObject properties = new JSONObject();
-            JSONArray items = new JSONArray();
             String basePath = "#/properties";
             String baseItemsPath = "#/items";
             if (schemaType == JavaTypeEnum.ARRAY) {
-                jsonSchema.put("items", items);
+                jsonSchema.put("items", JsonUtil.buildJsonSchemaItems(this.response, baseItemsPath, 0));
             } else {
+                if (CollectionUtils.isNotEmpty(this.response.getChildren())) {
+                    for (FieldWrapper child : this.response.getChildren()) {
+                        properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, basePath, 0));
+                    }
+                }
+            }
+            if (MapUtils.isNotEmpty(properties)) {
                 jsonSchema.put("properties", properties);
             }
-            JsonUtil.buildJsonSchema(this.response, properties, items, basePath, baseItemsPath, 0);
             responseBean.setJsonSchema(jsonSchema.toJSONString());
         }
         return new ArrayList<>() {{

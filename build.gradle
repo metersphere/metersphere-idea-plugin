@@ -39,8 +39,8 @@ patchPluginXml {
 }
 
 runIde {
-    jvmArgs '-Xmx2G'
-    jvmArgs '-Xss10M'
+    jvmArgs '-Xmx4G'
+    jvmArgs '--add-exports', 'java.base/jdk.internal.vm=ALL-UNNAMED'
 }
 
 //d
