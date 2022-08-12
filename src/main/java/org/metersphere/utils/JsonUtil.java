@@ -177,8 +177,18 @@ public class JsonUtil {
         }
         if (JavaTypeEnum.ARRAY.equals(bodyField.getType())) {
             if (CollectionUtils.isNotEmpty(bodyField.getChildren())) {
-                FieldWrapper realField = bodyField.getChildren().get(0);
-                items.add(createProperty(realField, null, baseItemsPath));
+                if (bodyField.getChildren().size() == 0) {
+                    FieldWrapper realField = bodyField.getChildren().get(0);
+                    items.add(createProperty(realField, null, baseItemsPath));
+                } else {
+                    JSONObject obj = createProperty("object", new FieldWrapper(), null, baseItemsPath);
+                    JSONObject objPro = new JSONObject();
+                    for (FieldWrapper child : bodyField.getChildren()) {
+                        objPro.put(child.getName(), createProperty(child, null, basePath));
+                    }
+                    obj.put("properties", objPro);
+                    items.add(obj);
+                }
             } else {
                 items.add(createProperty("object", bodyField, null, baseItemsPath));
             }
@@ -212,6 +222,12 @@ public class JsonUtil {
                                 baseItemsPath = root ? baseItemsPath + "/" + fieldWrapper.getName() : basePath + "/#/items/" + bodyField.getName() + "/#/items/" + fieldWrapper.getName();
                                 for (FieldWrapper child : fieldWrapper.getChildren()) {
                                     buildJsonSchema(child, grandSonPropertis, proItems, basePath + bodyField.getName() + "/#/properties/" + child.getName(), baseItemsPath, curDeepth + 2);
+                                    if (proItems.size() != 0) {
+                                        JSONObject pro = createProperty(child, null, basePath + bodyField.getName() + "/#/properties/" + child.getName());
+                                        grandSonPropertis.put(child.getName(), pro);
+                                        pro.put("items", proItems);
+                                        pro.put("type", "array");
+                                    }
                                 }
                             }
                             break;
@@ -252,7 +268,9 @@ public class JsonUtil {
 
     private static JSONObject createProperty(FieldWrapper fieldWrapper, JSONArray items, String basePath) {
         JSONObject pro = new JSONObject();
-        pro.put("type", fieldWrapper.getType() == JavaTypeEnum.ARRAY ? "array" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()) == null ? "object" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()));
+        if (fieldWrapper.getType() != null) {
+            pro.put("type", fieldWrapper.getType() == JavaTypeEnum.ARRAY ? "array" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()) == null ? "object" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()));
+        }
         if (StringUtils.isNotBlank(fieldWrapper.getDesc()) && !StringUtils.equalsIgnoreCase(fieldWrapper.getDesc(), fieldWrapper.getPsiType().getPresentableText())) {
             pro.put("description", fieldWrapper.getDesc());
         }
