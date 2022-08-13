@@ -82,7 +82,7 @@ public class JsonUtil {
         for (FieldWrapper fieldInfo : children) {
             descList.add(buildDesc(fieldInfo));
             if (!JavaTypeEnum.ENUM.equals(fieldInfo.getType())) {
-                if (curDeepth <= state.getDeepth() + 2) {
+                if (curDeepth <= state.getDeepth()) {
                     descList.addAll(buildFieldDescList(fieldInfo.getChildren(), curDeepth + 1));
                 }
             }
@@ -122,7 +122,7 @@ public class JsonUtil {
         if (fieldInfos == null) {
             return map;
         }
-        if (curDeepth < state.getDeepth() + 4) {
+        if (curDeepth < state.getDeepth()) {
             for (FieldWrapper fieldInfo : fieldInfos) {
                 buildJsonValue(map, fieldInfo, curDeepth + 1);
             }

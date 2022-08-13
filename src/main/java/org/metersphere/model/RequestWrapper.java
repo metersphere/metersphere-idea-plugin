@@ -177,10 +177,10 @@ public class RequestWrapper {
                     String bPath = "#/properties";
                     String baseItemsPath = "#/items";
                     if (schemaType == JavaTypeEnum.ARRAY) {
-                        jsonSchema.put("items", JsonUtil.buildJsonSchemaItems(this.response, baseItemsPath, 0));
+                        jsonSchema.put("items", JsonUtil.buildJsonSchemaItems(bodyFieldOp.get(), baseItemsPath, 0));
                     } else {
-                        if (CollectionUtils.isNotEmpty(this.response.getChildren())) {
-                            for (FieldWrapper child : this.response.getChildren()) {
+                        if (CollectionUtils.isNotEmpty(bodyFieldOp.get().getChildren())) {
+                            for (FieldWrapper child : bodyFieldOp.get().getChildren()) {
                                 properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, bPath, 0));
                             }
                         }

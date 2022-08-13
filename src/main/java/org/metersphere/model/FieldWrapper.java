@@ -178,7 +178,7 @@ public class FieldWrapper {
 
     public void resolveChildren(int curDeepth) {
         //解析对象深度
-        if (curDeepth > appSettingState.getDeepth() + 2) {
+        if (curDeepth > appSettingState.getDeepth()) {
             return;
         }
         PsiType psiType = this.psiType;
