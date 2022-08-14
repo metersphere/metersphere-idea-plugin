@@ -192,7 +192,7 @@ public class RequestWrapper {
                     bodyBean.setJsonSchema(jsonSchema.toJSONString());
                 }
             }
-        } else if (this.paramStr.contains(WebAnnotation.RequestPart)) {
+        } else {
             bodyBean.setMode("formdata");
             Optional<FieldWrapper> formFieldOp = getFormParam(this.getRequestFieldList());
             bodyBean.setFormdata(JsonUtil.buildFormdata(formFieldOp.get(), 0));

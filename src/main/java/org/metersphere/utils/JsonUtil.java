@@ -295,13 +295,11 @@ public class JsonUtil {
         if (fieldWrapper == null) {
             return formDataBeans;
         }
-        if (CollectionUtils.isNotEmpty(fieldWrapper.getAnnotations())) {
-            if (FieldUtil.findAnnotationByName(fieldWrapper.getAnnotations(), WebAnnotation.RequestPart) != null) {
-                formDataBeans.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(fieldWrapper.getName(), "file", null, null));
-            } else {
-                // todo 重写
-                return getFormDataBeans(fieldWrapper, curDeepth);
-            }
+        if (FieldUtil.findAnnotationByName(fieldWrapper.getAnnotations(), WebAnnotation.RequestPart) != null) {
+            formDataBeans.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(fieldWrapper.getName(), "file", null, null));
+        } else {
+            // todo 重写
+            return getFormDataBeans(fieldWrapper, curDeepth);
         }
         return formDataBeans;
     }
