@@ -4,16 +4,20 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.intellij.psi.PsiArrayType;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.*;
+import com.intellij.psi.javadoc.PsiDocTag;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.constants.PluginConstants;
+import org.metersphere.constants.WebAnnotation;
 import org.metersphere.model.FieldWrapper;
+import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
 
 import java.lang.reflect.Modifier;
@@ -278,4 +282,191 @@ public class JsonUtil {
 
         return fatherObj;
     }
+
+    /**
+     * 获取 formdata
+     *
+     * @param fieldWrapper
+     * @param curDeepth
+     * @return
+     */
+    public static List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> buildFormdata(FieldWrapper fieldWrapper, int curDeepth) {
+        List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> formDataBeans = new LinkedList<>();
+        if (fieldWrapper == null) {
+            return formDataBeans;
+        }
+        if (CollectionUtils.isNotEmpty(fieldWrapper.getAnnotations())) {
+            if (FieldUtil.findAnnotationByName(fieldWrapper.getAnnotations(), WebAnnotation.RequestPart) != null) {
+                formDataBeans.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(fieldWrapper.getName(), "file", null, null));
+            } else {
+                // todo 重写
+                return getFormDataBeans(fieldWrapper, curDeepth);
+            }
+        }
+        return formDataBeans;
+    }
+
+    // todo
+    private static PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean buildCommonFormdata(FieldWrapper fieldWrapper, int curDeepth) {
+        JavaTypeEnum typeEnum = fieldWrapper.getType();
+        switch (typeEnum) {
+            case ENUM:
+            case OBJECT:
+                break;
+            case ARRAY:
+                break;
+            default:
+                break;
+        }
+        return null;
+    }
+
+    private static List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> getFormDataBeans(FieldWrapper fieldWrapper, int curDeepth) {
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
+        int maxDeepth = state.getDeepth();
+        Project project = fieldWrapper.getPsiType().getResolveScope().getProject();
+        PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(fieldWrapper.getPsiType().getCanonicalText(), GlobalSearchScope.allScope(project));
+        List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param = new LinkedList<>();
+        if (psiClass != null) {
+
+            if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
+                // 如果是简单类型, 则直接返回
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(fieldWrapper.getName(), "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getQualifiedName()), FieldUtil.getJavaDocName(PsiUtil.resolveClassInType(fieldWrapper.getPsiType()), state, false)));
+                return param;
+            }
+
+            PsiField[] fields = psiClass.getAllFields();
+            for (PsiField field : fields) {
+                if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))
+                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), FieldUtil.getJavaDocName(field, state, false)));
+                    //这个判断对多层集合嵌套的数据类型
+                else if (PsiTypeUtil.isCollection(field.getType())) {
+                    getFormDataBeansCollection(param, field, field.getName() + "[0]", curDeepth, maxDeepth);
+                } else if (field.getType().getCanonicalText().contains("[]")) {
+                    getFormDataBeansArray(param, field, field.getName() + "[0]", curDeepth, maxDeepth);
+                } else if (PsiTypeUtil.isMap(field.getType())) {
+                    param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(field.getName() + ".key", "text", null, FieldUtil.getJavaDocName(field, state, false)));
+                } else {
+                    getFormDataBeansPojo(param, field, field.getName(), curDeepth, maxDeepth);
+                }
+            }
+        }
+
+        return param;
+    }
+
+    private static void getFormDataBeansMap(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField field, String prefixField, int curDeepth, int maxDeepth) {
+        if (curDeepth == maxDeepth)
+            return;
+        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName() + ".key", "text", null, null));
+    }
+
+    private static void getFormDataBeansPojo(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
+        if (curDeepth == maxDeepth)
+            return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
+        PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField.getType(), fatherField.getProject(), "pojo");
+        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        if (psiClass != null) {
+            if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, true)));
+            } else {
+                //复杂对象类型遍历属性
+                PsiField[] fields = psiClass.getAllFields();
+                for (PsiField field : fields) {
+                    if (FieldUtil.skipJavaTypes.contains(field.getName().toLowerCase()))
+                        continue;
+                    if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), FieldUtil.getJavaDocName(psiClass, state, false)));
+                    else {
+                        //容器
+                        String pf = prefixField + "." + field.getName() + "[0]";
+                        if (PsiTypeUtil.isCollection(field.getType())) {
+                            getFormDataBeansCollection(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (field.getType().getCanonicalText().contains("[]")) {
+                            //数组
+                            getFormDataBeansArray(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (PsiTypeUtil.isMap(field.getType())) {
+                            getFormDataBeansMap(param, field, field.getName(), curDeepth + 1, maxDeepth);
+                        } else
+                            getFormDataBeansPojo(param, field, pf, curDeepth + 1, maxDeepth);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void getFormDataBeansArray(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
+        if (curDeepth == maxDeepth)
+            return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
+        PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField.getType(), fatherField.getProject(), "array");
+        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        if (psiClass != null) {
+            if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, false)));
+            } else {
+                //复杂对象类型遍历属性
+                PsiField[] fields = psiClass.getAllFields();
+                for (PsiField field : fields) {
+                    if (FieldUtil.skipJavaTypes.contains(field.getName().toLowerCase()))
+                        continue;
+                    if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), FieldUtil.getJavaDocName(field, state, false)));
+                    else {
+                        //容器
+                        String pf = prefixField + "." + field.getName() + "[0]";
+                        if (PsiTypeUtil.isCollection(field.getType())) {
+                            getFormDataBeansCollection(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (field.getType().getCanonicalText().contains("[]")) {
+                            //数组
+                            getFormDataBeansArray(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (PsiTypeUtil.isMap(field.getType())) {
+                            getFormDataBeansMap(param, field, field.getName(), curDeepth + 1, maxDeepth);
+                        } else
+                            getFormDataBeansPojo(param, field, pf, curDeepth + 1, maxDeepth);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void getFormDataBeansCollection(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField fatherField, String prefixField, int curDeepth, int maxDeepth) {
+        if (curDeepth == maxDeepth)
+            return;
+        AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
+        PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField, "collection");
+        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        if (psiClass != null) {
+            if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
+                param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, false)));
+            } else {
+                //复杂对象类型遍历属性
+                PsiField[] fields = psiClass.getAllFields();
+                for (PsiField field : fields) {
+                    if (FieldUtil.skipJavaTypes.contains(field.getName().toLowerCase()))
+                        continue;
+                    if (PluginConstants.simpleJavaType.contains(field.getType().getCanonicalText()))//普通类型
+                        param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName(), "text", PluginConstants.simpleJavaTypeValue.get(field.getType().getCanonicalText()), FieldUtil.getJavaDocName(psiClass, state, false)));
+                    else {
+                        //容器
+                        String pf = prefixField + "." + field.getName() + "[0]";
+                        if (PsiTypeUtil.isCollection(field.getType())) {
+                            getFormDataBeansCollection(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (field.getType().getCanonicalText().contains("[]")) {
+                            //数组
+                            getFormDataBeansArray(param, field, pf, curDeepth + 1, maxDeepth);
+                        } else if (PsiTypeUtil.isMap(field.getType())) {
+                            getFormDataBeansMap(param, field, field.getName(), curDeepth + 1, maxDeepth);
+                        } else
+                            getFormDataBeansPojo(param, field, pf, curDeepth + 1, maxDeepth);
+                    }
+                }
+            }
+        } else {
+//            logger.error(fatherField.getContainingFile().getName() + ":" + fatherField.getName() + " cannot find psiclass");
+        }
+    }
+
 }

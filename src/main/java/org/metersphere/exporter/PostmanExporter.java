@@ -37,7 +37,7 @@ public class PostmanExporter implements IExporter {
     private static final List<String> FormDataAnnoPath = Lists.newArrayList("org.springframework.web.bind.annotation.RequestPart", "org.springframework.web.bind.annotation.RequestParam");
 
     private static final Pattern RequestAnyPattern = Pattern.compile("RequestBody|RequestParam|RequestPart");
-    private static final V2Exporter v2exporter = new V2Exporter();
+    private static final V2Exporter v2Exporter = new V2Exporter();
     Logger logger = Logger.getInstance(PostmanExporter.class);
 
     @Override
@@ -46,7 +46,7 @@ public class PostmanExporter implements IExporter {
             appSettingService.getState().setWithJsonSchema(false);
             appSettingService.getState().setWithBasePath(true);
 
-            List<PostmanModel> postmanModels = v2exporter.transform(files, appSettingService.getState());
+            List<PostmanModel> postmanModels = v2Exporter.transform(files, appSettingService.getState());
             if (postmanModels.size() == 0) {
                 Messages.showInfoMessage("No java api was found! please change your search root", infoTitle());
                 return false;

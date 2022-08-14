@@ -30,6 +30,7 @@ public class FieldUtil {
      * 泛型列表
      */
     public static final List<String> genericList = new ArrayList<>();
+    public static final List<String> skipJavaTypes = new ArrayList<>();
 
 
     static {
@@ -57,6 +58,10 @@ public class FieldUtil {
         genericList.add("E");
         genericList.add("K");
         genericList.add("V");
+        skipJavaTypes.add("serialVersionUID".toLowerCase());
+        skipJavaTypes.add("optimisticLockVersion".toLowerCase());
+        skipJavaTypes.add("javax.servlet.http.HttpServletResponse");
+        skipJavaTypes.add("javax.servlet.http.HttpServletRequest");
     }
 
     private static boolean isParamRequired(PsiAnnotation annotation) {
@@ -104,7 +109,7 @@ public class FieldUtil {
     }
 
     private static Object getValue(String typeStr, List<PsiAnnotation> annotations) {
-        if (Arrays.asList("LocalDateTime", "Date").contains(typeStr)) {
+        if (Arrays.asList("LocalDateTime", "Date").contains(typeStr) && CollectionUtils.isNotEmpty(annotations)) {
             for (PsiAnnotation annotation : annotations) {
                 if (annotation.getText().contains(JacksonAnnotation.JsonFormat)) {
                     PsiNameValuePair[] attributes = annotation.getParameterList().getAttributes();

@@ -12,4 +12,5 @@ public interface WebAnnotation {
     String RequestBody = "@RequestBody";
     String ResponseBody = "@ResponseBody";
     String PathVariable = "@PathVariable";
+    String RequestPart = "@RequestPart";
 }

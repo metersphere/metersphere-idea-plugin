@@ -160,6 +160,7 @@ public class RequestWrapper {
 
         PostmanModel.ItemBean.RequestBean.BodyBean bodyBean = new PostmanModel.ItemBean.RequestBean.BodyBean();
 
+        // body 和 form 表单
         if (this.paramStr.contains(WebAnnotation.RequestBody)) {
             bodyBean.setMode("raw");
             Optional<FieldWrapper> bodyFieldOp = getRequestBodyParam(this.getRequestFieldList());
@@ -191,6 +192,10 @@ public class RequestWrapper {
                     bodyBean.setJsonSchema(jsonSchema.toJSONString());
                 }
             }
+        } else if (this.paramStr.contains(WebAnnotation.RequestPart)) {
+            bodyBean.setMode("formdata");
+            Optional<FieldWrapper> formFieldOp = getFormParam(this.getRequestFieldList());
+            bodyBean.setFormdata(JsonUtil.buildFormdata(formFieldOp.get(), 0));
         }
 
         requestBean.setBody(bodyBean);
@@ -203,6 +208,25 @@ public class RequestWrapper {
                 .stream()
                 .filter(f -> FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestBody) != null)
                 .findFirst();
+    }
+
+    private Optional<FieldWrapper> getFormParam(List<FieldWrapper> requestFieldList) {
+        return requestFieldList
+                .stream()
+                .filter(f -> containsForm(f))
+                .findFirst();
+    }
+
+    /**
+     * form 表单 包含 RequestPart 或者既不包含 RequestPart 也不包含 RequestBody
+     *
+     * @param f
+     * @return
+     */
+    private boolean containsForm(FieldWrapper f) {
+        return FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestPart) != null ||
+                (FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestBody) == null
+                        && FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestPart) == null);
     }
 
     private List<PostmanModel.ItemBean.ResponseBean> getResponseBean(PostmanModel.ItemBean itemBean) {
