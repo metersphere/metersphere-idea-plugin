@@ -195,7 +195,9 @@ public class RequestWrapper {
         } else {
             bodyBean.setMode("formdata");
             Optional<FieldWrapper> formFieldOp = getFormParam(this.getRequestFieldList());
-            bodyBean.setFormdata(JsonUtil.buildFormdata(formFieldOp.get(), 0));
+            if (formFieldOp.isPresent()) {
+                bodyBean.setFormdata(JsonUtil.buildFormdata(formFieldOp.get(), 0));
+            }
         }
 
         requestBean.setBody(bodyBean);
