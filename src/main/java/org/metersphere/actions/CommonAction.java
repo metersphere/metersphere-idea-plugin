@@ -10,13 +10,16 @@ import com.intellij.openapi.util.ThrowableComputable;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.exporter.ExporterFactory;
 import org.metersphere.utils.ProgressUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class CommonAction extends AnAction {
+    private Logger logger = LoggerFactory.getLogger(CommonAction.class);
+
     protected void export(String source, AnActionEvent event) {
         Project project = event.getProject();
         if (project == null) {
@@ -32,6 +35,7 @@ public abstract class CommonAction extends AnAction {
                     return null;
                 });
             } catch (Throwable throwable) {
+                logger.error("Export MeterSphere API failed !", throwable);
                 exception.set(throwable);
                 r.set(false);
             }

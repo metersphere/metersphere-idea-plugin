@@ -220,7 +220,8 @@ public class RequestWrapper {
     }
 
     /**
-     * form 表单 包含 RequestPart 或者既不包含 RequestPart 也不包含 RequestBody
+     * form 表单 包含 RequestPart 或者
+     * 既不包含 RequestPart 也不包含 RequestBody 不包含 PathVariable 也不包含 RequestParam
      *
      * @param f
      * @return
@@ -228,7 +229,10 @@ public class RequestWrapper {
     private boolean containsForm(FieldWrapper f) {
         return FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestPart) != null ||
                 (FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestBody) == null
-                        && FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestPart) == null);
+                        && FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestPart) == null
+                        && FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.RequestParam) == null
+                        && FieldUtil.findAnnotationByName(f.getAnnotations(), WebAnnotation.PathVariable) == null
+                );
     }
 
     private List<PostmanModel.ItemBean.ResponseBean> getResponseBean(PostmanModel.ItemBean itemBean) {
