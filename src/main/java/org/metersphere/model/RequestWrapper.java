@@ -14,10 +14,7 @@ import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.constants.WebAnnotation;
 import org.metersphere.state.AppSettingState;
-import org.metersphere.utils.CollectionUtils;
-import org.metersphere.utils.FieldUtil;
-import org.metersphere.utils.JsonUtil;
-import org.metersphere.utils.ProgressUtil;
+import org.metersphere.utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,12 +44,15 @@ public class RequestWrapper {
         this.annotations = Arrays.asList(method.getAnnotations());
         this.name = method.getName();
         this.className = method.getClass().getCanonicalName();
-        this.returnStr = method.getReturnType().getCanonicalText();
         this.methodName = method.getName();
         this.requestFieldList = resolveRequestFieldList(method);
         this.response = new FieldWrapper("directRoot", method.getReturnType(), null, 0);
         this.paramStr = thisMethod.getParameterList().getText();
-        this.returnStr = thisMethod.getReturnType().getCanonicalText();
+        if (thisMethod.getReturnType() != null) {
+            this.returnStr = thisMethod.getReturnType().getCanonicalText();
+        } else {
+            LogUtil.error(this.name + " has no returnType!");
+        }
     }
 
     private List<FieldWrapper> resolveRequestFieldList(PsiMethod method) {
@@ -277,7 +277,7 @@ public class RequestWrapper {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toString(this);
+        return "RequestWrapper [name=" + name + ", paramStr=" + Optional.ofNullable(paramStr).orElse("") + ", returnStr=" + Optional.ofNullable(returnStr).orElse("") + "]";
     }
 
     private List<PostmanModel.ItemBean.ResponseBean.HeaderBeanXX> getResponseHeader(PostmanModel.ItemBean itemBean) {

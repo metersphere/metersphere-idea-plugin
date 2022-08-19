@@ -35,11 +35,12 @@ buildSearchableOptions {
 patchPluginXml {
     version = project.version
     sinceBuild = '193.*'
-    untilBuild = '221.*'
+    untilBuild = '222.*'
 }
 
 runIde {
     jvmArgs '-Xmx4G'
+    jvmArgs '-Xss10M'
     jvmArgs '--add-exports', 'java.base/jdk.internal.vm=ALL-UNNAMED'
 }
 
