@@ -1,8 +1,15 @@
 package org.metersphere.constants;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.gson.JsonArray;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +17,20 @@ import java.util.Map;
 public class PluginConstants {
     public static final String EXPORTER_MS = "MeterSphere";
     public static final String EXPORTER_POSTMAN = "Postman";
+
+    //-------------------------------------------------------------------------------------------------------------------------------- Normal
+    /**
+     * 标准日期格式：yyyy-MM-dd
+     */
+    public static final DateTimeFormatter NORM_DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    /**
+     * 标准日期时间格式，精确到分：yyyy-MM-dd HH:mm
+     */
+    public static final DateTimeFormatter NORM_TIME_PATTERN = DateTimeFormatter.ofPattern("HH:mm:ss");
+    /**
+     * 标准日期时间格式，精确到秒：yyyy-MM-dd HH:mm:ss
+     */
+    public static final DateTimeFormatter NORM_DATETIME_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static final List<String> simpleJavaType = new ArrayList<>() {{
         add("int");
@@ -36,6 +57,24 @@ public class PluginConstants {
         add("com.google.gson.JsonObject");
         add("Map");
         add("java.util.Map");
+        add("Date");
+        add("java.util.Date");
+        add("LocalDateTime");
+        add("java.time.LocalDateTime");
+        add("LocalTime");
+        add("java.time.LocalTime");
+        add("LocalDate");
+        add("java.time.LocalDate");
+        add("BigDecimal");
+        add("java.math.BigDecimal");
+        add("JSONArray");
+        add("com.alibaba.fastjson.JSONArray");
+        add("JsonArray");
+        add("com.google.gson.JsonArray");
+        add("Void");
+        add("java.lang.Void");
+        add("MultipartFile");
+        add("org.springframework.web.multipart.MultipartFile");
     }};
 
     public static final Map<String, Object> simpleJavaTypeValue = new HashMap<>() {{
@@ -63,6 +102,24 @@ public class PluginConstants {
         put("JsonObject", new JSONObject());
         put("java.util.Map", new JSONObject());
         put("Map", new JSONObject());
+        put("Date", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
+        put("java.util.Date", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
+        put("LocalDateTime", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
+        put("java.time.LocalDateTime", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
+        put("LocalTime", LocalTime.now().format(NORM_TIME_PATTERN));
+        put("java.time.LocalTime", LocalTime.now().format(NORM_TIME_PATTERN));
+        put("LocalDate", LocalDate.now().format(NORM_DATE_PATTERN));
+        put("java.time.LocalDate", LocalDate.now().format(NORM_DATE_PATTERN));
+        put("BigDecimal", "0.0");
+        put("java.math.BigDecimal", "0.0");
+        put("JSONArray", new JSONArray());
+        put("com.alibaba.fastjson.JSONArray", new JSONArray());
+        put("JsonArray", new JsonArray());
+        put("com.google.gson.JsonArray", new JsonArray());
+        put("Void", "");
+        put("java.lang.Void", "");
+        put("MultipartFile", "");
+        put("org.springframework.web.multipart.MultipartFile", "");
     }};
 
     public static final Map<String, String> simpleJavaTypeJsonSchemaMap = new HashMap<>() {{
@@ -90,6 +147,24 @@ public class PluginConstants {
         put("JsonObject", "object");
         put("java.util.Map", "object");
         put("Map", "object");
+        put("Date", "string");
+        put("java.util.Date", "string");
+        put("LocalDateTime", "string");
+        put("java.time.LocalDateTime", "string");
+        put("LocalTime", "string");
+        put("java.time.LocalTime", "string");
+        put("LocalDate", "string");
+        put("java.time.LocalDate", "string");
+        put("BigDecimal", "number");
+        put("java.math.BigDecimal", "number");
+        put("JSONArray", "array");
+        put("com.alibaba.fastjson.JSONArray", "array");
+        put("JsonArray", "array");
+        put("com.google.gson.JsonArray", "array");
+        put("Void", "string");
+        put("java.lang.Void", "string");
+        put("MultipartFile", "object");
+        put("org.springframework.web.multipart.MultipartFile", "object");
     }};
 
     public static final List<String> javaBaseCollectionType = new ArrayList<>() {
