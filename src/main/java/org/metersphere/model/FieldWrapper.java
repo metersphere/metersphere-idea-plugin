@@ -12,6 +12,7 @@ import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.FieldUtil;
+import org.metersphere.utils.LogUtil;
 
 import java.util.*;
 
@@ -128,7 +129,7 @@ public class FieldWrapper {
     }
 
     private Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
-        if (psiType instanceof PsiArrayType) {
+        if (psiType instanceof PsiArrayType || psiType == null) {
             return new HashMap<>();
         }
         if (fieldResolveCountMap.get() == null) {
@@ -164,7 +165,10 @@ public class FieldWrapper {
      * @return
      */
     private PsiType getRealParameter(PsiType realParameter) {
-
+        if (realParameter == null) {
+            LogUtil.error("getRealParameter realParameter is null");
+            return null;
+        }
         PsiClass realClass = JavaPsiFacade.getInstance(psiType.getResolveScope().getProject()).findClass(realParameter.getCanonicalText(), GlobalSearchScope.allScope(psiType.getResolveScope().getProject()));
         if (realClass == null && parent != null && MapUtils.isNotEmpty(parent.genericTypeMap)) {
             for (Map.Entry<PsiTypeParameter, PsiType> entry : parent.genericTypeMap.entrySet()) {
@@ -182,6 +186,10 @@ public class FieldWrapper {
             return;
         }
         PsiType psiType = this.psiType;
+        if (psiType == null) {
+            LogUtil.error("resolveChildren psitype is null");
+            return;
+        }
         if (FieldUtil.isNormalType(psiType.getPresentableText())) {
             //基础类或基础包装类没有子域
             return;
