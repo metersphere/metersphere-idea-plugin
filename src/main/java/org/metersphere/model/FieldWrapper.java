@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
+import org.metersphere.parse.utils.PsiUtils;
 import org.metersphere.state.AppSettingState;
 import org.metersphere.utils.FieldUtil;
 import org.metersphere.utils.LogUtil;
@@ -228,11 +229,8 @@ public class FieldWrapper {
             if (psiClass == null) {
                 return;
             }
-            for (PsiField psiField : psiClass.getAllFields()) {
+            for (PsiField psiField : PsiUtils.getMemberFields(psiClass)) {
                 if (ExcludeFieldConstants.skipJavaTypes.contains(psiField.getName().toLowerCase())) {
-                    continue;
-                }
-                if (FieldUtil.isStaticField(psiField)) {
                     continue;
                 }
                 if (FieldUtil.isIgnoredField(psiField)) {
