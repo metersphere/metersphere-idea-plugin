@@ -98,6 +98,7 @@
         <li><b>1.0.7</b> add coverModule</li>
         <li><b>1.0.8</b> fix multi RequestParam</li>
         <li><b>1.0.9</b> fix multi RequestParam</li>
+        <li><b>1.1.0</b> default no api case</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
