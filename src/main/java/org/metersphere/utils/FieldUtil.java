@@ -224,7 +224,7 @@ public class FieldUtil {
                 PsiDocToken token = iterator.next();
                 if (token.getTokenType().toString().equalsIgnoreCase("DOC_COMMENT_DATA")) {
                     if (StringUtils.isNotBlank(token.getText())) {
-                        apiName = UTF8Util.toUTF8String(token.getText()).trim();
+                        apiName = token.getText().trim();
                     }
                     break;
                 }
