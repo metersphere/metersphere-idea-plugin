@@ -98,11 +98,11 @@ public class MeterSphereExporter implements IExporter {
             if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED) {
                 return true;
             } else {
-                throwableAtomicReference.set(new RuntimeException(response.getStatusLine().getReasonPhrase()));
+                throwableAtomicReference.set(new RuntimeException("from server:" + response.getStatusLine().getReasonPhrase()));
                 return false;
             }
         } catch (Exception e) {
-            throwableAtomicReference.set(e);
+            throwableAtomicReference.set(new RuntimeException("from server:" + e.getMessage()));
             logger.error("上传至 MS 失败！", e);
         } finally {
             if (response != null) {
@@ -148,6 +148,8 @@ public class MeterSphereExporter implements IExporter {
             }
         }
         param.put("protocol", "HTTP");
+        //标记导入来源是 idea
+        param.put("origin", "idea");
         return param;
     }
 
