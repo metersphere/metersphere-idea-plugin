@@ -46,24 +46,24 @@ public class MeterSphereExporter implements IExporter {
         appSettingService.getState().setWithBasePath(false);
 
         List<PostmanModel> postmanModels = v2Exporter.transform(files, appSettingService.getState());
-        if (postmanModels.size() == 0) {
+        if (postmanModels.isEmpty()) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
         }
         File temp = File.createTempFile(UUID.randomUUID().toString(), null);
-        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("item", postmanModels);
-        JSONObject info = new JSONObject();
-        info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
-        String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : files.get(0).getProject().getName();
-        info.put("name", exportName);
-        info.put("description", "exported at " + dateTime);
-        info.put("_postman_id", UUID.randomUUID().toString());
-        jsonObject.put("info", info);
-        bufferedWriter.write(new Gson().toJson(jsonObject));
-        bufferedWriter.flush();
-        bufferedWriter.close();
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp, StandardCharsets.UTF_8))) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("item", postmanModels);
+            JSONObject info = new JSONObject();
+            info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
+            String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String exportName = StringUtils.isNotBlank(appSettingService.getState().getExportModuleName()) ? appSettingService.getState().getExportModuleName() : files.get(0).getProject().getName();
+            info.put("name", exportName);
+            info.put("description", "exported at " + dateTime);
+            info.put("_postman_id", UUID.randomUUID().toString());
+            jsonObject.put("info", info);
+            bufferedWriter.write(new Gson().toJson(jsonObject));
+            bufferedWriter.flush();
+        }
         AtomicReference<Throwable> throwableAtomicReference = new AtomicReference<>();
         boolean r = uploadToServer(temp, throwableAtomicReference);
         if (!r) {
