@@ -160,6 +160,9 @@ public class FieldUtil {
     }
 
     public static boolean isNormalType(PsiType psiType) {
+        if (psiType == null) {
+            return true;
+        }
         PsiClass psiClass = PsiUtil.resolveClassInType(psiType);
         if (psiClass != null) {
             if (psiClass.isEnum()) {
