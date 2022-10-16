@@ -19,6 +19,7 @@ import org.metersphere.constants.MSApiConstants;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
+import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.HttpFutureUtils;
 import org.metersphere.utils.MSApiUtil;
 import org.metersphere.utils.ProgressUtil;
@@ -33,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class MeterSphereExporter implements IExporter {
     private Logger logger = Logger.getInstance(MeterSphereExporter.class);
@@ -46,6 +48,7 @@ public class MeterSphereExporter implements IExporter {
         appSettingService.getState().setWithBasePath(false);
 
         List<PostmanModel> postmanModels = v2Exporter.transform(files, appSettingService.getState());
+        postmanModels = postmanModels.stream().filter(p-> CollectionUtils.isNotEmpty(p.getItem())).collect(Collectors.toList());
         if (postmanModels.size() == 0) {
             throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(3));
         }
