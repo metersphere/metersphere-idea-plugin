@@ -184,6 +184,8 @@ public class RequestWrapper {
                             for (FieldWrapper child : bodyFieldOp.get().getChildren()) {
                                 properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, bPath, 0));
                             }
+                        } else {
+                            properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
                         }
                     }
                     if (MapUtils.isNotEmpty(properties)) {
@@ -263,6 +265,8 @@ public class RequestWrapper {
                     for (FieldWrapper child : this.response.getChildren()) {
                         properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, basePath, 0));
                     }
+                } else {
+                    properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
                 }
             }
             if (MapUtils.isNotEmpty(properties)) {
