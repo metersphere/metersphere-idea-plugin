@@ -64,8 +64,7 @@ public class RequestWrapper {
         return fieldWrappers;
     }
 
-    public PostmanModel.ItemBean toItemBean() {
-        boolean restController = false;
+    public PostmanModel.ItemBean toItemBean(boolean isRestController) {
         String basePath = "";
 
         PostmanModel.ItemBean itemBean = new PostmanModel.ItemBean();
@@ -117,7 +116,7 @@ public class RequestWrapper {
         ProgressUtil.show((String.format("Found controller: %s api: %s", controllerClass.getName(), urlBean.getRaw())));
         //header
         List<PostmanModel.ItemBean.RequestBean.HeaderBean> headerBeans = new ArrayList<>();
-        if (restController) {
+        if (isRestController) {
             FieldUtil.addRestHeader(headerBeans);
         } else {
             FieldUtil.addFormHeader(headerBeans);
@@ -185,7 +184,9 @@ public class RequestWrapper {
                                 properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, bPath, 0));
                             }
                         } else {
-                            properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
+                            if (this.response.getPsiType() != null && !StringUtils.equalsIgnoreCase(this.response.getPsiType().getPresentableText(), "void")) {
+                                properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
+                            }
                         }
                     }
                     if (MapUtils.isNotEmpty(properties)) {
@@ -266,7 +267,9 @@ public class RequestWrapper {
                         properties.put(child.getName(), JsonUtil.buildJsonSchemaProperties(child, basePath, 0));
                     }
                 } else {
-                    properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
+                    if (this.response.getPsiType() != null && !StringUtils.equalsIgnoreCase(this.response.getPsiType().getPresentableText(), "void")) {
+                        properties.put(this.response.getName(), JsonUtil.buildJsonSchemaProperties(this.response, basePath, 0));
+                    }
                 }
             }
             if (MapUtils.isNotEmpty(properties)) {

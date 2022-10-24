@@ -33,7 +33,7 @@ public class V2Exporter implements IExporter {
                 if (classes.length == 0)
                     return;
                 boolean isRequest = false;
-
+                boolean restController = false;
                 //从注解里面找 RestController 和 RequestMapping 来确定请求头和 basepath
                 PsiModifierList controllerModi = PsiTreeUtil.findChildOfType(controllerClass, PsiModifierList.class);
                 if (controllerModi != null) {
@@ -42,6 +42,9 @@ public class V2Exporter implements IExporter {
                         Map<String, Boolean> r = FieldUtil.existRequetAnnotation(annotations);
                         if (r.get("rest") || r.get("general")) {
                             isRequest = true;
+                        }
+                        if (r.get("rest")) {
+                            restController = true;
                         }
                     }
                 }
@@ -55,7 +58,7 @@ public class V2Exporter implements IExporter {
                 Collection<PsiMethod> methodCollection = PsiTreeUtil.findChildrenOfType(controllerClass, PsiMethod.class);
                 Iterator<PsiMethod> methodIterator = methodCollection.iterator();
                 while (methodIterator.hasNext()) {
-                    PostmanModel.ItemBean itemBean = new RequestWrapper(methodIterator.next(), controllerClass).toItemBean();
+                    PostmanModel.ItemBean itemBean = new RequestWrapper(methodIterator.next(), controllerClass).toItemBean(restController);
                     if (itemBean != null) {
                         itemBeans.add(itemBean);
                     }
