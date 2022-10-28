@@ -10,17 +10,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.MSApiConstants;
 import org.metersphere.state.*;
+import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.MSApiUtil;
 
 import javax.swing.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
-
-import org.metersphere.utils.CollectionUtils;
+import java.util.Optional;
 
 import static org.metersphere.utils.MSApiUtil.test;
 
@@ -42,12 +43,44 @@ public class AppSettingComponent {
     private JCheckBox javadocCheckBox;
     private JTextField contextPath;
     private JComboBox<MSProjectVersion> projectVersionCB;
-    private JComboBox workspaceCB;
-    private JComboBox updateVersionCB;
+    private JComboBox<MSWorkSpace> workspaceCB;
+    private JComboBox<MSProjectVersion> updateVersionCB;
     private JCheckBox coverModule;
     private AppSettingService appSettingService = AppSettingService.getInstance();
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
+
+    private ItemListener workspaceListener = itemEvent -> {
+        if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+            if (workspaceCB.getSelectedItem() != null) {
+                appSettingService.getState().clear();
+                appSettingService.getState().setWorkSpace((MSWorkSpace) workspaceCB.getSelectedItem());
+                initProject(appSettingService.getState(), ((MSWorkSpace) workspaceCB.getSelectedItem()).getId());
+            }
+        }
+    };
+
+    private ItemListener projectListener = itemEvent -> {
+        if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+            if (projectCB.getSelectedItem() != null) {
+                appSettingService.getState().setProject((MSProject) projectCB.getSelectedItem());
+                MSProject selectedProject = (MSProject) itemEvent.getItem();
+                initModule(selectedProject.getId());
+                if (Objects.equals(true, selectedProject.getVersionEnable())) {
+                    mutationProjectVersions(selectedProject.getId());
+                }
+            }
+        }
+    };
+
+    private ItemListener moduleItemListener = itemEvent -> {
+        if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+            if (projectCB.getSelectedItem() != null) {
+                appSettingService.getState().setModule((MSModule) itemEvent.getItem());
+            }
+        }
+    };
+
 
     public AppSettingComponent() {
         AppSettingState appSettingState = appSettingService.getState();
@@ -85,29 +118,10 @@ public class AppSettingComponent {
         });
 
         //工作空间 action -> 项目 -> 版本
-        workspaceCB.addItemListener(itemEvent -> {
-            if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (workspaceCB.getSelectedItem() != null) {
-                    appSettingState.clear();
-                    appSettingState.setWorkSpace((MSWorkSpace) workspaceCB.getSelectedItem());
-                    initProject(appSettingState, ((MSWorkSpace) workspaceCB.getSelectedItem()).getId());
-                }
-            }
-        });
+        workspaceCB.addItemListener(workspaceListener);
 
         //项目 action -> 版本
-        projectCB.addItemListener(itemEvent -> {
-            if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (projectCB.getSelectedItem() != null) {
-                    appSettingState.setProject((MSProject) projectCB.getSelectedItem());
-                    MSProject selectedProject = (MSProject) itemEvent.getItem();
-                    initModule(selectedProject.getId());
-                    if (Objects.equals(true, selectedProject.getVersionEnable())) {
-                        mutationProjectVersions(selectedProject.getId());
-                    }
-                }
-            }
-        });
+        projectCB.addItemListener(projectListener);
 
         projectVersionCB.addItemListener(itemEvent -> {
             if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
@@ -123,13 +137,8 @@ public class AppSettingComponent {
             }
         });
 
-        moduleCB.addItemListener(itemEvent -> {
-            if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (projectCB.getSelectedItem() != null) {
-                    appSettingState.setModule((MSModule) itemEvent.getItem());
-                }
-            }
-        });
+        moduleCB.addItemListener(moduleItemListener);
+
         modeId.addActionListener(actionEvent -> {
             appSettingState.setModeId(modeId.getSelectedItem().toString());
             if (!MSApiUtil.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_FULLCOVERAGE)) {
@@ -252,11 +261,32 @@ public class AppSettingComponent {
             logger.error("get project failed!");
             return false;
         }
+
+        MSProject selectedProject = null;
+        if (this.projectCB.getSelectedItem() != null) {
+            selectedProject = (MSProject) this.projectCB.getSelectedItem();
+        }
+
         //设置下拉选择框
+        this.projectCB.removeItemListener(projectListener);
         this.projectCB.removeAllItems();
         for (MSProject s : appSettingState.getProjectOptions()) {
             this.projectCB.addItem(s);
         }
+        if (appSettingState.getProjectOptions().contains(selectedProject)) {
+            this.projectCB.setSelectedItem(selectedProject);
+            initModule(Optional.ofNullable(selectedProject).orElse(new MSProject()).getId());
+        } else {
+            //原来项目被删除了 刷新一次模块
+            if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
+                this.projectCB.setSelectedItem(appSettingState.getProjectOptions().get(0));
+                initModule(appSettingState.getProjectOptions().get(0).getId());
+            } else {
+                this.moduleCB.removeAllItems();
+            }
+        }
+        this.projectCB.addItemListener(projectListener);
+
         if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
             checkVersionEnable(appSettingState, appSettingState.getProjectOptions().get(0).getId());
         }
@@ -335,13 +365,31 @@ public class AppSettingComponent {
             logger.error("get workspace failed!");
             return false;
         }
+
+        MSWorkSpace selectedWorkspace = null;
+        if (this.workspaceCB.getSelectedItem() != null) {
+            selectedWorkspace = (MSWorkSpace) this.workspaceCB.getSelectedItem();
+        }
+        this.workspaceCB.removeItemListener(workspaceListener);
         this.workspaceCB.removeAllItems();
         for (MSWorkSpace s : appSettingState.getWorkSpaceOptions()) {
             this.workspaceCB.addItem(s);
         }
-
+        if (appSettingState.getWorkSpaceOptions().contains(selectedWorkspace)) {
+            this.workspaceCB.setSelectedItem(selectedWorkspace);
+        } else {
+            //原来工作空间被删除了 刷新一次 project
+            if (CollectionUtils.isNotEmpty(appSettingState.getWorkSpaceOptions())) {
+                this.workspaceCB.setSelectedItem(appSettingState.getWorkSpaceOptions().get(0));
+                initProject(appSettingState, appSettingState.getWorkSpaceOptions().get(0).getId());
+            } else {
+                this.projectCB.removeAllItems();
+                this.moduleCB.removeAllItems();
+            }
+        }
+        this.workspaceCB.addItemListener(workspaceListener);
         if (CollectionUtils.isNotEmpty(appSettingState.getWorkSpaceOptions())) {
-            initProject(appSettingState, appSettingState.getWorkSpaceOptions().get(0).getId());
+            initProject(appSettingState, Optional.ofNullable(selectedWorkspace).orElse(appSettingState.getWorkSpaceOptions().get(0)).getId());
         }
 
         return true;
@@ -353,6 +401,7 @@ public class AppSettingComponent {
      * @param msProjectId
      */
     private boolean initModule(String msProjectId) {
+        if (StringUtils.isBlank(msProjectId)) return false;
         AppSettingState appSettingState = appSettingService.getState();
 
         checkVersionEnable(appSettingState, msProjectId);
@@ -366,11 +415,27 @@ public class AppSettingComponent {
             logger.error("get module failed!");
             return false;
         }
-
-        this.moduleCB.removeAllItems();
-        for (MSModule s : appSettingState.getModuleOptions()) {
-            this.moduleCB.addItem(s);
+        MSModule selectedModule = null;
+        if (this.moduleCB.getSelectedItem() != null) {
+            selectedModule = (MSModule) this.moduleCB.getSelectedItem();
         }
+        this.moduleCB.removeItemListener(moduleItemListener);
+        this.moduleCB.removeAllItems();
+        for (MSModule msModule : appSettingState.getModuleOptions()) {
+            this.moduleCB.addItem(msModule);
+        }
+        if (appSettingState.getModuleOptions().contains(selectedModule)) {
+            this.moduleCB.setSelectedItem(selectedModule);
+        } else {
+            //原来模块被删除了 刷新一次 模块
+            if (CollectionUtils.isNotEmpty(appSettingState.getModuleOptions())) {
+                this.moduleCB.setSelectedItem(appSettingState.getModuleOptions().get(0));
+            } else {
+                this.moduleCB.removeAllItems();
+            }
+        }
+        this.moduleCB.addItemListener(moduleItemListener);
+
         return true;
     }
 
