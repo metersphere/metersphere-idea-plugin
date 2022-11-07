@@ -107,13 +107,15 @@ public class MSApiUtil {
      * @return 如果成功查询到版本返回 response 对象,否则返回 {@code null}
      */
     public static JSONObject listProjectVersionBy(String projectId, AppSettingState appSettingState) {
-        if (StringUtils.isBlank(projectId)) {
+        if (StringUtils.isAnyBlank(projectId, appSettingState.getMeterSphereAddress())) {
             return null;
         }
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            String url = String.format("%s/project/version/get-project-versions/%s",
-                    appSettingState.getMeterSphereAddress(), projectId);
+            String url = !appSettingState.getMeterSphereAddress().endsWith("api") ? String.format("%s/project/version/get-project-versions/%s",
+                    appSettingState.getMeterSphereAddress(), projectId) :
+                    String.format("%s/project/version/get-project-versions/%s",
+                            appSettingState.getMeterSphereAddress().substring(0, appSettingState.getMeterSphereAddress().lastIndexOf("api")) + "project", projectId);
             HttpGet httPost = new HttpGet(url);
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSinature(appSettingState));
