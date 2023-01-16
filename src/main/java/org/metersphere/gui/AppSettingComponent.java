@@ -275,11 +275,13 @@ public class AppSettingComponent {
         }
         if (appSettingState.getProjectOptions().contains(selectedProject)) {
             this.projectCB.setSelectedItem(selectedProject);
+            appSettingState.setProject(selectedProject);
             initModule(Optional.ofNullable(selectedProject).orElse(new MSProject()).getId());
         } else {
             //原来项目被删除了 刷新一次模块
             if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
                 this.projectCB.setSelectedItem(appSettingState.getProjectOptions().get(0));
+                appSettingState.setProject(appSettingState.getProjectOptions().get(0));
                 initModule(appSettingState.getProjectOptions().get(0).getId());
             } else {
                 this.moduleCB.removeAllItems();
@@ -377,10 +379,12 @@ public class AppSettingComponent {
         }
         if (appSettingState.getWorkSpaceOptions().contains(selectedWorkspace)) {
             this.workspaceCB.setSelectedItem(selectedWorkspace);
+            appSettingState.setWorkSpace(selectedWorkspace);
         } else {
             //原来工作空间被删除了 刷新一次 project
             if (CollectionUtils.isNotEmpty(appSettingState.getWorkSpaceOptions())) {
                 this.workspaceCB.setSelectedItem(appSettingState.getWorkSpaceOptions().get(0));
+                appSettingState.setWorkSpace(appSettingState.getWorkSpaceOptions().get(0));
                 initProject(appSettingState, appSettingState.getWorkSpaceOptions().get(0).getId());
             } else {
                 this.projectCB.removeAllItems();
@@ -426,10 +430,12 @@ public class AppSettingComponent {
         }
         if (appSettingState.getModuleOptions().contains(selectedModule)) {
             this.moduleCB.setSelectedItem(selectedModule);
+            appSettingState.setModule(selectedModule);
         } else {
             //原来模块被删除了 刷新一次 模块
             if (CollectionUtils.isNotEmpty(appSettingState.getModuleOptions())) {
                 this.moduleCB.setSelectedItem(appSettingState.getModuleOptions().get(0));
+                appSettingState.setModule(appSettingState.getModuleOptions().get(0));
             } else {
                 this.moduleCB.removeAllItems();
             }
