@@ -101,6 +101,7 @@
         <li><b>1.1.0</b> default no api case</li>
         <li><b>1.2.0</b> fix null pointer,update list</li>
         <li><b>1.2.1</b> fix version list</li>
+        <li><b>1.2.2</b> fix nullpointerexception</li>
       </ul>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
