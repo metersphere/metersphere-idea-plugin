@@ -19,6 +19,8 @@ import org.metersphere.constants.MSApiConstants;
 import org.metersphere.constants.PluginConstants;
 import org.metersphere.model.PostmanModel;
 import org.metersphere.state.AppSettingState;
+import org.metersphere.state.MSModule;
+import org.metersphere.state.MSProject;
 import org.metersphere.utils.CollectionUtils;
 import org.metersphere.utils.HttpFutureUtils;
 import org.metersphere.utils.MSApiUtil;
@@ -32,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -133,10 +136,10 @@ public class MeterSphereExporter implements IExporter {
         if (state.getModule() == null) {
             throw new RuntimeException("no module selected ! please check your rights");
         }
-        param.put("moduleId", state.getModule().getId());
+        param.put("moduleId", Optional.ofNullable(state.getModule()).orElse(new MSModule()).getId());
         param.put("platform", "Postman");
         param.put("model", "definition");
-        param.put("projectId", state.getProject().getId());
+        param.put("projectId", Optional.ofNullable(state.getProject()).orElse(new MSProject()).getId());
         if (state.getProjectVersion() != null && state.isSupportVersion()) {
             param.put("versionId", state.getProjectVersion().getId());
         }
