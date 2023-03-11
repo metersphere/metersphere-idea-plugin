@@ -9,6 +9,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import de.plushnikov.intellij.lombok.util.PsiAnnotationUtil;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.metersphere.constants.*;
@@ -306,15 +307,23 @@ public class FieldUtil {
             while (iterator.hasNext()) {
                 PsiDocToken token = iterator.next();
                 if (token.getTokenType().toString().equalsIgnoreCase("DOC_TAG_NAME") && token.getText().equalsIgnoreCase("@param")) {
-                    PsiDocToken paramEn = iterator.next();
-                    PsiDocToken paramZh = iterator.next();
-                    if (StringUtils.isNoneBlank(paramEn.getText(), paramZh.getText())) {
+                    PsiDocToken paramEn = getNext(iterator);
+                    PsiDocToken paramZh = getNext(iterator);
+                    if (ObjectUtils.allNotNull(paramEn,paramZh) && StringUtils.isNoneBlank(paramEn.getText(), paramZh.getText())) {
                         r.put(UTF8Util.toUTF8String(paramEn.getText()), UTF8Util.toUTF8String(paramZh.getText()));
                     }
                 }
             }
         }
         return r;
+    }
+
+    private static PsiDocToken getNext(Iterator<PsiDocToken> iterator) {
+        try {
+            return iterator.next();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     public static String getUrlFromAnnotation(PsiMethod method) {
