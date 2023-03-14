@@ -44,4 +44,12 @@ runIde {
     jvmArgs '--add-exports', 'java.base/jdk.internal.vm=ALL-UNNAMED'
 }
 
-//d
+publishPlugin {
+    // plugins.jetbrains.com 配置的插件 token
+    token = System.getenv("ENV.MeterSphereToken")
+}
+
+publishPlugin {
+//    channels = ['stable'] 发布正式版使用这个渠道
+    channels = ['beta']
+}
