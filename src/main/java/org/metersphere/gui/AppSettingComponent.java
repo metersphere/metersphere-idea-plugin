@@ -359,7 +359,7 @@ public class AppSettingComponent {
         JSONObject userInfo = MSApiUtil.getUserInfo(appSettingState);
         appSettingState.setUserId(userInfo.getString("data"));
 
-        JSONObject workspaceObj = MSApiUtil.getWorkSpaceList(appSettingState, userInfo.getString("data"));
+        JSONObject workspaceObj = MSApiUtil.getWorkSpaceList(appSettingState);
         if (workspaceObj != null && workspaceObj.getBoolean("success")) {
             appSettingState.setWorkSpaceOptions(gson.fromJson(gson.toJson(workspaceObj.getJSONArray("data")), new TypeToken<List<MSWorkSpace>>() {
             }.getType()));

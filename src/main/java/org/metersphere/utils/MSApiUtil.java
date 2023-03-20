@@ -176,13 +176,12 @@ public class MSApiUtil {
      * 获取工作空间
      *
      * @param appSettingState
-     * @param userId
      * @return
      */
-    public static JSONObject getWorkSpaceList(AppSettingState appSettingState, String userId) {
+    public static JSONObject getWorkSpaceList(AppSettingState appSettingState) {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace/");
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace");
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSinature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
