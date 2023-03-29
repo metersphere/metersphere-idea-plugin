@@ -35,7 +35,7 @@ public class AppSettingConfigurable implements Configurable {
 
     @Override
     public boolean isModified() {
-        return true;
+        return false;
     }
 
     @Override
