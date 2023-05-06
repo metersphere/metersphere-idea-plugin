@@ -310,6 +310,7 @@ public class AppSettingComponent {
             projectVersionCB.setEnabled(false);
             updateVersionCB.setEnabled(false);
         } else {
+            mutationProjectVersions(projectId);
             projectVersionCB.setEnabled(true);
             if (modeId.getSelectedItem().toString().equalsIgnoreCase(MSApiConstants.COVER)) {
                 updateVersionCB.setEnabled(true);
