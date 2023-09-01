@@ -289,9 +289,6 @@ public class AppSettingComponent {
         }
         this.projectCB.addItemListener(projectListener);
 
-        if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
-            checkVersionEnable(appSettingState, appSettingState.getProjectOptions().get(0).getId());
-        }
         if (CollectionUtils.isEmpty(appSettingState.getProjectOptions())) {
             this.moduleCB.removeAllItems();
             appSettingState.setModule(null);
