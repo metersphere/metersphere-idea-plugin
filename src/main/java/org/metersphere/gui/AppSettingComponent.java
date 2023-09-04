@@ -336,13 +336,21 @@ public class AppSettingComponent {
             return;
         }
         //设置下拉选择框
+        MSProjectVersion projectVersion = appSettingState.getProjectVersion();
         this.projectVersionCB.removeAllItems();
         for (MSProjectVersion version : appSettingState.getProjectVersionOptions()) {
             this.projectVersionCB.addItem(version);
         }
+        if (appSettingState.getProjectVersionOptions().contains(projectVersion)) {
+            this.projectVersionCB.setSelectedItem(projectVersion);
+        }
+        MSProjectVersion updateVersion = appSettingState.getUpdateVersion();
         this.updateVersionCB.removeAllItems();
         for (MSProjectVersion version : appSettingState.getUpdateVersionOptions()) {
             this.updateVersionCB.addItem(version);
+        }
+        if (appSettingState.getUpdateVersionOptions().contains(updateVersion)) {
+            this.updateVersionCB.setSelectedItem(updateVersion);
         }
         if (modeId.getSelectedItem().toString().equalsIgnoreCase(MSApiConstants.COVER)) {
             updateVersionCB.setEnabled(true);

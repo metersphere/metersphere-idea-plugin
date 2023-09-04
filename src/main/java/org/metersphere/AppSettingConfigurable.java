@@ -29,7 +29,7 @@ public class AppSettingConfigurable implements Configurable {
     JComponent createComponent() {
         //main setting pane
         AppSettingComponent appSettingComponent = new AppSettingComponent();
-        originalState = JSONObject.parseObject(JSONObject.toJSONString(appSettingService.getState()), AppSettingState.class);
+        originalState = appSettingService.getState();
         return appSettingComponent.getSettingPanel();
     }
 
