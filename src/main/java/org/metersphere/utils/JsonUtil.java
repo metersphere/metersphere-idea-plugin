@@ -7,11 +7,10 @@ import com.google.gson.GsonBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
-import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.JavaTypeEnum;
 import org.metersphere.constants.PluginConstants;
@@ -356,7 +355,7 @@ public class JsonUtil {
     private static void getFormDataBeansMap(List<PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean> param, PsiField field, String prefixField, int curDeepth, int maxDeepth) {
         if (curDeepth == maxDeepth)
             return;
-        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField + "." + field.getName() + ".key", "text", null, null));
     }
 
@@ -365,7 +364,7 @@ public class JsonUtil {
             return;
         AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField.getType(), fatherField.getProject(), "pojo");
-        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
                 param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, true)));
@@ -400,7 +399,7 @@ public class JsonUtil {
             return;
         AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField.getType(), fatherField.getProject(), "array");
-        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
                 param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, false)));
@@ -435,7 +434,7 @@ public class JsonUtil {
             return;
         AppSettingState state = ApplicationManager.getApplication().getService(AppSettingService.class).getState();
         PsiClass psiClass = PsiTypeUtil.getPsiClass(fatherField, "collection");
-        prefixField = org.apache.commons.lang3.StringUtils.isNotBlank(prefixField) ? prefixField : "";
+        prefixField = StringUtils.isNotBlank(prefixField) ? prefixField : "";
         if (psiClass != null) {
             if (PluginConstants.simpleJavaType.contains(psiClass.getName())) {
                 param.add(new PostmanModel.ItemBean.RequestBean.BodyBean.FormDataBean(prefixField, "text", PluginConstants.simpleJavaTypeValue.get(psiClass.getName()), FieldUtil.getJavaDocName(psiClass, state, false)));

@@ -6,7 +6,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.metersphere.AppSettingService;
 import org.metersphere.constants.ExcludeFieldConstants;
 import org.metersphere.constants.JavaTypeEnum;
