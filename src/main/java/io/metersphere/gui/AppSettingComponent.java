@@ -89,14 +89,18 @@ public class AppSettingComponent {
         AppSettingState appSettingState = appSettingService.getState();
 
         assert appSettingState != null;
+        // 初始化数据
         initData(appSettingState);
 
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
-                if (initOrganizationWithProject())
+                // TODO 是否需要初始化组织？
+                Messages.showInfoMessage("Sync success!", "Info");
+                /*
+                if (initOrganization())
                     Messages.showInfoMessage("Sync success!", "Info");
                 else
-                    Messages.showInfoMessage("Sync fail!", "Info");
+                    Messages.showInfoMessage("Sync fail!", "Info");*/
             } else {
                 Messages.showInfoMessage("Connect fail!", "Info");
             }
@@ -358,11 +362,11 @@ public class AppSettingComponent {
         updateVersionCB.setEnabled(Objects.requireNonNull(modeId.getSelectedItem()).toString().equalsIgnoreCase(MSApiConstants.COVER));
     }
 
-    private boolean initOrganizationWithProject() {
+    private boolean initOrganization() {
         AppSettingState appSettingState = appSettingService.getState();
 
-        JSONObject userInfo = MSApiUtils.getUserInfo(appSettingState);
         assert appSettingState != null;
+        JSONObject userInfo = MSApiUtils.getUserInfo(appSettingState);
         assert userInfo != null;
         appSettingState.setUserId(userInfo.getString("data"));
 

@@ -1,21 +1,25 @@
 package io.metersphere.util;
 
 import com.alibaba.fastjson.JSONObject;
+import io.metersphere.constants.URLConstants;
 import io.metersphere.state.AppSettingState;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.util.UUID;
 
 public class MSApiUtils {
+
+    public static final String ACCESS_KEY = "accessKey";
+    public static final String SIGNATURE = "signature";
 
     /**
      * 测试连接
@@ -26,11 +30,14 @@ public class MSApiUtils {
         }
 
         try (CloseableHttpClient httpClient = HttpClients.custom().build()) {
-            HttpGet httpGet = new HttpGet(String.format("%s/currentUser", appSettingState.getMeterSphereAddress()));
-            httpGet.addHeader("Accept", "application/json;charset=UTF-8");
-            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
-            httpGet.addHeader("signature", getSignature(appSettingState));
+            String userInfoUrl = String.format("%s%s", appSettingState.getMeterSphereAddress(), URLConstants.USER_INFO);
 
+            HttpGet httpGet = new HttpGet(userInfoUrl);
+            httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
+            httpGet.addHeader("Content-type", ContentType.APPLICATION_JSON.toString());
+
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             HttpResponse response = httpClient.execute(httpGet);
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
@@ -39,16 +46,12 @@ public class MSApiUtils {
                 LogUtils.error("test failed! Status code: " + statusCode);
                 return false;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LogUtils.error("测试连接失败！", e);
             return false;
         }
     }
 
-
-    public static String getSignature(AppSettingState appSettingState) {
-        return CodingUtils.aesEncrypt(appSettingState.getAccesskey() + "|" + UUID.randomUUID() + "|" + System.currentTimeMillis(), appSettingState.getSecretkey(), appSettingState.getAccesskey());
-    }
 
     /**
      * 根据 AK SK 获取项目列表
@@ -56,10 +59,10 @@ public class MSApiUtils {
     public static JSONObject getProjectList(AppSettingState appSettingState, JSONObject param) {
         CloseableHttpClient httpClient = HttpClients.custom().build();
         try {
-            HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + "/project/list/related");
-            httpPost.addHeader("accessKey", appSettingState.getAccesskey());
-            httpPost.addHeader("signature", getSignature(appSettingState));
-            httpPost.addHeader("Content-Type", "application/json");
+            HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + URLConstants.GET_PROJECT_LIST);
+            httpPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
+            httpPost.addHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
 
             StringEntity stringEntity = new StringEntity(param.toJSONString());
             httpPost.setEntity(stringEntity);
@@ -98,13 +101,11 @@ public class MSApiUtils {
         }
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            String baseUrl = appSettingState.getMeterSphereAddress().endsWith("api") ?
-                    appSettingState.getMeterSphereAddress() : appSettingState.getMeterSphereAddress() + "/api";
-            String url = String.format("%s/project/version/get-project-versions/%s", baseUrl, projectId);
-
+            // TODO 根据实际接口调整
+            String url = appSettingState.getMeterSphereAddress() + URLConstants.GET_PROJECT_VERSION;
             HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
-            httpGet.addHeader("signature", getSignature(appSettingState));
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
 
             HttpResponse response = httpClient.execute(httpGet);
 
@@ -115,7 +116,7 @@ public class MSApiUtils {
                 LogUtils.error("list project versions failed! Status code: " + response.getStatusLine().getStatusCode());
                 return null;
             }
-        } catch (IOException | UnsupportedOperationException e) {
+        } catch (Exception e) {
             LogUtils.error("list project versions failed", e);
             return null;
         }
@@ -126,11 +127,11 @@ public class MSApiUtils {
     }
 
     public static JSONObject getUserInfo(AppSettingState appSettingState) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
-            httPost.addHeader("accessKey", appSettingState.getAccesskey());
-            httPost.addHeader("signature", getSignature(appSettingState));
+            httPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
                 return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
@@ -154,12 +155,12 @@ public class MSApiUtils {
      * 获取组织
      */
     public static JSONObject getOrganizationList(AppSettingState appSettingState) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             // TODO 更新接口
-            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/org/list/userorganization");
-            httPost.addHeader("accessKey", appSettingState.getAccesskey());
-            httPost.addHeader("signature", getSignature(appSettingState));
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_ORG_LIST);
+            httPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
                 return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
@@ -184,11 +185,11 @@ public class MSApiUtils {
      * @param protocol  协议 1.0.0 暂时只支持 HTTP
      */
     public static JSONObject getModuleList(AppSettingState appSettingState, String projectId, String protocol) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
-            HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/api/module/list/" + projectId + "/" + protocol);
-            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
-            httpGet.addHeader("signature", getSignature(appSettingState));
+            HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_API_MODULE_LIST + projectId + "?protocol=" + protocol);
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {
                 return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
@@ -212,11 +213,11 @@ public class MSApiUtils {
      * @param projectId 项目ID
      */
     public static boolean getProjectVersionEnable(AppSettingState appSettingState, String projectId) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
+        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/project/version/enable/" + projectId);
-            httpGet.addHeader("accessKey", appSettingState.getAccesskey());
-            httpGet.addHeader("signature", getSignature(appSettingState));
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
 
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {

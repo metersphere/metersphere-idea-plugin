@@ -1,12 +1,13 @@
 package io.metersphere.util;
 
+import io.metersphere.state.AppSettingState;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 /**
  * 加密解密工具
@@ -21,22 +22,18 @@ public class CodingUtils {
      * @param iv        向量
      * @return 加密后字符串
      */
-    public static String aesEncrypt(String src, String secretKey, String iv) {
-        if (StringUtils.isBlank(secretKey)) {
-            throw new RuntimeException("secretKey is empty");
-        }
+    private static String aesEncrypt(String src, String secretKey, String iv) throws Exception {
+        byte[] raw = secretKey.getBytes(StandardCharsets.UTF_8);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(raw, "AES");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        IvParameterSpec iv1 = new IvParameterSpec(iv.getBytes());
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, iv1);
+        byte[] encrypted = cipher.doFinal(src.getBytes(StandardCharsets.UTF_8));
+        return Base64.encodeBase64String(encrypted);
+    }
 
-        try {
-            byte[] raw = secretKey.getBytes(StandardCharsets.UTF_8);
-            SecretKeySpec secretKeySpec = new SecretKeySpec(raw, "AES");
-            // "算法/模式/补码方式" ECB
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            IvParameterSpec iv1 = new IvParameterSpec(iv.getBytes());
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, iv1);
-            byte[] encrypted = cipher.doFinal(src.getBytes(StandardCharsets.UTF_8));
-            return Base64.encodeBase64String(encrypted);
-        } catch (Exception e) {
-            throw new RuntimeException("AES encrypt error:", e);
-        }
+
+    public static String getSignature(AppSettingState appSettingState) throws Exception {
+        return aesEncrypt(appSettingState.getAccesskey() + "|" + UUID.randomUUID() + "|" + System.currentTimeMillis(), appSettingState.getSecretkey(), appSettingState.getAccesskey());
     }
 }
