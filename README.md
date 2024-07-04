@@ -2,18 +2,17 @@
 
 ## 支持导出 HTTP 接口到 MeterSphere.
 
-### Features：
+### 特性：
 
-- Javadoc-based analysis,no additional annotations.
-- Automatically identify classes, generate api documents to MeterSphere.
-- Support list, set, collection and other data structures, and support nested generic parsing.
-- Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on
-  json5.
+- 基于 Javadoc 的分析，无需额外的注解。
+- 自动识别类，生成API文档到 MeterSphere。
+- 支持列表、集合、和其他数据结构，并支持嵌套泛型解析。
+- 支持解析常见的注解如 @ResponseBody、@RequestMapping，并基于JSON5 生成API文档。
 
-### Usage：
+### 使用方法：
 
-- Locate the cursor to the package/project folder or class, right-click Export MeterSphere.
-- Support annotations：
+- 将光标定位到包/项目文件夹或类上，右键点击“导出到 MeterSphere”。
+- 支持注解：
    <p>
    org.springframework.web.bind.annotation.Controller 
    org.springframework.web.bind.annotation.RestController 
@@ -28,12 +27,6 @@
    org.springframework.web.bind.annotation.ResponseBody
    </p>
 
-### 特性：
-
-- 基于javadoc解析，无代码入侵
-- 自动识别类，生成接口定义到 MeterSphere
-- 支持List、Set、Collection等数据结构，支持嵌套泛型解析
-- 支持@ResponseBody等常用注解的解析
 
 ### 安装方式：
 - 直接在 idea -> Settings -> plugins -> Marketplace 搜索 MeterSphere 在线安装
@@ -55,31 +48,31 @@
 </thead>
 <tr>
 <td>
-apiServer
+Server
 </td>
 <td>
-MeterSphere API 服务器地址
-</td>
-</tr>
-<tr>
-<td>
-accesskey
-</td>
-<td>
-accesskey
+MeterSphere Server 地址
 </td>
 </tr>
 <tr>
 <td>
-secretkey
+AccessKey
 </td>
 <td>
-secretkey
+AccessKey
 </td>
 </tr>
 <tr>
 <td>
-protocol
+SecretKey
+</td>
+<td>
+SecretKey
+</td>
+</tr>
+<tr>
+<td>
+Protocol
 </td>
 <td>
 协议
@@ -87,7 +80,7 @@ protocol
 </tr>
 <tr>
 <td>
-organization
+Organization
 </td>
 <td>
 组织
@@ -95,7 +88,7 @@ organization
 </tr>
 <tr>
 <td>
-project
+Project
 </td>
 <td>
 项目
@@ -103,7 +96,7 @@ project
 </tr>
 <tr>
 <td>
-module
+Module
 </td>
 <td>
 接口将要导入的项目对应的模块
