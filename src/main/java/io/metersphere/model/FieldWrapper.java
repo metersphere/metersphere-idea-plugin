@@ -51,7 +51,7 @@ public class FieldWrapper {
 
     }
 
-    public FieldWrapper(PsiParameter parameter, FieldWrapper parent, int curDeepth) {
+    public FieldWrapper(PsiParameter parameter, FieldWrapper parent, int curDepth) {
         this.name = parameter.getName();
         this.annotations = Arrays.asList(parameter.getAnnotations());
         this.psiType = parameter.getType();
@@ -66,7 +66,7 @@ public class FieldWrapper {
         this.parent = parent;
         this.genericTypeMap = resolveGenerics(this.psiType);
         this.desc = FieldUtils.getJavaDocName(PsiUtil.resolveClassInType(this.psiType), appSettingState, false);
-        resolveChildren(curDeepth + 1);
+        resolveChildren(curDepth + 1);
     }
 
     public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent, int curDeepth) {
