@@ -15,15 +15,25 @@
 - 支持注解：
    <p>
    org.springframework.web.bind.annotation.Controller 
+  <p>
    org.springframework.web.bind.annotation.RestController 
+  <p>
    org.springframework.web.bind.annotation.RequestMapping 
+  <p>
    org.springframework.web.bind.annotation.GetMapping 
+  <p>
    org.springframework.web.bind.annotation.PutMapping 
+  <p>
    org.springframework.web.bind.annotation.DeleteMapping 
+  <p>
    org.springframework.web.bind.annotation.PatchMapping 
+  <p>
    org.springframework.web.bind.annotation.PathVariable 
+  <p>
    org.springframework.web.bind.annotation.RequestBody 
+  <p>
    org.springframework.web.bind.annotation.RequestParam 
+  <p>
    org.springframework.web.bind.annotation.ResponseBody
    </p>
 

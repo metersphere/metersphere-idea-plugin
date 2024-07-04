@@ -150,9 +150,7 @@
         </action>
 
 
-        <action id="PostmanAction"
-                class="io.metersphere.actions.ExportToPostmanAction" text="Export Postman"
-                description="Export Postman">
+        <action id="PostmanAction" class="io.metersphere.actions.ExportToPostmanAction" text="Export Postman"  description="Export Postman">
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
