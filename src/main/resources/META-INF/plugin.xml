@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>org.metersphere.Metersphere</id>
+    <id>io.metersphere.Metersphere</id>
     <name>MeterSphere</name>
     <vendor email="dahai.zhang@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
@@ -107,8 +107,8 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationConfigurable parentId="other" instance="org.metersphere.AppSettingConfigurable"
-                                 id="org.metersphere.AppSettingConfigurable"
+        <applicationConfigurable parentId="other" instance="io.metersphere.AppSettingConfigurable"
+                                 id="io.metersphere.AppSettingConfigurable"
                                  displayName="MeterSphere"/>
     </extensions>
 
@@ -131,7 +131,7 @@
         </group>
 
         <action id="MSAction"
-                class="org.metersphere.actions.ExportToMSAction" text="Export MeterSphere"
+                class="io.metersphere.actions.ExportToMSAction" text="Export MeterSphere"
                 description="Export MeterSphere">
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
@@ -151,7 +151,7 @@
 
 
         <action id="PostmanAction"
-                class="org.metersphere.actions.ExportToPostmanAction" text="Export Postman"
+                class="io.metersphere.actions.ExportToPostmanAction" text="Export Postman"
                 description="Export Postman">
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
@@ -162,7 +162,7 @@
     </actions>
     <depends>com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="org.metersphere.AppSettingService"/>
-        <applicationService serviceImplementation="org.metersphere.gui.AppSettingComponent"></applicationService>
+        <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
+        <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"></applicationService>
     </extensions>
 </idea-plugin>

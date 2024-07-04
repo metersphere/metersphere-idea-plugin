@@ -1,30 +1,37 @@
-// Copyright 2000-2021 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
-
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.2.1'
+    id 'org.jetbrains.intellij' version '1.15.0'
 }
 
 group 'org.intellij.sdk'
-version '1.2.3'
+version '3.x.x'
 
-sourceCompatibility = 11
+sourceCompatibility = 17
+targetCompatibility = 17
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.projectlombok:lombok:1.18.22'
-    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5'
-    implementation 'com.alibaba:fastjson:1.2.83'
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-    testCompileOnly 'org.projectlombok:lombok:1.18.22'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
+    compileOnly 'org.projectlombok:lombok:1.18.34' // 只在编译时需要，不参与运行时
+    annotationProcessor 'org.projectlombok:lombok:1.18.34' // 注解处理器，用于生成代码
+    testCompileOnly 'org.projectlombok:lombok:1.18.34' // 测试时编译依赖
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34' // 测试时注解处理器
+
+    implementation 'com.alibaba:fastjson:2.0.51' // 使用最新版本的 Fastjson
+    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5' // IntelliJ Lombok 插件支持
 }
 
 intellij {
-    version = '2020.3.2'
+    version = '2024.1.1'
     plugins = ['com.intellij.java']
 }
 
@@ -34,8 +41,8 @@ buildSearchableOptions {
 
 patchPluginXml {
     version = project.version
-    sinceBuild = '193.*'
-    untilBuild = '231.*'
+    sinceBuild = '233.*'
+    untilBuild = '241.*'
 }
 
 runIde {
@@ -45,11 +52,9 @@ runIde {
 }
 
 publishPlugin {
-    // plugins.jetbrains.com 配置的插件 token
-    token = System.getenv("ENV.MeterSphereToken")
+    token = System.getenv("ENV.JETBRAINS.TOKEN")
 }
 
 publishPlugin {
-//    channels = ['stable'] 发布正式版使用这个渠道
-    channels = ['beta']
+    channels = ['stable']
 }
