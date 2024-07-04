@@ -11,7 +11,7 @@ import org.apache.http.ssl.SSLContexts;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
-public class HttpFutureUtils {
+public class HttpConfig {
     private static final String HTTPS = "https";
 
     public static CloseableHttpClient getOneHttpClient(String url) {

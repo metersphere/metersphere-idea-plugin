@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
 import io.metersphere.AppSettingService;
 import io.metersphere.constants.PluginConstants;
-import io.metersphere.util.MSApiUtils;
+import io.metersphere.util.MSClientUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,7 +32,7 @@ public class ExporterFactory {
         if (EXPORTER_MS.equalsIgnoreCase(source)) {
             //只有导出MeterSphere时才检查连接状态
             assert appSettingService.getState() != null;
-            if (!MSApiUtils.test(appSettingService.getState())) {
+            if (!MSClientUtils.test(appSettingService.getState())) {
                 throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
             }
         }

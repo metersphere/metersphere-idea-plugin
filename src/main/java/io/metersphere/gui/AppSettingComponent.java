@@ -8,7 +8,7 @@ import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
 import io.metersphere.constants.MSApiConstants;
 import io.metersphere.state.*;
-import io.metersphere.util.MSApiUtils;
+import io.metersphere.util.MSClientUtils;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static io.metersphere.util.MSApiUtils.test;
+import static io.metersphere.util.MSClientUtils.test;
 
 @Data
 public class AppSettingComponent {
@@ -149,7 +149,7 @@ public class AppSettingComponent {
 
         modeId.addActionListener(actionEvent -> {
             appSettingState.setModeId(Objects.requireNonNull(modeId.getSelectedItem()).toString());
-            if (!MSApiUtils.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
+            if (!MSClientUtils.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
                 updateVersionCB.setSelectedItem(null);
                 appSettingState.setUpdateVersion(null);
                 updateVersionCB.setEnabled(false);
@@ -261,7 +261,7 @@ public class AppSettingComponent {
         if (StringUtils.isNotBlank(organizationId)) {
             param.put("organizationId", organizationId);
         }
-        JSONObject project = MSApiUtils.getProjectList(appSettingState, param);
+        JSONObject project = MSClientUtils.getProjectList(appSettingState, param);
         if (project != null && project.getBoolean("success")) {
             appSettingState.setProjectOptions(gson.fromJson(gson.toJson(project.getJSONArray("data")), new TypeToken<List<MSProject>>() {
             }.getType()));
@@ -308,7 +308,7 @@ public class AppSettingComponent {
     }
 
     private void checkVersionEnable(AppSettingState appSettingState, String projectId) {
-        boolean versionEnable = MSApiUtils.getProjectVersionEnable(appSettingState, projectId);
+        boolean versionEnable = MSClientUtils.getProjectVersionEnable(appSettingState, projectId);
         appSettingState.setSupportVersion(versionEnable);
         if (!versionEnable) {
             projectVersionCB.setEnabled(false);
@@ -330,7 +330,7 @@ public class AppSettingComponent {
         if (appSettingState == null) {
             return;
         }
-        JSONObject jsonObject = MSApiUtils.listProjectVersionBy(projectId, appSettingState);
+        JSONObject jsonObject = MSClientUtils.listProjectVersionBy(projectId, appSettingState);
         if (jsonObject != null && jsonObject.getBoolean("success")) {
             String json = gson.toJson(jsonObject.getJSONArray("data"));
             List<MSProjectVersion> versionList = gson.fromJson(json, new TypeToken<List<MSProjectVersion>>() {
@@ -366,11 +366,11 @@ public class AppSettingComponent {
         AppSettingState appSettingState = appSettingService.getState();
 
         assert appSettingState != null;
-        JSONObject userInfo = MSApiUtils.getUserInfo(appSettingState);
+        JSONObject userInfo = MSClientUtils.getUserInfo(appSettingState);
         assert userInfo != null;
         appSettingState.setUserId(userInfo.getString("data"));
 
-        JSONObject organizationObj = MSApiUtils.getOrganizationList(appSettingState);
+        JSONObject organizationObj = MSClientUtils.getOrganizationList(appSettingState);
         if (organizationObj != null && organizationObj.getBoolean("success")) {
             appSettingState.setOrganizationOptions(gson.fromJson(gson.toJson(organizationObj.getJSONArray("data")), new TypeToken<List<MSOrganization>>() {
             }.getType()));
@@ -420,7 +420,7 @@ public class AppSettingComponent {
         checkVersionEnable(appSettingState, msProjectId);
         //初始化模块
         assert appSettingState != null;
-        JSONObject module = MSApiUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
+        JSONObject module = MSClientUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
 
         if (module != null && module.getBoolean("success")) {
             appSettingState.setModuleOptions(gson.fromJson(gson.toJson(module.getJSONArray("data")), new TypeToken<List<MSModule>>() {

@@ -16,7 +16,7 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 
-public class MSApiUtils {
+public class MSClientUtils {
 
     public static final String ACCESS_KEY = "accessKey";
     public static final String SIGNATURE = "signature";
@@ -127,7 +127,7 @@ public class MSApiUtils {
     }
 
     public static JSONObject getUserInfo(AppSettingState appSettingState) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
+        CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
             httPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
@@ -155,7 +155,7 @@ public class MSApiUtils {
      * 获取组织
      */
     public static JSONObject getOrganizationList(AppSettingState appSettingState) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
+        CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             // TODO 更新接口
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_ORG_LIST);
@@ -185,7 +185,7 @@ public class MSApiUtils {
      * @param protocol  协议 1.0.0 暂时只支持 HTTP
      */
     public static JSONObject getModuleList(AppSettingState appSettingState, String projectId, String protocol) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
+        CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_API_MODULE_LIST + projectId + "?protocol=" + protocol);
             httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
@@ -213,7 +213,7 @@ public class MSApiUtils {
      * @param projectId 项目ID
      */
     public static boolean getProjectVersionEnable(AppSettingState appSettingState, String projectId) {
-        CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient(appSettingState.getMeterSphereAddress());
+        CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/project/version/enable/" + projectId);
             httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());

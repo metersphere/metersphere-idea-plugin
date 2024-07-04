@@ -82,12 +82,12 @@ public class MeterSphereExporter implements IExporter {
 
         AppSettingState state = appSettingService.getState();
         assert state != null;
-        CloseableHttpClient httpclient = HttpFutureUtils.getOneHttpClient(state.getMeterSphereAddress());
+        CloseableHttpClient httpclient = HttpConfig.getOneHttpClient(state.getMeterSphereAddress());
         String url = state.getMeterSphereAddress() + "/api/definition/import";
         HttpPost httpPost = new HttpPost(url);// 创建httpPost
         httpPost.setHeader("Accept", "application/json, text/plain, */*");
-        httpPost.setHeader(MSApiUtils.ACCESS_KEY, appSettingService.getState().getAccesskey());
-        httpPost.setHeader(MSApiUtils.SIGNATURE, CodingUtils.getSignature(appSettingService.getState()));
+        httpPost.setHeader(MSClientUtils.ACCESS_KEY, appSettingService.getState().getAccesskey());
+        httpPost.setHeader(MSClientUtils.SIGNATURE, CodingUtils.getSignature(appSettingService.getState()));
         CloseableHttpResponse response = null;
         JSONObject param = buildParam(state);
         HttpEntity formEntity = MultipartEntityBuilder.create().addBinaryBody("file", file, ContentType.APPLICATION_JSON, null)
@@ -129,7 +129,7 @@ public class MeterSphereExporter implements IExporter {
     @NotNull
     private JSONObject buildParam(AppSettingState state) {
         JSONObject param = new JSONObject();
-        param.put("modeId", MSApiUtils.getModeId(state.getModeId()));
+        param.put("modeId", MSClientUtils.getModeId(state.getModeId()));
         if (state.getModule() == null) {
             throw new RuntimeException("no module selected ! please check your rights");
         }
@@ -140,7 +140,7 @@ public class MeterSphereExporter implements IExporter {
         if (state.getProjectVersion() != null && state.isSupportVersion()) {
             param.put("versionId", state.getProjectVersion().getId());
         }
-        if (MSApiUtils.getModeId(state.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
+        if (MSClientUtils.getModeId(state.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
             if (state.getUpdateVersion() != null && state.isSupportVersion()) {
                 param.put("updateVersionId", state.getUpdateVersion().getId());
             }
