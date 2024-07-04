@@ -51,35 +51,35 @@
           <th align="left">含义</th>
         </tr>
         <tr>
-          <td>apiServer</td>
-          <td>MeterSphere api 服务器地址</td>
+          <td>Server</td>
+          <td>MeterSphere 服务器地址</td>
         </tr>
         <tr>
-          <td>accesskey</td>
-          <td>accesskey</td>
+          <td>AccessKey</td>
+          <td>AccessKey</td>
         </tr>
         <tr>
-          <td>secretkey</td>
-          <td>secretkey</td>
+          <td>SecretKey</td>
+          <td>SecretKey</td>
         </tr>
         <tr>
-          <td>protocol</td>
+          <td>Protocol</td>
           <td>协议</td>
         </tr>
         <tr>
-          <td>project</td>
+          <td>Project</td>
           <td>接口将要导入的项目</td>
         </tr>
         <tr>
-          <td>module</td>
+          <td>Module</td>
           <td>接口将要导入的项目对应的模块</td>
         </tr>
         <tr>
-          <td>mode</td>
+          <td>Mode</td>
           <td>覆盖/不覆盖已导入同名接口</td>
         </tr>
         <tr>
-          <td>deepth</td>
+          <td>Depth</td>
           <td>针对接口中含有复杂嵌套对象的解析深度</td>
         </tr>
       </table><br>
@@ -163,6 +163,6 @@
     <depends>com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
-        <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"></applicationService>
+        <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"/>
     </extensions>
 </idea-plugin>
