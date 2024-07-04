@@ -87,10 +87,10 @@ protocol
 </tr>
 <tr>
 <td>
-workspace
+organization
 </td>
 <td>
-工作空间
+组织
 </td>
 </tr>
 <tr>

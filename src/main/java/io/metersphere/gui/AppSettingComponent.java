@@ -43,20 +43,20 @@ public class AppSettingComponent {
     private JCheckBox javadocCheckBox;
     private JTextField contextPath;
     private JComboBox<MSProjectVersion> projectVersionCB;
-    private JComboBox<MSWorkSpace> workspaceCB;
+    private JComboBox<MSOrganization> organizationCB;
     private JComboBox<MSProjectVersion> updateVersionCB;
     private JCheckBox coverModule;
     private AppSettingService appSettingService = AppSettingService.getInstance();
     private Gson gson = new Gson();
     private Logger logger = Logger.getInstance(AppSettingComponent.class);
 
-    private ItemListener workspaceListener = itemEvent -> {
+    private ItemListener organizationListener = itemEvent -> {
         if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-            if (workspaceCB.getSelectedItem() != null) {
+            if (organizationCB.getSelectedItem() != null) {
                 assert appSettingService.getState() != null;
                 appSettingService.getState().clear();
-                appSettingService.getState().setWorkSpace((MSWorkSpace) workspaceCB.getSelectedItem());
-                initProject(appSettingService.getState(), ((MSWorkSpace) workspaceCB.getSelectedItem()).getId());
+                appSettingService.getState().setOrganization((MSOrganization) organizationCB.getSelectedItem());
+                initProject(appSettingService.getState(), ((MSOrganization) organizationCB.getSelectedItem()).getId());
             }
         }
     };
@@ -93,7 +93,7 @@ public class AppSettingComponent {
 
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
-                if (initWorkSpaceWithProject())
+                if (initOrganizationWithProject())
                     Messages.showInfoMessage("Sync success!", "Info");
                 else
                     Messages.showInfoMessage("Sync fail!", "Info");
@@ -121,8 +121,8 @@ public class AppSettingComponent {
             }
         });
 
-        //工作空间 action -> 项目 -> 版本
-        workspaceCB.addItemListener(workspaceListener);
+        //组织 action -> 项目 -> 版本
+        organizationCB.addItemListener(organizationListener);
 
         //项目 action -> 版本
         projectCB.addItemListener(projectListener);
@@ -193,11 +193,11 @@ public class AppSettingComponent {
         if (StringUtils.isNotBlank(appSettingState.getExportModuleName())) {
             moduleName.setText(new String(appSettingState.getExportModuleName().getBytes(StandardCharsets.UTF_8)));
         }
-        if (appSettingState.getWorkSpaceOptions() != null) {
-            appSettingState.getWorkSpaceOptions().forEach(p -> workspaceCB.addItem(p));
+        if (appSettingState.getOrganizationOptions() != null) {
+            appSettingState.getOrganizationOptions().forEach(p -> organizationCB.addItem(p));
         }
-        if (appSettingState.getWorkSpace() != null) {
-            workspaceCB.setSelectedItem(appSettingState.getWorkSpace());
+        if (appSettingState.getOrganization() != null) {
+            organizationCB.setSelectedItem(appSettingState.getOrganization());
         }
 
         if (appSettingState.getProjectOptions() != null) {
@@ -250,12 +250,12 @@ public class AppSettingComponent {
         coverModule.setSelected(appSettingState.isCoverModule());
     }
 
-    private void initProject(AppSettingState appSettingState, String workspaceId) {
+    private void initProject(AppSettingState appSettingState, String organizationId) {
         //初始化项目
         JSONObject param = new JSONObject();
         param.put("userId", appSettingState.getUserId());
-        if (StringUtils.isNotBlank(workspaceId)) {
-            param.put("workspaceId", workspaceId);
+        if (StringUtils.isNotBlank(organizationId)) {
+            param.put("organizationId", organizationId);
         }
         JSONObject project = MSApiUtils.getProjectList(appSettingState, param);
         if (project != null && project.getBoolean("success")) {
@@ -358,7 +358,7 @@ public class AppSettingComponent {
         updateVersionCB.setEnabled(Objects.requireNonNull(modeId.getSelectedItem()).toString().equalsIgnoreCase(MSApiConstants.COVER));
     }
 
-    private boolean initWorkSpaceWithProject() {
+    private boolean initOrganizationWithProject() {
         AppSettingState appSettingState = appSettingService.getState();
 
         JSONObject userInfo = MSApiUtils.getUserInfo(appSettingState);
@@ -366,41 +366,41 @@ public class AppSettingComponent {
         assert userInfo != null;
         appSettingState.setUserId(userInfo.getString("data"));
 
-        JSONObject workspaceObj = MSApiUtils.getWorkSpaceList(appSettingState);
-        if (workspaceObj != null && workspaceObj.getBoolean("success")) {
-            appSettingState.setWorkSpaceOptions(gson.fromJson(gson.toJson(workspaceObj.getJSONArray("data")), new TypeToken<List<MSWorkSpace>>() {
+        JSONObject organizationObj = MSApiUtils.getOrganizationList(appSettingState);
+        if (organizationObj != null && organizationObj.getBoolean("success")) {
+            appSettingState.setOrganizationOptions(gson.fromJson(gson.toJson(organizationObj.getJSONArray("data")), new TypeToken<List<MSOrganization>>() {
             }.getType()));
         } else {
-            logger.error("get workspace failed!");
+            logger.error("get organization failed!");
             return false;
         }
 
-        MSWorkSpace selectedWorkspace = null;
-        if (this.workspaceCB.getSelectedItem() != null) {
-            selectedWorkspace = (MSWorkSpace) this.workspaceCB.getSelectedItem();
+        MSOrganization selectedWorkspace = null;
+        if (this.organizationCB.getSelectedItem() != null) {
+            selectedWorkspace = (MSOrganization) this.organizationCB.getSelectedItem();
         }
-        this.workspaceCB.removeItemListener(workspaceListener);
-        this.workspaceCB.removeAllItems();
-        for (MSWorkSpace s : appSettingState.getWorkSpaceOptions()) {
-            this.workspaceCB.addItem(s);
+        this.organizationCB.removeItemListener(organizationListener);
+        this.organizationCB.removeAllItems();
+        for (MSOrganization s : appSettingState.getOrganizationOptions()) {
+            this.organizationCB.addItem(s);
         }
-        if (appSettingState.getWorkSpaceOptions().contains(selectedWorkspace)) {
-            this.workspaceCB.setSelectedItem(selectedWorkspace);
-            appSettingState.setWorkSpace(selectedWorkspace);
+        if (appSettingState.getOrganizationOptions().contains(selectedWorkspace)) {
+            this.organizationCB.setSelectedItem(selectedWorkspace);
+            appSettingState.setOrganization(selectedWorkspace);
         } else {
-            //原来工作空间被删除了 刷新一次 project
-            if (CollectionUtils.isNotEmpty(appSettingState.getWorkSpaceOptions())) {
-                this.workspaceCB.setSelectedItem(appSettingState.getWorkSpaceOptions().getFirst());
-                appSettingState.setWorkSpace(appSettingState.getWorkSpaceOptions().getFirst());
-                initProject(appSettingState, appSettingState.getWorkSpaceOptions().getFirst().getId());
+            //原来组织被删除了 刷新一次 project
+            if (CollectionUtils.isNotEmpty(appSettingState.getOrganizationOptions())) {
+                this.organizationCB.setSelectedItem(appSettingState.getOrganizationOptions().getFirst());
+                appSettingState.setOrganization(appSettingState.getOrganizationOptions().getFirst());
+                initProject(appSettingState, appSettingState.getOrganizationOptions().getFirst().getId());
             } else {
                 this.projectCB.removeAllItems();
                 this.moduleCB.removeAllItems();
             }
         }
-        this.workspaceCB.addItemListener(workspaceListener);
-        if (CollectionUtils.isNotEmpty(appSettingState.getWorkSpaceOptions())) {
-            initProject(appSettingState, Optional.ofNullable(selectedWorkspace).orElse(appSettingState.getWorkSpaceOptions().getFirst()).getId());
+        this.organizationCB.addItemListener(organizationListener);
+        if (CollectionUtils.isNotEmpty(appSettingState.getOrganizationOptions())) {
+            initProject(appSettingState, Optional.ofNullable(selectedWorkspace).orElse(appSettingState.getOrganizationOptions().getFirst()).getId());
         }
 
         return true;

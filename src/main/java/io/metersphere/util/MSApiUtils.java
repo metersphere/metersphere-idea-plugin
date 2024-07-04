@@ -151,12 +151,13 @@ public class MSApiUtils {
     }
 
     /**
-     * 获取工作空间
+     * 获取组织
      */
-    public static JSONObject getWorkSpaceList(AppSettingState appSettingState) {
+    public static JSONObject getOrganizationList(AppSettingState appSettingState) {
         CloseableHttpClient httpClient = HttpFutureUtils.getOneHttpClient();
         try {
-            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/workspace/list/userworkspace");
+            // TODO 更新接口
+            HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/org/list/userorganization");
             httPost.addHeader("accessKey", appSettingState.getAccesskey());
             httPost.addHeader("signature", getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);

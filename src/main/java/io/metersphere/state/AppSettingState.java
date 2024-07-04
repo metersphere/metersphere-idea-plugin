@@ -17,8 +17,8 @@ public class AppSettingState {
     private List<String> apiTypeList;
     private String apiType = "http";
 
-    private List<MSWorkSpace> workSpaceOptions;
-    private MSWorkSpace workSpace;
+    private List<MSOrganization> organizationOptions;
+    private MSOrganization organization;
 
     private List<MSProject> projectOptions;
     private MSProject project;

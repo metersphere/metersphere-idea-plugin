@@ -3,7 +3,7 @@ package io.metersphere.state;
 import lombok.Data;
 
 @Data
-public class MSWorkSpace {
+public class MSOrganization {
     private String name;
     private String id;
 
@@ -18,10 +18,8 @@ public class MSWorkSpace {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof MSWorkSpace) {
-            if (obj.hashCode() == this.hashCode()) {
-                return true;
-            }
+        if (obj instanceof MSOrganization) {
+            return obj.hashCode() == this.hashCode();
         }
         return false;
     }
