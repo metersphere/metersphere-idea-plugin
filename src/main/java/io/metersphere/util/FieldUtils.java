@@ -8,18 +8,19 @@ import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
 import de.plushnikov.intellij.lombok.util.PsiAnnotationUtil;
-import io.metersphere.model.FieldWrapper;
-import io.metersphere.model.PostmanModel;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import io.metersphere.constants.JacksonAnnotation;
 import io.metersphere.constants.PluginConstants;
 import io.metersphere.constants.SpringMappingConstants;
+import io.metersphere.model.FieldWrapper;
+import io.metersphere.model.PostmanModel;
 import io.metersphere.state.AppSettingState;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,48 +28,43 @@ import java.util.stream.Collectors;
 
 public class FieldUtils {
 
-    public static final Map<String, Object> normalTypes = new HashMap<>();
+    public static final Map<String, Object> normalTypes = createNormalTypesMap();
+    public static final List<String> skipJavaTypes = Arrays.asList(
+            "serialVersionUID".toLowerCase(),
+            "optimisticLockVersion".toLowerCase(),
+            "javax.servlet.http.HttpServletResponse",
+            "javax.servlet.http.HttpServletRequest"
+    );
 
-    /**
-     * 泛型列表
-     */
-    public static final List<String> genericList = new ArrayList<>();
-    public static final List<String> skipJavaTypes = new ArrayList<>();
-
-
-    static {
-        normalTypes.put("int", 1);
-        normalTypes.put("boolean", false);
-        normalTypes.put("byte", 1);
-        normalTypes.put("short", 1);
-        normalTypes.put("long", 1L);
-        normalTypes.put("float", 1.0F);
-        normalTypes.put("double", 1.0D);
-        normalTypes.put("char", 'a');
-        normalTypes.put("Boolean", false);
-        normalTypes.put("Byte", 0);
-        normalTypes.put("Short", (short) 0);
-        normalTypes.put("Integer", 0);
-        normalTypes.put("Long", 0L);
-        normalTypes.put("Float", 0.0F);
-        normalTypes.put("Double", 0.0D);
-        normalTypes.put("String", "@string");
-        normalTypes.put("Date", new Date().getTime());
-        normalTypes.put("BigDecimal", 0.111111);
-        normalTypes.put("LocalDateTime", "yyyy-MM-dd HH:mm:ss");
-        normalTypes.put("BigInteger", 0);
-        genericList.add("T");
-        genericList.add("E");
-        genericList.add("K");
-        genericList.add("V");
-        skipJavaTypes.add("serialVersionUID".toLowerCase());
-        skipJavaTypes.add("optimisticLockVersion".toLowerCase());
-        skipJavaTypes.add("javax.servlet.http.HttpServletResponse");
-        skipJavaTypes.add("javax.servlet.http.HttpServletRequest");
+    private static Map<String, Object> createNormalTypesMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("int", 1);
+        map.put("boolean", false);
+        map.put("byte", (byte) 1);
+        map.put("short", (short) 1);
+        map.put("long", 1L);
+        map.put("float", 1.0F);
+        map.put("double", 1.0D);
+        map.put("char", 'a');
+        map.put("Boolean", false);
+        map.put("Byte", (byte) 0);
+        map.put("Short", (short) 0);
+        map.put("Integer", 0);
+        map.put("Long", 0L);
+        map.put("Float", 0.0F);
+        map.put("Double", 0.0D);
+        map.put("String", "@string");
+        map.put("Date", new Date().getTime());
+        map.put("BigDecimal", new BigDecimal("0.111111"));
+        map.put("LocalDateTime", "yyyy-MM-dd HH:mm:ss");
+        map.put("BigInteger", BigInteger.ZERO);
+        return map;
     }
+
 
     public static Object getValue(FieldWrapper fieldInfo) {
         PsiType psiType = fieldInfo.getPsiType();
+
         if (isIterableType(psiType)) {
             PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
             if (type == null) {
@@ -76,14 +72,12 @@ public class FieldUtils {
             }
             if (isNormalType(type)) {
                 Object value = getValue(psiType.getPresentableText(), fieldInfo.getAnnotations());
-                if (value == null) {
-                    return null;
-                }
-                return value + "," + value;
+                return Objects.requireNonNullElse(value, "") + "," + Objects.requireNonNullElse(value, "");
             }
         }
+
         Object value = getValue(psiType.getPresentableText(), fieldInfo.getAnnotations());
-        return value == null ? "" : value;
+        return Objects.requireNonNullElse(value, "");
     }
 
     private static Object getValue(String typeStr, List<PsiAnnotation> annotations) {
@@ -240,19 +234,6 @@ public class FieldUtils {
         return annotations.stream().filter(a -> Objects.requireNonNull(a.getQualifiedName()).contains("Mapping")).findFirst();
     }
 
-    public static Map<String, Boolean> existRequestAnnotation(Collection<PsiAnnotation> annotations) {
-        Map<String, Boolean> r = new HashMap<>();
-        r.put("rest", false);
-        r.put("general", false);
-        for (PsiAnnotation next : annotations) {
-            if (Objects.requireNonNull(next.getQualifiedName()).equalsIgnoreCase("org.springframework.web.bind.annotation.RestController"))
-                r.put("rest", true);
-            if (next.getQualifiedName().equalsIgnoreCase("org.springframework.stereotype.Controller"))
-                r.put("general", true);
-        }
-        return r;
-    }
-
     public static Map<String, String> getParamMap(PsiMethod e1, AppSettingState state) {
         if (e1 == null)
             return new HashMap<>();
@@ -306,61 +287,92 @@ public class FieldUtils {
     }
 
     public static List<String> getPath(String urlStr, String basePath) {
+        // Split URL into segments
         String[] urls = urlStr.split("/");
-        if (StringUtils.isNotBlank(basePath))
+
+        // Check if basePath is provided and prepend to urls
+        if (StringUtils.isNotBlank(basePath)) {
             urls = (basePath + "/" + urlStr).split("/");
-        Pattern p = Pattern.compile("\\{(\\w+)\\}");
-        return Arrays.stream(urls).map(s -> {
-            Matcher m = p.matcher(s);
-            while (m.find()) {
-                s = ":" + m.group(1);
-            }
-            return s;
-        }).filter(StringUtils::isNotBlank).collect(Collectors.toList());
+        }
+
+        // Pattern for finding path parameters
+        Pattern pathParamPattern = Pattern.compile("\\{(\\w+)}");
+
+        // Process each segment of the URL
+        return Arrays.stream(urls)
+                .map(segment -> {
+                    // Attempt to match path parameter pattern
+                    Matcher matcher = pathParamPattern.matcher(segment);
+                    if (matcher.find()) {
+                        // Replace with :paramName format if path parameter found
+                        return ":" + matcher.group(1);
+                    } else {
+                        // Otherwise, return the segment as is
+                        return segment;
+                    }
+                })
+                .filter(StringUtils::isNotBlank) // Filter out blank segments
+                .collect(Collectors.toList()); // Collect results into a list
     }
 
-    public static List<?> getQuery(PsiMethod e1, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
-        List<JSONObject> r = new ArrayList<>();
-        PsiParameterList parametersList = e1.getParameterList();
-        PsiParameter[] parameter = parametersList.getParameters();
-        if (requestBean.getMethod().equalsIgnoreCase("REQUEST") && parameter.length == 0) {
+
+    public static List<JSONObject> getQuery(PsiMethod method, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
+        List<JSONObject> parameters = new ArrayList<>();
+        PsiParameterList parameterList = method.getParameterList();
+        PsiParameter[] parametersArray = parameterList.getParameters();
+
+        // Check and adjust request method if needed
+        if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()) && parametersArray.length == 0) {
             requestBean.setMethod("GET");
         }
-        for (PsiParameter psiParameter : parameter) {
-            PsiAnnotation[] pAt = psiParameter.getAnnotations();
-            if (ArrayUtils.isNotEmpty(pAt)) {
-                //requestParam
-                if (CollectionUtils.isNotEmpty(PsiAnnotationUtil.findAnnotations(psiParameter, Pattern.compile("RequestParam")))) {
-                    String javaType = psiParameter.getType().getCanonicalText();
-                    if (PluginConstants.simpleJavaType.contains(javaType)) {
-                        JSONObject stringParam = new JSONObject();
-                        stringParam.put("key", getAnnotationName(psiParameter));
-                        stringParam.put("value", "");
-                        stringParam.put("equals", true);
-                        stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
-                        r.add(stringParam);
-                    } else {
-                        if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
-                            requestBean.setMethod("POST");
+
+        for (PsiParameter parameter : parametersArray) {
+            PsiAnnotation[] annotations = parameter.getAnnotations();
+            String javaType = parameter.getType().getCanonicalText();
+
+            // Check for @RequestParam annotation
+            boolean isRequestParam = false;
+            for (PsiAnnotation annotation : annotations) {
+                if ("RequestParam".equals(annotation.getQualifiedName())) {
+                    isRequestParam = true;
+                    break;
+                }
+            }
+
+            // Determine parameter handling based on annotation presence and type
+            if (isRequestParam) {
+                if (PluginConstants.simpleJavaType.contains(javaType)) {
+                    JSONObject stringParam = new JSONObject();
+                    stringParam.put("key", getAnnotationName(parameter));
+                    stringParam.put("value", "");
+                    stringParam.put("equals", true);
+                    stringParam.put("description", paramJavaDoc.get(parameter.getName()));
+                    parameters.add(stringParam);
+                } else {
+                    if ("REQUEST".equalsIgnoreCase(requestBean.getMethod())) {
+                        requestBean.setMethod("POST");
                     }
                 }
             } else {
-                String javaType = psiParameter.getType().getCanonicalText();
+                // Handle parameters without @RequestParam annotation
                 if (PluginConstants.simpleJavaType.contains(javaType)) {
                     JSONObject stringParam = new JSONObject();
-                    stringParam.put("key", psiParameter.getName());
+                    stringParam.put("key", parameter.getName());
                     stringParam.put("value", "");
                     stringParam.put("equals", true);
-                    stringParam.put("description", paramJavaDoc.get(psiParameter.getName()));
-                    r.add(stringParam);
+                    stringParam.put("description", paramJavaDoc.get(parameter.getName()));
+                    parameters.add(stringParam);
                 } else {
-                    if ("REQUEST".equalsIgnoreCase(requestBean.getMethod()))
+                    if ("REQUEST".equalsIgnoreCase(requestBean.getMethod())) {
                         requestBean.setMethod("POST");
+                    }
                 }
             }
         }
-        return r;
+
+        return parameters;
     }
+
 
     public static List<?> getVariable(List<String> path, Map<String, String> paramJavaDoc) {
         JSONArray variables = new JSONArray();

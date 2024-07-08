@@ -34,11 +34,11 @@ public class AppSettingComponent {
     private JPasswordField secretkey;
     private JButton testCon;
     private JTabbedPane settingPanel;
-    private JComboBox apiType;
+    private JComboBox<String> apiType;
     private JComboBox<MSProject> projectCB;
     private JComboBox<MSModule> moduleCB;
     private JComboBox<String> modeId;
-    private JComboBox depthCB;
+    private JComboBox<Integer> depthCB;
     private JTextField moduleName;
     private JCheckBox javadocCheckBox;
     private JTextField contextPath;

@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 public class MeterSphereExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
-    private final V2Exporter v2Exporter = new V2Exporter();
+    private final ExporterImpl v2Exporter = new ExporterImpl();
 
     @Override
     public boolean export(List<PsiJavaFile> files) throws Throwable {
