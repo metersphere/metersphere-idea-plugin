@@ -1,9 +1,5 @@
 package io.metersphere.constants;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.google.gson.JsonArray;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -51,7 +47,6 @@ public class PluginConstants {
         add("String");
         add("java.lang.String");
         add("JSONObject");
-        add("com.alibaba.fastjson.JSONObject");
         add("JsonObject");
         add("com.google.gson.JsonObject");
         add("Map");
@@ -95,12 +90,11 @@ public class PluginConstants {
         put("java.lang.Boolean", false);
         put("java.lang.String", "");
         put("String", "");
-        put("com.alibaba.fastjson.JSONObject", new JSONObject());
-        put("JSONObject", new JSONObject());
-        put("com.google.gson.JsonObject", new JSONObject());
-        put("JsonObject", new JSONObject());
-        put("java.util.Map", new JSONObject());
-        put("Map", new JSONObject());
+        put("JSONObject", new HashMap<>());
+        put("com.google.gson.JsonObject", new HashMap<>());
+        put("JsonObject", new HashMap<>());
+        put("java.util.Map", new HashMap<>());
+        put("Map", new HashMap<>());
         put("Date", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
         put("java.util.Date", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
         put("LocalDateTime", LocalDateTime.now().format(NORM_DATETIME_PATTERN));
@@ -111,10 +105,6 @@ public class PluginConstants {
         put("java.time.LocalDate", LocalDate.now().format(NORM_DATE_PATTERN));
         put("BigDecimal", "0.0");
         put("java.math.BigDecimal", "0.0");
-        put("JSONArray", new JSONArray());
-        put("com.alibaba.fastjson.JSONArray", new JSONArray());
-        put("JsonArray", new JsonArray());
-        put("com.google.gson.JsonArray", new JsonArray());
         put("Void", "");
         put("java.lang.Void", "");
         put("MultipartFile", "");
@@ -140,7 +130,6 @@ public class PluginConstants {
         put("java.lang.Boolean", "boolean");
         put("java.lang.String", "string");
         put("String", "string");
-        put("com.alibaba.fastjson.JSONObject", "object");
         put("JSONObject", "object");
         put("com.google.gson.JsonObject", "object");
         put("JsonObject", "object");

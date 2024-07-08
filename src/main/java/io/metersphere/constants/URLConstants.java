@@ -6,4 +6,5 @@ public class URLConstants {
     public static final String GET_PROJECT_VERSION = "/project/version";//获取项目版本
     public static final String GET_ORG_LIST = "/org/list";//获取组织
     public static final String GET_API_MODULE_LIST = "/api/module/list/";//获取组织下的项目
+    public static final String API_IMPORT = "/api/definition/import";//导入API地址
 }

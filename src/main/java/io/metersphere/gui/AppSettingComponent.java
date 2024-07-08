@@ -1,16 +1,15 @@
 package io.metersphere.gui;
 
-import com.alibaba.fastjson.JSONObject;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
 import io.metersphere.constants.MSApiConstants;
 import io.metersphere.state.*;
+import io.metersphere.util.JSON;
+import io.metersphere.util.LogUtils;
 import io.metersphere.util.MSClientUtils;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
@@ -19,9 +18,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static io.metersphere.util.MSClientUtils.test;
 
@@ -47,8 +44,6 @@ public class AppSettingComponent {
     private JComboBox<MSProjectVersion> updateVersionCB;
     private JCheckBox coverModule;
     private AppSettingService appSettingService = AppSettingService.getInstance();
-    private Gson gson = new Gson();
-    private Logger logger = Logger.getInstance(AppSettingComponent.class);
 
     private ItemListener organizationListener = itemEvent -> {
         if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
@@ -256,17 +251,16 @@ public class AppSettingComponent {
 
     private void initProject(AppSettingState appSettingState, String organizationId) {
         //初始化项目
-        JSONObject param = new JSONObject();
+        Map<String, Object> param = new HashMap<>();
         param.put("userId", appSettingState.getUserId());
         if (StringUtils.isNotBlank(organizationId)) {
             param.put("organizationId", organizationId);
         }
-        JSONObject project = MSClientUtils.getProjectList(appSettingState, param);
-        if (project != null && project.getBoolean("success")) {
-            appSettingState.setProjectOptions(gson.fromJson(gson.toJson(project.getJSONArray("data")), new TypeToken<List<MSProject>>() {
-            }.getType()));
+        Map<String, Object> project = MSClientUtils.getProjectList(appSettingState, param);
+        if (project != null && BooleanUtils.isTrue(Boolean.valueOf(project.get("success").toString()))) {
+            appSettingState.setProjectOptions(JSON.parseArray(String.valueOf(project.get("data")), MSProject.class));
         } else {
-            logger.error("get project failed!");
+            LogUtils.error("get project failed!");
             return;
         }
 
@@ -330,11 +324,10 @@ public class AppSettingComponent {
         if (appSettingState == null) {
             return;
         }
-        JSONObject jsonObject = MSClientUtils.listProjectVersionBy(projectId, appSettingState);
-        if (jsonObject != null && jsonObject.getBoolean("success")) {
-            String json = gson.toJson(jsonObject.getJSONArray("data"));
-            List<MSProjectVersion> versionList = gson.fromJson(json, new TypeToken<List<MSProjectVersion>>() {
-            }.getType());
+        Map<String, Object> jsonObject = MSClientUtils.listProjectVersionBy(projectId, appSettingState);
+        if (jsonObject != null && jsonObject.containsKey("success")) {
+            String json = JSON.toJSONString(jsonObject.get("data"));
+            List<MSProjectVersion> versionList = JSON.parseArray(json, MSProjectVersion.class);
             appSettingState.setProjectVersionOptions(versionList);
             appSettingState.setUpdateVersionOptions(versionList);
         }
@@ -366,16 +359,15 @@ public class AppSettingComponent {
         AppSettingState appSettingState = appSettingService.getState();
 
         assert appSettingState != null;
-        JSONObject userInfo = MSClientUtils.getUserInfo(appSettingState);
+        Map<String, Object> userInfo = MSClientUtils.getUserInfo(appSettingState);
         assert userInfo != null;
-        appSettingState.setUserId(userInfo.getString("data"));
+        appSettingState.setUserId(userInfo.get("data").toString());
 
-        JSONObject organizationObj = MSClientUtils.getOrganizationList(appSettingState);
-        if (organizationObj != null && organizationObj.getBoolean("success")) {
-            appSettingState.setOrganizationOptions(gson.fromJson(gson.toJson(organizationObj.getJSONArray("data")), new TypeToken<List<MSOrganization>>() {
-            }.getType()));
+        Map<String, Object> organizationObj = MSClientUtils.getOrganizationList(appSettingState);
+        if (organizationObj != null && organizationObj.containsKey("success") && organizationObj.containsKey("data")) {
+            appSettingState.setOrganizationOptions(JSON.parseArray(organizationObj.get("data").toString(), MSOrganization.class));
         } else {
-            logger.error("get organization failed!");
+            LogUtils.error("get organization failed!");
             return false;
         }
 
@@ -420,13 +412,12 @@ public class AppSettingComponent {
         checkVersionEnable(appSettingState, msProjectId);
         //初始化模块
         assert appSettingState != null;
-        JSONObject module = MSClientUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
+        Map<String, Object> module = MSClientUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
 
-        if (module != null && module.getBoolean("success")) {
-            appSettingState.setModuleOptions(gson.fromJson(gson.toJson(module.getJSONArray("data")), new TypeToken<List<MSModule>>() {
-            }.getType()));
+        if (module != null && module.containsKey("success")) {
+            appSettingState.setModuleOptions(JSON.parseArray(module.get("data").toString(), MSModule.class));
         } else {
-            logger.error("get module failed!");
+            LogUtils.error("get module failed!");
             return;
         }
         MSModule selectedModule = null;

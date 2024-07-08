@@ -69,13 +69,13 @@ public class FieldWrapper {
         resolveChildren(curDepth + 1);
     }
 
-    public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent, int curDeepth) {
-        this(type, parent, curDeepth);
+    public FieldWrapper(String fieldName, PsiType type, FieldWrapper parent, int curDepth) {
+        this(type, parent, curDepth);
         this.name = fieldName;
     }
 
-    public FieldWrapper(PsiField field, PsiType type, FieldWrapper parent, int curDeepth) {
-        this(type, parent, curDeepth);
+    public FieldWrapper(PsiField field, PsiType type, FieldWrapper parent, int curDepth) {
+        this(type, parent, curDepth);
         this.name = field.getName();
         this.desc = FieldUtils.getJavaDocName(field, appSettingState, false);
     }

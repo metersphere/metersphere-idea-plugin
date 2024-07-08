@@ -1,31 +1,25 @@
 package io.metersphere.util;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import io.metersphere.AppSettingService;
-import io.metersphere.model.FieldWrapper;
-import io.metersphere.model.PostmanModel;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import io.metersphere.constants.JavaTypeEnum;
 import io.metersphere.constants.PluginConstants;
 import io.metersphere.constants.WebAnnotation;
+import io.metersphere.model.FieldWrapper;
+import io.metersphere.model.PostmanModel;
 import io.metersphere.state.AppSettingState;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.Modifier;
 import java.util.*;
 
-public class JSONUtils {
+public class DataParseUtils {
 
-    private static final Gson gson = new GsonBuilder().excludeFieldsWithModifiers(Modifier.STATIC, Modifier.FINAL).setPrettyPrinting().create();
     private static final AppSettingState state = AppSettingService.getInstance().getState();
 
 
@@ -35,9 +29,9 @@ public class JSONUtils {
         }
         Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren(), curDepth + 1);
         if (JavaTypeEnum.ARRAY.equals(fieldInfo.getType())) {
-            return gson.toJson(Collections.singletonList(stringObjectMap));
+            return JSON.toJSONString(Collections.singletonList(stringObjectMap));
         }
-        return gson.toJson(stringObjectMap);
+        return JSON.toJSONString(stringObjectMap);
     }
 
 
@@ -106,8 +100,8 @@ public class JSONUtils {
         }
     }
 
-    private static JSONObject createProperty(FieldWrapper fieldWrapper, JSONArray items, String basePath) {
-        JSONObject pro = new JSONObject();
+    private static Map<String, Object> createProperty(FieldWrapper fieldWrapper, List<Object> items, String basePath) {
+        Map<String, Object> pro = new HashMap<>();
         if (fieldWrapper.getType() != null) {
             pro.put("type", fieldWrapper.getType() == JavaTypeEnum.ARRAY ? "array" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()) == null ? "object" : PluginConstants.simpleJavaTypeJsonSchemaMap.get(fieldWrapper.getPsiType().getCanonicalText()));
         }
@@ -116,7 +110,7 @@ public class JSONUtils {
         }
         if (items != null) {
             if (JavaTypeEnum.ARRAY == fieldWrapper.getType()) {
-                items.add(createProperty(fieldWrapper.getChildren().getFirst(), new JSONArray(), basePath + "/" + fieldWrapper.getName()));
+                items.add(createProperty(fieldWrapper.getChildren().getFirst(), new LinkedList<>(), basePath + "/" + fieldWrapper.getName()));
             }
             pro.put("items", items);
         }
@@ -128,14 +122,14 @@ public class JSONUtils {
         return pro;
     }
 
-    private static JSONObject createProperty(FieldWrapper fieldWrapper, String basePath) {
-        JSONObject pro = createProperty(fieldWrapper, null, basePath);
+    private static Map<String, Object> createProperty(FieldWrapper fieldWrapper, String basePath) {
+        Map<String, Object> pro = createProperty(fieldWrapper, null, basePath);
         pro.put("type", "object");
         return pro;
     }
 
-    private static void setMockObj(JSONObject pro) {
-        JSONObject mock = new JSONObject();
+    private static void setMockObj(Map<String, Object> pro) {
+        Map<String, Object> mock = new HashMap<>();
         mock.put("mock", "");
         pro.put("mock", mock);
     }
@@ -149,7 +143,7 @@ public class JSONUtils {
      */
 
     public static Object buildJsonSchemaItems(FieldWrapper field, String baseItemsPath, int curDepth) {
-        JSONArray items = new JSONArray();
+        List<Object> items = new LinkedList<>();
         assert state != null;
         if (curDepth > state.getDepth()) {
             return items;
@@ -160,8 +154,8 @@ public class JSONUtils {
                 FieldWrapper realField = field.getChildren().getFirst();
                 items.add(createProperty(realField, null, baseItemsPath));
             } else {
-                JSONObject obj = createProperty(field, baseItemsPath);
-                JSONObject objPro = new JSONObject();
+                Map<String, Object> obj = createProperty(field, baseItemsPath);
+                Map<String, Object> objPro = new HashMap<>();
                 for (FieldWrapper child : field.getChildren()) {
                     objPro.put(child.getName(), buildJsonSchemaProperties(child, baseItemsPath + "/" + field.getName() + "/#/properties", curDepth + 1));
                 }
@@ -183,10 +177,10 @@ public class JSONUtils {
     public static Object buildJsonSchemaProperties(FieldWrapper child, String basePropertiesPath, int curDepth) {
         assert state != null;
         if (curDepth > state.getDepth()) {
-            return new JSONObject();
+            return new HashMap<>();
         }
-        JSONObject fatherObj = createProperty(child, null, basePropertiesPath);
-        JSONObject fatherProperties = new JSONObject();
+        Map<String, Object> fatherObj = createProperty(child, null, basePropertiesPath);
+        Map<String, Object> fatherProperties = new HashMap<>();
 
         switch (child.getType()) {
             case ENUM:
@@ -207,8 +201,8 @@ public class JSONUtils {
                     //数组或者集合类型 取第一个孩子节点为内置类型
                     if (child.getChildren().size() == 1) {
                         FieldWrapper arrayTypeField = child.getChildren().getFirst();
-                        JSONObject arraySchemaObj = createProperty(arrayTypeField, null, basePropertiesPath + "/" + child.getName() + "/#/items");
-                        JSONArray arraySchemaArray = new JSONArray();
+                        Map<String, Object> arraySchemaObj = createProperty(arrayTypeField, null, basePropertiesPath + "/" + child.getName() + "/#/items");
+                        List<Object> arraySchemaArray = new LinkedList<>();
                         arraySchemaArray.add(arraySchemaObj);
                         fatherObj.put("items", arraySchemaArray);
                     } else {

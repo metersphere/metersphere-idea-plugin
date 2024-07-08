@@ -26,7 +26,6 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.34' // 测试时编译依赖
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34' // 测试时注解处理器
 
-    implementation 'com.alibaba:fastjson:2.0.51' // 使用最新版本的 Fastjson
     implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5' // IntelliJ Lombok 插件支持
 }
 

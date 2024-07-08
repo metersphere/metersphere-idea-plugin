@@ -1,7 +1,5 @@
 package io.metersphere.util;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.psi.*;
 import com.intellij.psi.javadoc.PsiDocToken;
@@ -316,8 +314,8 @@ public class FieldUtils {
     }
 
 
-    public static List<JSONObject> getQuery(PsiMethod method, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
-        List<JSONObject> parameters = new ArrayList<>();
+    public static List<Map<String, Object>> getQuery(PsiMethod method, PostmanModel.ItemBean.RequestBean requestBean, Map<String, String> paramJavaDoc) {
+        List<Map<String, Object>> parameters = new ArrayList<>();
         PsiParameterList parameterList = method.getParameterList();
         PsiParameter[] parametersArray = parameterList.getParameters();
 
@@ -342,7 +340,7 @@ public class FieldUtils {
             // Determine parameter handling based on annotation presence and type
             if (isRequestParam) {
                 if (PluginConstants.simpleJavaType.contains(javaType)) {
-                    JSONObject stringParam = new JSONObject();
+                    Map<String, Object> stringParam = new HashMap<>();
                     stringParam.put("key", getAnnotationName(parameter));
                     stringParam.put("value", "");
                     stringParam.put("equals", true);
@@ -356,7 +354,7 @@ public class FieldUtils {
             } else {
                 // Handle parameters without @RequestParam annotation
                 if (PluginConstants.simpleJavaType.contains(javaType)) {
-                    JSONObject stringParam = new JSONObject();
+                    Map<String, Object> stringParam = new HashMap<>();
                     stringParam.put("key", parameter.getName());
                     stringParam.put("value", "");
                     stringParam.put("equals", true);
@@ -375,10 +373,10 @@ public class FieldUtils {
 
 
     public static List<?> getVariable(List<String> path, Map<String, String> paramJavaDoc) {
-        JSONArray variables = new JSONArray();
+        List<Object> variables = new LinkedList<>();
         for (String s : path) {
             if (s.startsWith(":")) {
-                JSONObject var = new JSONObject();
+                Map<String, Object> var = new HashMap<>();
                 var.put("key", s.substring(1));
                 var.put("description", paramJavaDoc.get(s.substring(1)));
                 variables.add(var);

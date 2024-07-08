@@ -1,6 +1,5 @@
 package io.metersphere.exporter;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
@@ -11,18 +10,20 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaFile;
 import io.metersphere.AppSettingService;
-import io.metersphere.model.PostmanModel;
-import org.jetbrains.annotations.NotNull;
 import io.metersphere.constants.PluginConstants;
+import io.metersphere.model.PostmanModel;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.ProgressUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class PostmanExporter implements IExporter {
@@ -53,9 +54,9 @@ public class PostmanExporter implements IExporter {
             }
 
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file[0].getCanonicalPath() + "/postman.json"));
-            JSONObject jsonObject = new JSONObject();
+            Map<String, Object> jsonObject = new HashMap<>();
             jsonObject.put("item", postmanModels);
-            JSONObject info = new JSONObject();
+            Map<String, Object> info = new HashMap<>();
             info.put("schema", "https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
             String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             info.put("name", files.getFirst().getProject().getName());

@@ -36,7 +36,7 @@ public class PostmanModel implements Serializable {
                 private String raw;
                 // postman 实际没有该参数，增加只是为了方便 ms 导入
                 private String jsonSchema;
-                private List<FormDataBean> formdata;
+                private List<FormDataBean> dataBean;
 
                 @Data
                 @AllArgsConstructor

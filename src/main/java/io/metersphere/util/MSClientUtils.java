@@ -1,6 +1,5 @@
 package io.metersphere.util;
 
-import com.alibaba.fastjson.JSONObject;
 import io.metersphere.constants.URLConstants;
 import io.metersphere.state.AppSettingState;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +14,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MSClientUtils {
 
@@ -56,7 +57,7 @@ public class MSClientUtils {
     /**
      * 根据 AK SK 获取项目列表
      */
-    public static JSONObject getProjectList(AppSettingState appSettingState, JSONObject param) {
+    public static Map<String, Object> getProjectList(AppSettingState appSettingState, Map<String, Object> param) {
         CloseableHttpClient httpClient = HttpClients.custom().build();
         try {
             HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + URLConstants.GET_PROJECT_LIST);
@@ -64,13 +65,12 @@ public class MSClientUtils {
             httpPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             httpPost.addHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
 
-            StringEntity stringEntity = new StringEntity(param.toJSONString());
+            StringEntity stringEntity = new StringEntity(JSON.toJSONString(param));
             httpPost.setEntity(stringEntity);
 
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 if (response.getStatusLine().getStatusCode() == 200) {
-                    String responseBody = EntityUtils.toString(response.getEntity());
-                    return JSONObject.parseObject(responseBody);
+                    return JSON.parseMap(EntityUtils.toString(response.getEntity()));
                 } else {
                     LogUtils.error("getProjectList failed! Status code: " + response.getStatusLine().getStatusCode());
                 }
@@ -86,7 +86,7 @@ public class MSClientUtils {
                 LogUtils.error("Failed to close HttpClient", e);
             }
         }
-        return null;
+        return new HashMap<>();
     }
 
     /**
@@ -95,7 +95,7 @@ public class MSClientUtils {
      * @param appSettingState 应用配置状态管理器
      * @return 如果成功查询到版本返回 response 对象,否则返回 {@code null}
      */
-    public static JSONObject listProjectVersionBy(String projectId, AppSettingState appSettingState) {
+    public static Map<String, Object> listProjectVersionBy(String projectId, AppSettingState appSettingState) {
         if (projectId == null || appSettingState.getMeterSphereAddress() == null) {
             return null;
         }
@@ -110,8 +110,7 @@ public class MSClientUtils {
             HttpResponse response = httpClient.execute(httpGet);
 
             if (isSuccessful(response)) {
-                String responseBody = EntityUtils.toString(response.getEntity());
-                return JSONObject.parseObject(responseBody);
+                return JSON.parseMap(EntityUtils.toString(response.getEntity()));
             } else {
                 LogUtils.error("list project versions failed! Status code: " + response.getStatusLine().getStatusCode());
                 return null;
@@ -126,7 +125,7 @@ public class MSClientUtils {
         return response != null && response.getStatusLine().getStatusCode() == 200;
     }
 
-    public static JSONObject getUserInfo(AppSettingState appSettingState) {
+    public static Map<String, Object> getUserInfo(AppSettingState appSettingState) {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
@@ -134,7 +133,7 @@ public class MSClientUtils {
             httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
-                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+                return JSON.parseMap(EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
             LogUtils.error("getUserInfo failed", e);
@@ -154,7 +153,7 @@ public class MSClientUtils {
     /**
      * 获取组织
      */
-    public static JSONObject getOrganizationList(AppSettingState appSettingState) {
+    public static Map<String, Object> getOrganizationList(AppSettingState appSettingState) {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             // TODO 更新接口
@@ -163,7 +162,7 @@ public class MSClientUtils {
             httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
-                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+                return JSON.parseMap(EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
             LogUtils.error("getUserInfo failed", e);
@@ -184,7 +183,7 @@ public class MSClientUtils {
      * @param projectId 项目ID
      * @param protocol  协议 1.0.0 暂时只支持 HTTP
      */
-    public static JSONObject getModuleList(AppSettingState appSettingState, String projectId, String protocol) {
+    public static Map<String, Object> getModuleList(AppSettingState appSettingState, String projectId, String protocol) {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_API_MODULE_LIST + projectId + "?protocol=" + protocol);
@@ -192,7 +191,7 @@ public class MSClientUtils {
             httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {
-                return JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
+                return JSON.parseMap(EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
             LogUtils.error("getModuleList failed", e);
@@ -221,11 +220,9 @@ public class MSClientUtils {
 
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {
-                JSONObject r = JSONObject.parseObject(EntityUtils.toString(response.getEntity()));
-                if (r.containsKey("success")) {
-                    if (r.getBoolean("success") && r.getBoolean("data") != null) {
-                        return r.getBoolean("data");
-                    }
+                Map<String, Object> r = JSON.parseMap(EntityUtils.toString(response.getEntity()));
+                if (r.containsKey("success") && r.containsKey("data")) {
+                    return (boolean) r.get("success") && (boolean) r.get("data");
                 }
                 return false;
             }
