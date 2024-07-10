@@ -26,7 +26,7 @@ public class MSClientUtils {
      * 测试连接
      */
     public static boolean test(AppSettingState appSettingState) {
-        if (StringUtils.isAnyBlank(appSettingState.getMeterSphereAddress(), appSettingState.getAccesskey(), appSettingState.getSecretkey())) {
+        if (StringUtils.isAnyBlank(appSettingState.getMeterSphereAddress(), appSettingState.getAccessKey(), appSettingState.getSecretKey())) {
             return false;
         }
 
@@ -37,7 +37,7 @@ public class MSClientUtils {
             httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
             httpGet.addHeader("Content-type", ContentType.APPLICATION_JSON.toString());
 
-            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             HttpResponse response = httpClient.execute(httpGet);
             int statusCode = response.getStatusLine().getStatusCode();
@@ -61,7 +61,7 @@ public class MSClientUtils {
         CloseableHttpClient httpClient = HttpClients.custom().build();
         try {
             HttpPost httpPost = new HttpPost(appSettingState.getMeterSphereAddress() + URLConstants.GET_PROJECT_LIST);
-            httpPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpPost.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httpPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             httpPost.addHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
 
@@ -104,7 +104,7 @@ public class MSClientUtils {
             // TODO 根据实际接口调整
             String url = appSettingState.getMeterSphereAddress() + URLConstants.GET_PROJECT_VERSION;
             HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
 
             HttpResponse response = httpClient.execute(httpGet);
@@ -129,7 +129,7 @@ public class MSClientUtils {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + "/user/key/validate");
-            httPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httPost.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
@@ -158,7 +158,7 @@ public class MSClientUtils {
         try {
             // TODO 更新接口
             HttpGet httPost = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_ORG_LIST);
-            httPost.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httPost.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httPost.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httPost);
             if (response.getStatusLine().getStatusCode() == 200) {
@@ -187,7 +187,7 @@ public class MSClientUtils {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + URLConstants.GET_API_MODULE_LIST + projectId + "?protocol=" + protocol);
-            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
             CloseableHttpResponse response = httpClient.execute(httpGet);
             if (response.getStatusLine().getStatusCode() == 200) {
@@ -215,7 +215,7 @@ public class MSClientUtils {
         CloseableHttpClient httpClient = HttpConfig.getOneHttpClient(appSettingState.getMeterSphereAddress());
         try {
             HttpGet httpGet = new HttpGet(appSettingState.getMeterSphereAddress() + "/project/version/enable/" + projectId);
-            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccesskey());
+            httpGet.addHeader(ACCESS_KEY, appSettingState.getAccessKey());
             httpGet.addHeader(SIGNATURE, CodingUtils.getSignature(appSettingState));
 
             CloseableHttpResponse response = httpClient.execute(httpGet);

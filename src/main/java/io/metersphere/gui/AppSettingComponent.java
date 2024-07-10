@@ -2,7 +2,6 @@ package io.metersphere.gui;
 
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
-import io.metersphere.constants.MSApiConstants;
 import io.metersphere.state.*;
 import io.metersphere.util.JSON;
 import io.metersphere.util.LogUtils;
@@ -27,22 +26,14 @@ public class AppSettingComponent {
 
     private JPanel mainSettingPanel;
     private JTextField meterSphereAddress;
-    private JTextField accesskey;
-    private JPasswordField secretkey;
+    private JTextField accessKey;
+    private JPasswordField secretKey;
     private JButton testCon;
     private JTabbedPane settingPanel;
-    private JComboBox<String> apiType;
     private JComboBox<MSProject> projectCB;
     private JComboBox<MSModule> moduleCB;
-    private JComboBox<String> modeId;
-    private JComboBox<Integer> depthCB;
     private JTextField moduleName;
-    private JCheckBox javadocCheckBox;
-    private JTextField contextPath;
-    private JComboBox<MSProjectVersion> projectVersionCB;
     private JComboBox<MSOrganization> organizationCB;
-    private JComboBox<MSProjectVersion> updateVersionCB;
-    private JCheckBox coverModule;
     private AppSettingService appSettingService = AppSettingService.getInstance();
 
     private ItemListener organizationListener = itemEvent -> {
@@ -107,16 +98,16 @@ public class AppSettingComponent {
                 appSettingState.setMeterSphereAddress(meterSphereAddress.getText());
             }
         });
-        accesskey.addKeyListener(new KeyAdapter() {
+        accessKey.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                appSettingState.setAccesskey(accesskey.getText());
+                appSettingState.setAccessKey(accessKey.getText());
             }
         });
-        secretkey.addKeyListener(new KeyAdapter() {
+        secretKey.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                appSettingState.setSecretkey(secretkey.getText());
+                appSettingState.setSecretKey(secretKey.getText());
             }
         });
 
@@ -126,69 +117,22 @@ public class AppSettingComponent {
         //项目 action -> 版本
         projectCB.addItemListener(projectListener);
 
-        projectVersionCB.addItemListener(itemEvent -> {
-            if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (projectVersionCB.getSelectedItem() != null)
-                    appSettingState.setProjectVersion((MSProjectVersion) itemEvent.getItem());
-            }
-        });
-
-        updateVersionCB.addItemListener(itemEvent -> {
-            if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-                if (updateVersionCB.getSelectedItem() != null)
-                    appSettingState.setUpdateVersion((MSProjectVersion) itemEvent.getItem());
-            }
-        });
-
         moduleCB.addItemListener(moduleItemListener);
 
-        modeId.addActionListener(actionEvent -> {
-            appSettingState.setModeId(Objects.requireNonNull(modeId.getSelectedItem()).toString());
-            if (!MSClientUtils.getModeId(appSettingState.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
-                updateVersionCB.setSelectedItem(null);
-                appSettingState.setUpdateVersion(null);
-                updateVersionCB.setEnabled(false);
-                //不覆盖的时候，覆盖路径也设置为 false
-                coverModule.setSelected(false);
-                coverModule.setEnabled(false);
-            } else {
-                updateVersionCB.setEnabled(true);
-                projectVersionCB.setEnabled(true);
-                //覆盖模块设置为启用
-                coverModule.setEnabled(true);
-                if (CollectionUtils.isNotEmpty(appSettingState.getUpdateVersionOptions())) {
-                    updateVersionCB.setSelectedItem(appSettingState.getUpdateVersionOptions().getFirst());
-                }
-            }
-        });
-        coverModule.addActionListener(actionEvent -> {
-            appSettingState.setCoverModule(coverModule.isSelected());
-        });
-        depthCB.addActionListener(actionEvent ->
-                appSettingState.setDepth(Integer.valueOf(Objects.requireNonNull(depthCB.getSelectedItem()).toString())));
-        moduleName.addKeyListener(new KeyAdapter() {
+
+/*        moduleName.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 appSettingState.setExportModuleName(new String(moduleName.getText().trim().getBytes(StandardCharsets.UTF_8)));
             }
-        });
-        contextPath.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                appSettingState.setContextPath(contextPath.getText().trim());
-            }
-        });
-        javadocCheckBox.addActionListener((actionEvent) -> appSettingState.setJavadoc(javadocCheckBox.isSelected()));
+        });*/
     }
 
     private void initData(AppSettingState appSettingState) {
         meterSphereAddress.setText(appSettingState.getMeterSphereAddress());
-        accesskey.setText(appSettingState.getAccesskey());
-        secretkey.setText(appSettingState.getSecretkey());
-        if (appSettingState.getModeId() != null) {
-            modeId.setSelectedItem(appSettingState.getModeId());
-        }
-        apiType.setSelectedItem(appSettingState.getApiType());
+        accessKey.setText(appSettingState.getAccessKey());
+        secretKey.setText(appSettingState.getSecretKey());
+
         if (StringUtils.isNotBlank(appSettingState.getExportModuleName())) {
             moduleName.setText(new String(appSettingState.getExportModuleName().getBytes(StandardCharsets.UTF_8)));
         }
@@ -213,40 +157,6 @@ public class AppSettingComponent {
             moduleCB.setSelectedItem(appSettingState.getModule());
         }
 
-        // 版本
-        if (appSettingState.getProjectVersionOptions() != null) {
-            appSettingState.getProjectVersionOptions()
-                    .forEach(version -> projectVersionCB.addItem(version));
-        }
-        if (appSettingState.getProjectVersion() != null) {
-            projectVersionCB.setSelectedItem(appSettingState.getProjectVersion());
-        }
-
-        if (appSettingState.getUpdateVersionOptions() != null) {
-            appSettingState.getUpdateVersionOptions()
-                    .forEach(version -> updateVersionCB.addItem(version));
-        }
-        if (appSettingState.getUpdateVersion() != null) {
-            updateVersionCB.setSelectedItem(appSettingState.getUpdateVersion());
-        }
-
-        if (appSettingState.isSupportVersion()) {
-            if (!StringUtils.equalsIgnoreCase(MSApiConstants.UNCOVER, appSettingState.getModeId())) {
-                updateVersionCB.setEnabled(true);
-            }
-            projectVersionCB.setEnabled(true);
-        } else {
-            projectVersionCB.setEnabled(false);
-            updateVersionCB.setEnabled(false);
-        }
-
-        depthCB.setSelectedItem(appSettingState.getDepth().toString());
-
-        if (StringUtils.isNotBlank(appSettingState.getContextPath())) {
-            contextPath.setText(appSettingState.getContextPath().trim());
-        }
-        javadocCheckBox.setSelected(appSettingState.isJavadoc());
-        coverModule.setSelected(appSettingState.isCoverModule());
     }
 
     private void initProject(AppSettingState appSettingState, String organizationId) {
@@ -294,25 +204,8 @@ public class AppSettingComponent {
         if (CollectionUtils.isEmpty(appSettingState.getProjectOptions())) {
             this.moduleCB.removeAllItems();
             appSettingState.setModule(null);
-            this.projectVersionCB.removeAllItems();
-            this.updateVersionCB.removeAllItems();
             appSettingState.setProjectVersion(null);
             appSettingState.setUpdateVersion(null);
-        }
-    }
-
-    private void checkVersionEnable(AppSettingState appSettingState, String projectId) {
-        boolean versionEnable = MSClientUtils.getProjectVersionEnable(appSettingState, projectId);
-        appSettingState.setSupportVersion(versionEnable);
-        if (!versionEnable) {
-            projectVersionCB.setEnabled(false);
-            updateVersionCB.setEnabled(false);
-        } else {
-            mutationProjectVersions(projectId);
-            projectVersionCB.setEnabled(true);
-            if (Objects.requireNonNull(modeId.getSelectedItem()).toString().equalsIgnoreCase(MSApiConstants.COVER)) {
-                updateVersionCB.setEnabled(true);
-            }
         }
     }
 
@@ -331,28 +224,6 @@ public class AppSettingComponent {
             appSettingState.setProjectVersionOptions(versionList);
             appSettingState.setUpdateVersionOptions(versionList);
         }
-        List<MSProjectVersion> statedVersions = appSettingState.getProjectVersionOptions();
-        if (CollectionUtils.isEmpty(statedVersions)) {
-            return;
-        }
-        //设置下拉选择框
-        MSProjectVersion projectVersion = appSettingState.getProjectVersion();
-        this.projectVersionCB.removeAllItems();
-        for (MSProjectVersion version : appSettingState.getProjectVersionOptions()) {
-            this.projectVersionCB.addItem(version);
-        }
-        if (appSettingState.getProjectVersionOptions().contains(projectVersion)) {
-            this.projectVersionCB.setSelectedItem(projectVersion);
-        }
-        MSProjectVersion updateVersion = appSettingState.getUpdateVersion();
-        this.updateVersionCB.removeAllItems();
-        for (MSProjectVersion version : appSettingState.getUpdateVersionOptions()) {
-            this.updateVersionCB.addItem(version);
-        }
-        if (appSettingState.getUpdateVersionOptions().contains(updateVersion)) {
-            this.updateVersionCB.setSelectedItem(updateVersion);
-        }
-        updateVersionCB.setEnabled(Objects.requireNonNull(modeId.getSelectedItem()).toString().equalsIgnoreCase(MSApiConstants.COVER));
     }
 
     private boolean initOrganization() {
@@ -408,8 +279,6 @@ public class AppSettingComponent {
     private void initModule(String msProjectId) {
         if (StringUtils.isBlank(msProjectId)) return;
         AppSettingState appSettingState = appSettingService.getState();
-
-        checkVersionEnable(appSettingState, msProjectId);
         //初始化模块
         assert appSettingState != null;
         Map<String, Object> module = MSClientUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());

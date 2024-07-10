@@ -12,8 +12,8 @@ import java.util.List;
 public class AppSettingState {
     private String userId;
     private String meterSphereAddress;
-    private String accesskey;
-    private String secretkey;
+    private String accessKey;
+    private String secretKey;
     private List<String> apiTypeList;
     private String apiType = "http";
 

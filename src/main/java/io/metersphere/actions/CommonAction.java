@@ -7,8 +7,8 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
-import io.metersphere.exporter.ExporterFactory;
 import io.metersphere.constants.PluginConstants;
+import io.metersphere.exporter.ExporterFactory;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.ProgressUtils;
 
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class CommonAction extends AnAction {
 
-    protected void export(String source, AnActionEvent event) {
+    protected void export(AnActionEvent event) {
         Project project = event.getProject();
         if (project == null) {
             return;
@@ -29,7 +29,7 @@ public abstract class CommonAction extends AnAction {
             try {
                 ApplicationManager.getApplication().runReadAction((ThrowableComputable<Void, Throwable>) () -> {
                     ProgressUtils.show(("begin exporting..."));
-                    ExporterFactory.export(source, event);
+                    ExporterFactory.export(PluginConstants.EXPORTER_MS, event);
                     return null;
                 });
             } catch (Throwable throwable) {
@@ -44,13 +44,4 @@ public abstract class CommonAction extends AnAction {
         else
             Messages.showInfoMessage("Export to MeterSphere fail! " + Optional.ofNullable(exception.get()).orElse(new Throwable("")).getMessage(), PluginConstants.MessageTitle.Error.name());
     }
-
-    protected void exportDirectly(AnActionEvent event) {
-        try {
-            ExporterFactory.export(PluginConstants.EXPORTER_POSTMAN, event);
-        } catch (Throwable throwable) {
-            LogUtils.error(throwable);
-        }
-    }
-
 }

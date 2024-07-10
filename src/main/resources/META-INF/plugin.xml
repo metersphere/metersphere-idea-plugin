@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.metersphere.Metersphere</id>
     <name>MeterSphere</name>
-    <vendor email="dahai.zhang@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
+    <vendor email="support@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
     <em>Support Export API to MeterSphere.<em>
@@ -88,28 +88,20 @@
     ]]></description>
 
 
-    <change-notes><![CDATA[<ul>
-        <li><b>1.0.0</b> support export Http api to MeterSphere.</li>
-        <li><b>1.0.1</b> add context-path,xport-name,javadoc support.</li>
-        <li><b>1.0.2</b> add response support. postman export,fix map jsonobject</li>
-        <li><b>1.0.3</b> fix List<Map> format error</li>
-        <li><b>1.0.5</b> version support</li>
-        <li><b>1.0.6</b> detect javadoc, add formal parameter,generic request response type</li>
-        <li><b>1.0.7</b> add coverModule</li>
-        <li><b>1.0.8</b> fix multi RequestParam</li>
-        <li><b>1.0.9</b> fix multi RequestParam</li>
-        <li><b>1.1.0</b> default no api case</li>
-        <li><b>1.2.0</b> fix null pointer,update list</li>
-        <li><b>1.2.1</b> fix version list</li>
-        <li><b>1.2.2</b> fix nullpointerexception</li>
-      </ul>]]></change-notes>
+    <change-notes>
+        <![CDATA[<ul>
+        <li><b>3.0</b> feat 支持v3接口同步</li>
+      </ul>]]>
+    </change-notes>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationConfigurable parentId="other" instance="io.metersphere.AppSettingConfigurable"
-                                 id="io.metersphere.AppSettingConfigurable"
-                                 displayName="MeterSphere"/>
+        <applicationConfigurable
+                parentId="other"
+                instance="io.metersphere.AppSettingConfigurable"
+                id="io.metersphere.AppSettingConfigurable"
+                displayName="MeterSphere Settings"/>
     </extensions>
 
     <actions>
@@ -130,37 +122,31 @@
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </group>
 
-        <action id="MSAction"
+        <action
+                id="MSAction"
+                icon="io.metersphere.icons.MsIcons.Icon"
                 class="io.metersphere.actions.ExportToMSAction" text="Export MeterSphere"
                 description="Export MeterSphere">
+
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereProjectViewPopupMenu" anchor="last"/>
-            <keyboard-shortcut
-                    first-keystroke="alt shift e"
-                    keymap="$default"
-            />
-            <keyboard-shortcut
-                    first-keystroke="control C"
-                    keymap="Mac OS X" replace-all="true"/>
-            <keyboard-shortcut
-                    first-keystroke="control C"
-                    keymap="Mac OS X 10.5+" replace-all="true"/>
-        </action>
-
-
-        <action id="PostmanAction" class="io.metersphere.actions.ExportToPostmanAction" text="Export Postman"  description="Export Postman">
-            <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
-            <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
-            <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
-            <add-to-group group-id="MeterSphereProjectViewPopupMenu" anchor="last"/>
+            <keyboard-shortcut first-keystroke="alt shift e" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="control C" keymap="Mac OS X" replace-all="true"/>
+            <keyboard-shortcut first-keystroke="control C" keymap="Mac OS X 10.5+" replace-all="true"/>
         </action>
 
     </actions>
+
     <depends>com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
         <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"/>
+        <toolWindow id="MeterSphere" secondary="true"
+                    anchor="right"
+                    icon="io.metersphere.icons.MsIcons.Icon"
+                    factoryClass="io.metersphere.toolwin.MSToolWindow"/>
+
     </extensions>
 </idea-plugin>

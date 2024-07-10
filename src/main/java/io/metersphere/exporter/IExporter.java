@@ -1,10 +1,9 @@
 package io.metersphere.exporter;
 
-import com.intellij.psi.PsiJavaFile;
+import io.metersphere.model.Api;
 
 import java.util.List;
 
 public interface IExporter {
-    boolean export(List<PsiJavaFile> javaFiles) throws Throwable;
-
+    void sync(List<Api> apis);
 }

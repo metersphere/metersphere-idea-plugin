@@ -34,6 +34,6 @@ public class CodingUtils {
 
 
     public static String getSignature(AppSettingState appSettingState) throws Exception {
-        return aesEncrypt(appSettingState.getAccesskey() + "|" + UUID.randomUUID() + "|" + System.currentTimeMillis(), appSettingState.getSecretkey(), appSettingState.getAccesskey());
+        return aesEncrypt(appSettingState.getAccessKey() + "|" + UUID.randomUUID() + "|" + System.currentTimeMillis(), appSettingState.getSecretKey(), appSettingState.getAccessKey());
     }
 }
