@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>io.metersphere.Metersphere</id>
+    <id>io.metersphere</id>
     <name>MeterSphere</name>
     <vendor email="support@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
@@ -21,7 +21,7 @@
       <li>Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on json5.</li>
       </ul><br>
       Usage：<br>
-      <ul><li>Locate the cursor to the package/project folder or class, right-click Export MeterSphere.</li></ul><br>
+      <ul><li>Locate the cursor to the package/project folder or class, right-click Sync to MeterSphere.</li></ul><br>
       <em>Support annotations：</em><br>
       org.springframework.web.bind.annotation.Controller<br>
       org.springframework.web.bind.annotation.RestController<br>
@@ -42,47 +42,91 @@
       <li>支持@ResponseBody等常用注解的解析</li>
       </ul><br>
       用法：<br>
-      <ul><li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Export MeterSphere".</li></ul><br>
+      <ul><li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Sync to MeterSphere".</li></ul><br>
       自定义配置项：<br>
       Preferences —> Other Settings —> MeterSphere<br><br>
-      <table border="1">
-        <tr>
-          <th align="left">配置项</th>
-          <th align="left">含义</th>
-        </tr>
-        <tr>
-          <td>Server</td>
-          <td>MeterSphere 服务器地址</td>
-        </tr>
-        <tr>
-          <td>AccessKey</td>
-          <td>AccessKey</td>
-        </tr>
-        <tr>
-          <td>SecretKey</td>
-          <td>SecretKey</td>
-        </tr>
-        <tr>
-          <td>Protocol</td>
-          <td>协议</td>
-        </tr>
-        <tr>
-          <td>Project</td>
-          <td>接口将要导入的项目</td>
-        </tr>
-        <tr>
-          <td>Module</td>
-          <td>接口将要导入的项目对应的模块</td>
-        </tr>
-        <tr>
-          <td>Mode</td>
-          <td>覆盖/不覆盖已导入同名接口</td>
-        </tr>
-        <tr>
-          <td>Depth</td>
-          <td>针对接口中含有复杂嵌套对象的解析深度</td>
-        </tr>
-      </table><br>
+
+<table tr=1>
+    <thead>
+    <td>
+    配置项
+    </td>
+    <td>
+    含义
+    </td>
+    </thead>
+    <tr>
+    <td>
+    Server
+    </td>
+    <td>
+    MeterSphere Server 地址
+    </td>
+    </tr>
+    <tr>
+    <td>
+    AccessKey
+    </td>
+    <td>
+    AccessKey
+    </td>
+    </tr>
+    <tr>
+    <td>
+    SecretKey
+    </td>
+    <td>
+    SecretKey
+    </td>
+    </tr>
+    <tr>
+    <td>
+    Protocol
+    </td>
+    <td>
+    协议
+    </td>
+    </tr>
+    <tr>
+    <td>
+    Organization
+    </td>
+    <td>
+    组织
+    </td>
+    </tr>
+    <tr>
+    <td>
+    Project
+    </td>
+    <td>
+    项目
+    </td>
+    </tr>
+    <tr>
+    <td>
+    Module
+    </td>
+    <td>
+    接口将要导入的项目对应的模块
+    </td>
+    </tr>
+    <tr>
+    <td>
+    Mode
+    </td>
+    <td>
+    覆盖：
+    1.系统已存在的同一接口（请求类型+路径一致），请求参数内容不一致则覆盖系统原接口
+    2.系统已存在的同一接口（请求类型+路径一致），请求参数内容一致则不做变更
+    3.系统不存在的接口，则新增<br>
+    不覆盖：
+    1.系统已存在的同一接口（请求类型+路径一致），则不做变更
+    2.系统不存在的接口，则新增
+    </td>
+    </tr>
+    </table>
+<br>
       <em>Compatible IDE versions:</em><br>
       2020.3+ <br><br>
     ]]></description>
@@ -125,8 +169,8 @@
         <action
                 id="MSAction"
                 icon="io.metersphere.icons.MsIcons.Icon"
-                class="io.metersphere.actions.ExportToMSAction" text="Export MeterSphere"
-                description="Export MeterSphere">
+                class="io.metersphere.actions.ExportToMSAction" text="Sync to MeterSphere"
+                description="Sync to MeterSphere">
 
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>

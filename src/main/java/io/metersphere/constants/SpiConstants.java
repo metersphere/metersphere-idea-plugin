@@ -5,6 +5,6 @@ package io.metersphere.constants;
  */
 public interface SpiConstants {
 
-    String ApiVersion = "com.source3g.xx";
+    String ApiVersion = "io.metersphere.xx";
 
 }

@@ -7,11 +7,11 @@
 - 基于 Javadoc 的分析，无需额外的注解。
 - 自动识别类，生成API文档到 MeterSphere。
 - 支持列表、集合、和其他数据结构，并支持嵌套泛型解析。
-- 支持解析常见的注解如 @ResponseBody、@RequestMapping，并基于JSON5 生成API文档。
+- 支持解析常见的注解如 @ResponseBody、@RequestMapping 等。
 
 ### 使用方法：
 
-- 将光标定位到包/项目文件夹或类上，右键点击“导出到 MeterSphere”。
+- 将光标定位到包/项目文件夹或类上，右键点击“Sync to MeterSphere”。
 - 支持注解：
    <p>
    org.springframework.web.bind.annotation.Controller 
@@ -114,66 +114,16 @@ Module
 </tr>
 <tr>
 <td>
-mode
+Mode
 </td>
 <td>
-覆盖/不覆盖已导入同名接口
-</td>
-</tr>
-<tr>
-<td>
-object-deepth
-</td>
-<td>
-针对接口中含有复杂嵌套对象的解析深度
-</td>
-</tr>
-<tr>
-<td>
-version
-</td>
-<td>
-新增接口建立的版本号
-</td>
-</tr>
-<tr>
-<td>
-update-version
-</td>
-<td>
-覆盖接口所生成的版本号
-</td>
-</tr>
-<tr>
-<td>
-context-path
-</td>
-<td>
-接口路径前缀
-</td>
-</tr>
-<tr>
-<td>
-export-name
-</td>
-<td>
-导出的模块名称
-</td>
-</tr>
-<tr>
-<td>
-javadoc
-</td>
-<td>
-支持读取接口/类名前注释的 javadoc 作为接口名称
-</td>
-</tr>
-<tr>
-<td>
-coverModule
-</td>
-<td>
-选择覆盖的同时是否一并更新旧接口的模块
+覆盖：
+1.系统已存在的同一接口（请求类型+路径一致），请求参数内容不一致则覆盖系统原接口
+2.系统已存在的同一接口（请求类型+路径一致），请求参数内容一致则不做变更
+3.系统不存在的接口，则新增<br>
+不覆盖：
+1.系统已存在的同一接口（请求类型+路径一致），则不做变更
+2.系统不存在的接口，则新增
 </td>
 </tr>
 </table>
