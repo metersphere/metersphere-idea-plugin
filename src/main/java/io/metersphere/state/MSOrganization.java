@@ -23,4 +23,9 @@ public class MSOrganization {
         }
         return false;
     }
+
+    public MSOrganization(String name, String id) {
+        this.name = name;
+        this.id = id;
+    }
 }

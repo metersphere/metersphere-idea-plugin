@@ -2,13 +2,14 @@ package io.metersphere.gui;
 
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
-import io.metersphere.state.*;
-import io.metersphere.util.JSON;
+import io.metersphere.state.AppSettingState;
+import io.metersphere.state.MSModule;
+import io.metersphere.state.MSOrganization;
+import io.metersphere.state.MSProject;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.MSClientUtils;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
@@ -17,7 +18,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import static io.metersphere.util.MSClientUtils.test;
 
@@ -59,9 +61,6 @@ public class AppSettingComponent {
                 appSettingService.getState().setProject((MSProject) projectCB.getSelectedItem());
                 MSProject selectedProject = (MSProject) itemEvent.getItem();
                 initModule(selectedProject.getId());
-                if (Objects.equals(true, selectedProject.getVersionEnable())) {
-                    mutationProjectVersions(selectedProject.getId());
-                }
             }
         }
     };
@@ -78,20 +77,16 @@ public class AppSettingComponent {
 
     public AppSettingComponent() {
         AppSettingState appSettingState = appSettingService.getState();
-
         assert appSettingState != null;
         // 初始化数据
         initData(appSettingState);
 
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
-                // TODO 是否需要初始化组织？
-                Messages.showInfoMessage("Sync success!", "Info");
-                /*
                 if (initOrganization())
                     Messages.showInfoMessage("Sync success!", "Info");
                 else
-                    Messages.showInfoMessage("Sync fail!", "Info");*/
+                    Messages.showInfoMessage("Sync fail!", "Info");
             } else {
                 Messages.showInfoMessage("Connect fail!", "Info");
             }
@@ -123,14 +118,6 @@ public class AppSettingComponent {
         projectCB.addItemListener(projectListener);
 
         moduleCB.addItemListener(moduleItemListener);
-
-
-        enable.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                beanContent.setEnabled(true);
-            }
-        });
     }
 
     private void initData(AppSettingState appSettingState) {
@@ -165,45 +152,22 @@ public class AppSettingComponent {
     }
 
     private void initProject(AppSettingState appSettingState, String organizationId) {
-        //初始化项目
-        Map<String, Object> param = new HashMap<>();
-        param.put("userId", appSettingState.getUserId());
-        if (StringUtils.isNotBlank(organizationId)) {
-            param.put("organizationId", organizationId);
-        }
-        Map<String, Object> project = MSClientUtils.getProjectList(appSettingState, param);
-        if (project != null && BooleanUtils.isTrue(Boolean.valueOf(project.get("success").toString()))) {
-            appSettingState.setProjectOptions(JSON.parseArray(String.valueOf(project.get("data")), MSProject.class));
-        } else {
-            LogUtils.error("get project failed!");
-            return;
-        }
+        List<MSProject> projects = MSClientUtils.getProjectList(appSettingState, organizationId);
+        appSettingState.setProjectOptions(CollectionUtils.isNotEmpty(projects) ? projects : getDefaultProject());
 
-        MSProject selectedProject = null;
-        if (this.projectCB.getSelectedItem() != null) {
-            selectedProject = (MSProject) this.projectCB.getSelectedItem();
-        }
-
-        //设置下拉选择框
+        MSProject selectedProject = (MSProject) this.projectCB.getSelectedItem();
         this.projectCB.removeItemListener(projectListener);
         this.projectCB.removeAllItems();
-        for (MSProject s : appSettingState.getProjectOptions()) {
-            this.projectCB.addItem(s);
-        }
+        appSettingState.getProjectOptions().forEach(proj -> this.projectCB.addItem(proj));
+
         if (appSettingState.getProjectOptions().contains(selectedProject)) {
             this.projectCB.setSelectedItem(selectedProject);
             appSettingState.setProject(selectedProject);
-            initModule(Optional.ofNullable(selectedProject).orElse(new MSProject()).getId());
+            initModule(selectedProject != null ? selectedProject.getId() : null);
         } else {
-            //原来项目被删除了 刷新一次模块
-            if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
-                this.projectCB.setSelectedItem(appSettingState.getProjectOptions().getFirst());
-                appSettingState.setProject(appSettingState.getProjectOptions().getFirst());
-                initModule(appSettingState.getProjectOptions().getFirst().getId());
-            } else {
-                this.moduleCB.removeAllItems();
-            }
+            handleDeletedProject(appSettingState);
         }
+
         this.projectCB.addItemListener(projectListener);
 
         if (CollectionUtils.isEmpty(appSettingState.getProjectOptions())) {
@@ -214,20 +178,20 @@ public class AppSettingComponent {
         }
     }
 
-    /**
-     * 改变项目版本下拉列表的状态值
-     */
-    private void mutationProjectVersions(String projectId) {
-        AppSettingState appSettingState = appSettingService.getState();
-        if (appSettingState == null) {
-            return;
-        }
-        Map<String, Object> jsonObject = MSClientUtils.listProjectVersionBy(projectId, appSettingState);
-        if (jsonObject != null && jsonObject.containsKey("success")) {
-            String json = JSON.toJSONString(jsonObject.get("data"));
-            List<MSProjectVersion> versionList = JSON.parseArray(json, MSProjectVersion.class);
-            appSettingState.setProjectVersionOptions(versionList);
-            appSettingState.setUpdateVersionOptions(versionList);
+    private List<MSProject> getDefaultProject() {
+        return Collections.emptyList(); // or return a default project if needed
+    }
+
+    private void handleDeletedProject(AppSettingState appSettingState) {
+        if (CollectionUtils.isNotEmpty(appSettingState.getProjectOptions())) {
+            MSProject newSelected = (MSProject) this.projectCB.getSelectedItem();
+            appSettingState.setProject(newSelected);
+            initModule(newSelected != null ? newSelected.getId() : null);
+        } else {
+            this.moduleCB.removeAllItems();
+            appSettingState.setModule(null);
+            appSettingState.setProjectVersion(null);
+            appSettingState.setUpdateVersion(null);
         }
     }
 
@@ -235,89 +199,95 @@ public class AppSettingComponent {
         AppSettingState appSettingState = appSettingService.getState();
 
         assert appSettingState != null;
-        Map<String, Object> userInfo = MSClientUtils.getUserInfo(appSettingState);
-        assert userInfo != null;
-        appSettingState.setUserId(userInfo.get("data").toString());
 
-        Map<String, Object> organizationObj = MSClientUtils.getOrganizationList(appSettingState);
-        if (organizationObj != null && organizationObj.containsKey("success") && organizationObj.containsKey("data")) {
-            appSettingState.setOrganizationOptions(JSON.parseArray(organizationObj.get("data").toString(), MSOrganization.class));
-        } else {
-            LogUtils.error("get organization failed!");
-            return false;
-        }
+        List<MSOrganization> organizations = MSClientUtils.getOrganizationList(appSettingState);
+        appSettingState.setOrganizationOptions(CollectionUtils.isNotEmpty(organizations) ? organizations : getDefaultOrganization());
 
-        MSOrganization selectedWorkspace = null;
-        if (this.organizationCB.getSelectedItem() != null) {
-            selectedWorkspace = (MSOrganization) this.organizationCB.getSelectedItem();
-        }
+        MSOrganization selectedOrganization = (MSOrganization) this.organizationCB.getSelectedItem();
         this.organizationCB.removeItemListener(organizationListener);
         this.organizationCB.removeAllItems();
-        for (MSOrganization s : appSettingState.getOrganizationOptions()) {
-            this.organizationCB.addItem(s);
-        }
-        if (appSettingState.getOrganizationOptions().contains(selectedWorkspace)) {
-            this.organizationCB.setSelectedItem(selectedWorkspace);
-            appSettingState.setOrganization(selectedWorkspace);
+        appSettingState.getOrganizationOptions().forEach(org -> this.organizationCB.addItem(org));
+
+        if (appSettingState.getOrganizationOptions().contains(selectedOrganization)) {
+            this.organizationCB.setSelectedItem(selectedOrganization);
+            appSettingState.setOrganization(selectedOrganization);
         } else {
-            //原来组织被删除了 刷新一次 project
-            if (CollectionUtils.isNotEmpty(appSettingState.getOrganizationOptions())) {
-                this.organizationCB.setSelectedItem(appSettingState.getOrganizationOptions().getFirst());
-                appSettingState.setOrganization(appSettingState.getOrganizationOptions().getFirst());
-                initProject(appSettingState, appSettingState.getOrganizationOptions().getFirst().getId());
-            } else {
-                this.projectCB.removeAllItems();
-                this.moduleCB.removeAllItems();
-            }
+            handleDeletedOrganization(appSettingState);
         }
+
         this.organizationCB.addItemListener(organizationListener);
+
+        // 初始化项目
         if (CollectionUtils.isNotEmpty(appSettingState.getOrganizationOptions())) {
-            initProject(appSettingState, Optional.ofNullable(selectedWorkspace).orElse(appSettingState.getOrganizationOptions().getFirst()).getId());
+            String orgId = selectedOrganization != null ? selectedOrganization.getId() : appSettingState.getOrganization().getId();
+            initProject(appSettingState, orgId);
+        } else {
+            this.projectCB.removeAllItems();
+            this.moduleCB.removeAllItems();
         }
 
         return true;
     }
 
+    private List<MSOrganization> getDefaultOrganization() {
+        return Collections.singletonList(new MSOrganization("默认组织", "100001"));
+    }
+
+    private void handleDeletedOrganization(AppSettingState appSettingState) {
+        if (CollectionUtils.isNotEmpty(appSettingState.getOrganizationOptions())) {
+            MSOrganization newSelected = (MSOrganization) this.organizationCB.getSelectedItem();
+            appSettingState.setOrganization(newSelected);
+            assert newSelected != null;
+            initProject(appSettingState, newSelected.getId());
+        } else {
+            this.projectCB.removeAllItems();
+            this.moduleCB.removeAllItems();
+        }
+    }
+
+
     /**
      * ms 项目id
      */
     private void initModule(String msProjectId) {
-        if (StringUtils.isBlank(msProjectId)) return;
-        AppSettingState appSettingState = appSettingService.getState();
-        //初始化模块
-        assert appSettingState != null;
-        Map<String, Object> module = MSClientUtils.getModuleList(appSettingState, msProjectId, appSettingState.getApiType());
+        if (StringUtils.isBlank(msProjectId)) {
+            return;
+        }
 
-        if (module != null && module.containsKey("success")) {
-            appSettingState.setModuleOptions(JSON.parseArray(module.get("data").toString(), MSModule.class));
+        AppSettingState appSettingState = appSettingService.getState();
+        if (appSettingState == null) {
+            return;
+        }
+
+        List<MSModule> modules = MSClientUtils.getModuleList(appSettingState, msProjectId);
+
+        if (CollectionUtils.isNotEmpty(modules)) {
+            appSettingState.setModuleOptions(modules);
         } else {
             LogUtils.error("get module failed!");
             return;
         }
-        MSModule selectedModule = null;
-        if (this.moduleCB.getSelectedItem() != null) {
-            selectedModule = (MSModule) this.moduleCB.getSelectedItem();
-        }
+
+        MSModule selectedModule = (MSModule) this.moduleCB.getSelectedItem();
         this.moduleCB.removeItemListener(moduleItemListener);
         this.moduleCB.removeAllItems();
-        for (MSModule msModule : appSettingState.getModuleOptions()) {
-            this.moduleCB.addItem(msModule);
-        }
+
+        appSettingState.getModuleOptions().forEach(msModule -> this.moduleCB.addItem(msModule));
+
         if (appSettingState.getModuleOptions().contains(selectedModule)) {
             this.moduleCB.setSelectedItem(selectedModule);
             appSettingState.setModule(selectedModule);
         } else {
-            //原来模块被删除了 刷新一次 模块
-            if (CollectionUtils.isNotEmpty(appSettingState.getModuleOptions())) {
-                this.moduleCB.setSelectedItem(appSettingState.getModuleOptions().getFirst());
-                appSettingState.setModule(appSettingState.getModuleOptions().getFirst());
+            if (!appSettingState.getModuleOptions().isEmpty()) {
+                appSettingState.setModule(this.moduleCB.getItemAt(0));
             } else {
                 this.moduleCB.removeAllItems();
             }
         }
-        this.moduleCB.addItemListener(moduleItemListener);
 
+        this.moduleCB.addItemListener(moduleItemListener);
     }
+
 
     public JPanel getSettingPanel() {
         return this.mainSettingPanel;

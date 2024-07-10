@@ -1,8 +1,8 @@
 package io.metersphere.exporter;
 
 import com.google.gson.JsonObject;
+import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
-import io.metersphere.constants.MSApiConstants;
 import io.metersphere.constants.URLConstants;
 import io.metersphere.model.Api;
 import io.metersphere.openapi.OpenApiDataConvert;
@@ -22,10 +22,11 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class MeterSphereExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
@@ -35,12 +36,29 @@ public class MeterSphereExporter implements IExporter {
         OpenAPI openApi = new OpenApiDataConvert().convert(apis);
         openApi.getInfo().setTitle("MeterSphere API IDEA Sync");
         JsonObject apiJsonObject = new OpenApiGenerator().generate(openApi);
+        File temp = null;
+        try {
+            temp = File.createTempFile(UUID.randomUUID().toString(), null);
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
 
-        System.out.println(apiJsonObject.toString());
-        // TODO 上传到平台
+            bufferedWriter.write(apiJsonObject.toString());
+            bufferedWriter.flush();
+            bufferedWriter.close();
+
+            boolean r = uploadToServer(temp);
+            if (!r) {
+                Messages.showInfoMessage("Sync to MeterSphere fail!", "Error");
+            }
+        } catch (Exception e) {
+            Messages.showInfoMessage(e.getMessage(), "Error");
+        } finally {
+            if (temp != null) {
+                temp.delete();
+            }
+        }
     }
 
-    private boolean uploadToServer(File file, AtomicReference<Throwable> throwableAtomicReference) {
+    private boolean uploadToServer(File file) {
         ProgressUtils.show("Start to sync to MeterSphere Server");
 
         AppSettingState state = appSettingService.getState();
@@ -68,45 +86,32 @@ public class MeterSphereExporter implements IExporter {
                 if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED) {
                     return true;
                 } else {
-                    throwableAtomicReference.set(new RuntimeException("Server error: " + status.getReasonPhrase()));
-                    return false;
+                    throw new RuntimeException("Server error: " + status.getReasonPhrase());
                 }
             } catch (IOException e) {
-                throwableAtomicReference.set(e);
                 LogUtils.error("Failed to upload to MeterSphere", e);
+                throw new RuntimeException("Failed to upload to MeterSphere", e);
             }
         } catch (Exception e) {
-            throwableAtomicReference.set(e);
             LogUtils.error("Failed to close httpclient", e);
+            throw new RuntimeException("Failed to close httpclient", e);
         }
-        return false;
     }
 
 
     @NotNull
     private Map<String, Object> buildParam(AppSettingState state) {
         Map<String, Object> param = new HashMap<>();
-        param.put("modeId", MSClientUtils.getModeId(state.getModeId()));
+        param.put("coverModule", state.isCoverModule());
         if (state.getModule() == null) {
             throw new RuntimeException("no module selected ! please check your rights");
         }
+        param.put("type", "API");
+        param.put("platform", "Swagger3");
+        param.put("syncCase", true);
         param.put("moduleId", Optional.of(state.getModule()).orElse(new MSModule()).getId());
-        param.put("platform", "Postman");
         param.put("model", "definition");
         param.put("projectId", Optional.ofNullable(state.getProject()).orElse(new MSProject()).getId());
-        if (state.getProjectVersion() != null && state.isSupportVersion()) {
-            param.put("versionId", state.getProjectVersion().getId());
-        }
-        if (MSClientUtils.getModeId(state.getModeId()).equalsIgnoreCase(MSApiConstants.MODE_COVERAGE)) {
-            if (state.getUpdateVersion() != null && state.isSupportVersion()) {
-                param.put("updateVersionId", state.getUpdateVersion().getId());
-            }
-            if (state.isCoverModule()) {
-                param.put("coverModule", true);
-            } else {
-                param.put("coverModule", false);
-            }
-        }
         param.put("protocol", "HTTP");
         //标记导入来源是 idea
         param.put("origin", "idea");
