@@ -16,10 +16,15 @@ public enum HttpMethod {
     PATCH,
     HEAD,
     OPTIONS,
-    ;
+    TRACE,
+    NONE;
 
     public static HttpMethod of(String method) {
-        return HttpMethod.valueOf(method.toUpperCase());
+        try {
+            return HttpMethod.valueOf(method.toUpperCase());
+        } catch (Exception e) {
+            return NONE;
+        }
     }
 
     /**

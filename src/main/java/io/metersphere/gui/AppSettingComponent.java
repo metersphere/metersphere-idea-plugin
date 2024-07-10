@@ -34,7 +34,12 @@ public class AppSettingComponent {
     private JComboBox<MSModule> moduleCB;
     private JTextField moduleName;
     private JComboBox<MSOrganization> organizationCB;
+    private JTextArea beanContent;
+    private JCheckBox enable;
+    private JComboBox<Boolean> coverModule;
+
     private AppSettingService appSettingService = AppSettingService.getInstance();
+
 
     private ItemListener organizationListener = itemEvent -> {
         if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
@@ -120,12 +125,12 @@ public class AppSettingComponent {
         moduleCB.addItemListener(moduleItemListener);
 
 
-/*        moduleName.addKeyListener(new KeyAdapter() {
+        enable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                appSettingState.setExportModuleName(new String(moduleName.getText().trim().getBytes(StandardCharsets.UTF_8)));
+                beanContent.setEnabled(true);
             }
-        });*/
+        });
     }
 
     private void initData(AppSettingState appSettingState) {

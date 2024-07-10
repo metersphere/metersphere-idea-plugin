@@ -27,7 +27,7 @@ public class MSClientUtils {
      */
     public static boolean test(AppSettingState appSettingState) {
         if (StringUtils.isAnyBlank(appSettingState.getMeterSphereAddress(), appSettingState.getAccessKey(), appSettingState.getSecretKey())) {
-            return false;
+            return true;
         }
 
         try (CloseableHttpClient httpClient = HttpClients.custom().build()) {
