@@ -6,6 +6,7 @@ import io.metersphere.model.Property;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
@@ -27,6 +28,7 @@ public class OpenApiDataConvert {
     public OpenAPI convert(List<ApiDefinition> apis) {
         OpenAPI openApi = new OpenAPI();
         openApi.setInfo(new Info().title("").version("").description(""));
+        openApi.setPaths(new Paths());
 
         apis.stream()
                 .collect(Collectors.groupingBy(ApiDefinition::getPath))
