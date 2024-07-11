@@ -42,9 +42,10 @@ buildSearchableOptions {
 
 patchPluginXml {
     version = project.version
-    sinceBuild = '233.*'
+    sinceBuild = '221.*'
     untilBuild = '241.*'
 }
+
 
 runIde {
     jvmArgs '-Xmx4G'

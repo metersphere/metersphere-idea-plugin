@@ -23,6 +23,7 @@ import io.metersphere.util.parser.PsiSwaggerUtils;
 import io.metersphere.util.psi.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -165,15 +166,7 @@ public class ParseHelper {
         if (StringUtils.isEmpty(summary)) {
             summary = paramTagMap.get(parameter.getName());
         }
-        if (values != null && !values.isEmpty()) {
-            String valuesText = values.stream().map(Value::getText).collect(Collectors.joining(", "));
-            if (StringUtils.isEmpty(summary)) {
-                summary = valuesText;
-            } else {
-                summary += " (" + valuesText + ")";
-            }
-        }
-        return trim(summary);
+        return getString(values, summary);
     }
 
     /**
@@ -184,13 +177,6 @@ public class ParseHelper {
                 JavaConstants.NotNull2, JavaConstants.NotBlank2, JavaConstants.NotEmpty2};
         PsiAnnotation annotation = PsiAnnotationUtils.getAnnotation(parameter, annotations);
         return Objects.nonNull(annotation);
-    }
-
-    /**
-     * 获取参数可能的值
-     */
-    public List<Value> getParameterValues(PsiParameter parameter) {
-        return getTypeValues(parameter.getType());
     }
 
     /**
@@ -207,7 +193,7 @@ public class ParseHelper {
                 .collect(Collectors.toList());
     }
 
-    //---------------------- 字段相关 ------------------------------//
+    // ---------------------- 字段相关 ------------------------------//
 
     /**
      * 获取字段名
@@ -238,8 +224,12 @@ public class ParseHelper {
                         .orElse(null);
             }
         }
-
         // 枚举
+        return getString(values, summary);
+    }
+
+    @Nullable
+    private String getString(List<Value> values, String summary) {
         if (values != null && !values.isEmpty()) {
             String valuesText = values.stream().map(Value::getText).collect(Collectors.joining(", "));
             if (StringUtils.isEmpty(summary)) {
