@@ -28,7 +28,7 @@ public abstract class CommonAction extends AnAction {
         ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
             try {
                 ApplicationManager.getApplication().runReadAction((ThrowableComputable<Void, Throwable>) () -> {
-                    ProgressUtils.show(("begin exporting..."));
+                    ProgressUtils.show(("Start parsing data ..."));
                     TransferFactory.generator(PluginConstants.EXPORTER_MS, event);
                     return null;
                 });
