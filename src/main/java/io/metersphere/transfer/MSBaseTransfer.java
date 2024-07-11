@@ -1,4 +1,4 @@
-package io.metersphere.exporter;
+package io.metersphere.transfer;
 
 import com.google.gson.JsonObject;
 import com.intellij.openapi.ui.Messages;
@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
-public class MeterSphereExporter implements IExporter {
+public class MSBaseTransfer implements BaseTransfer {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
 
     @Override
-    public void sync(List<ApiDefinition> apis) {
+    public void upload(List<ApiDefinition> apis) {
         OpenAPI openApi = new OpenApiDataConvert().convert(apis);
-        openApi.getInfo().setTitle("MeterSphere API IDEA Sync");
+        openApi.getInfo().setTitle("IDEA plugin from MeterSphere");
         JsonObject apiJsonObject = new OpenApiGenerator().generate(openApi);
         File temp = null;
         try {

@@ -169,7 +169,7 @@
         <action
                 id="MSAction"
                 icon="io.metersphere.icons.MsIcons.Icon"
-                class="io.metersphere.actions.ExportToMSAction" text="Upload to MeterSphere"
+                class="io.metersphere.actions.MSUploadAction" text="Upload to MeterSphere"
                 description="Upload to MeterSphere">
 
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>

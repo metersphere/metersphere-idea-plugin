@@ -1,4 +1,4 @@
-package io.metersphere.exporter;
+package io.metersphere.transfer;
 
 import com.google.common.collect.Lists;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -27,14 +27,14 @@ import java.util.Map;
 
 import static io.metersphere.constants.PluginConstants.EXPORTER_MS;
 
-public class ExporterFactory {
+public class TransferFactory {
     private static final AppSettingService appSettingService = AppSettingService.getInstance();
     // 导出器, 如果有扩展可以在这里添加
-    private static final Map<String, IExporter> exporterMap = new HashMap<>() {{
-        put(EXPORTER_MS, new MeterSphereExporter());
+    private static final Map<String, BaseTransfer> exporterMap = new HashMap<>() {{
+        put(EXPORTER_MS, new MSBaseTransfer());
     }};
 
-    public static void export(String source, AnActionEvent event) {
+    public static void generator(String source, AnActionEvent event) {
         PsiElement element = event.getData(CommonDataKeys.PSI_FILE);
         if (element == null)
             element = event.getData(CommonDataKeys.PSI_ELEMENT);
@@ -50,7 +50,7 @@ public class ExporterFactory {
             return;
         }
         // 1.解析配置
-        ExporterFactory.StepResult<ApiSpecification> configResult = resolveConfig();
+        TransferFactory.StepResult<ApiSpecification> configResult = resolveConfig();
         ApiSpecification config = configResult.getData();
         if (configResult.isContinue()) {
             return;
@@ -60,25 +60,25 @@ public class ExporterFactory {
             return;
         }
         // 3.解析文档
-        ExporterFactory.StepResult<List<ApiDefinition>> apisResult = parse(data, config);
+        TransferFactory.StepResult<List<ApiDefinition>> apisResult = parse(data, config);
         if (apisResult.isContinue()) {
             return;
         }
         // 4.文档处理
         List<ApiDefinition> apis = apisResult.getData();
 
-        // 5.导出到指定平台
-        exporterMap.get(source).sync(apis);
+        // 5.同步到指定平台
+        exporterMap.get(source).upload(apis);
 
     }
 
     /**
      * 获取配置
      */
-    private static ExporterFactory.StepResult<ApiSpecification> resolveConfig() {
+    private static TransferFactory.StepResult<ApiSpecification> resolveConfig() {
         ApiSpecification config = new ApiSpecification();
         config = ApiSpecification.getMergedInternalConfig(config);
-        return ExporterFactory.StepResult.ok(config);
+        return TransferFactory.StepResult.ok(config);
     }
 
     /**
@@ -96,7 +96,7 @@ public class ExporterFactory {
     /**
      * 解析文档模型数据
      */
-    private static ExporterFactory.StepResult<List<ApiDefinition>> parse(EventData data, ApiSpecification config) {
+    private static TransferFactory.StepResult<List<ApiDefinition>> parse(EventData data, ApiSpecification config) {
         ApiParser parser = new ApiParser(data.getProject(), data.getModule(), config);
         // 选中方法
         if (data.getSelectedMethod() != null) {
@@ -104,13 +104,13 @@ public class ExporterFactory {
             if (!methodData.isValid()) {
                 LogUtils.info(DefaultConstants.NAME,
                         "The current method is not a valid api or ignored");
-                return ExporterFactory.StepResult.stop();
+                return TransferFactory.StepResult.stop();
             }
             if (config.isStrict() && StringUtils.isEmpty(methodData.getDeclaredApiSummary())) {
                 LogUtils.info(DefaultConstants.NAME, "The current method must declare summary");
-                return ExporterFactory.StepResult.stop();
+                return TransferFactory.StepResult.stop();
             }
-            return ExporterFactory.StepResult.ok(methodData.getApis());
+            return TransferFactory.StepResult.ok(methodData.getApis());
         }
 
         // 选中类
@@ -119,20 +119,20 @@ public class ExporterFactory {
             if (!controllerData.isValid()) {
                 LogUtils.info(DefaultConstants.NAME,
                         "The current class is not a valid controller or ignored");
-                return ExporterFactory.StepResult.stop();
+                return TransferFactory.StepResult.stop();
             }
             if (config.isStrict() && StringUtils.isEmpty(controllerData.getDeclaredCategory())) {
                 LogUtils.info(DefaultConstants.NAME, "The current class must declare category");
-                return ExporterFactory.StepResult.stop();
+                return TransferFactory.StepResult.stop();
             }
-            return ExporterFactory.StepResult.ok(controllerData.getApis());
+            return TransferFactory.StepResult.ok(controllerData.getApis());
         }
 
         // 批量
         List<PsiClass> controllers = PsiFileUtils.getPsiClassByFile(data.getSelectedJavaFiles());
         if (controllers.isEmpty()) {
             LogUtils.info(DefaultConstants.NAME, "Not found valid controller class");
-            return ExporterFactory.StepResult.stop();
+            return TransferFactory.StepResult.stop();
         }
         List<ApiDefinition> apis = Lists.newLinkedList();
         for (PsiClass controller : controllers) {
@@ -149,13 +149,13 @@ public class ExporterFactory {
             }
             apis.addAll(controllerApis);
         }
-        return ExporterFactory.StepResult.ok(apis);
+        return TransferFactory.StepResult.ok(apis);
     }
 
     /**
      * 某个步骤的执行结果
      */
-    public static class StepResult<T> {
+    private static class StepResult<T> {
 
         private final StepType type;
         @Getter

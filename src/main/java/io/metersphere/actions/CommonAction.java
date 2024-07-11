@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
 import io.metersphere.constants.PluginConstants;
-import io.metersphere.exporter.ExporterFactory;
+import io.metersphere.transfer.TransferFactory;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.ProgressUtils;
 
@@ -29,7 +29,7 @@ public abstract class CommonAction extends AnAction {
             try {
                 ApplicationManager.getApplication().runReadAction((ThrowableComputable<Void, Throwable>) () -> {
                     ProgressUtils.show(("begin exporting..."));
-                    ExporterFactory.export(PluginConstants.EXPORTER_MS, event);
+                    TransferFactory.generator(PluginConstants.EXPORTER_MS, event);
                     return null;
                 });
             } catch (Throwable throwable) {
@@ -37,7 +37,7 @@ public abstract class CommonAction extends AnAction {
                 exception.set(throwable);
                 r.set(false);
             }
-        }, "Exporting Api to MeterSphere Please Wait...", true, event.getProject());
+        }, "Upload to MeterSphere Please Wait...", true, event.getProject());
 
         if (r.get())
             Messages.showInfoMessage("Upload to MeterSphere success!", PluginConstants.MessageTitle.Info.name());

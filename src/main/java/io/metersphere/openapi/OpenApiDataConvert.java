@@ -6,7 +6,6 @@ import io.metersphere.model.Property;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
@@ -27,62 +26,37 @@ import java.util.stream.Collectors;
 public class OpenApiDataConvert {
     public OpenAPI convert(List<ApiDefinition> apis) {
         OpenAPI openApi = new OpenAPI();
-        Info openApiInfo = new Info();
-        openApiInfo.setTitle("");
-        openApiInfo.setVersion("");
-        openApiInfo.setDescription("");
-        openApi.setInfo(openApiInfo);
-        openApi.setPaths(new Paths());
-        Paths paths = openApi.getPaths();
+        openApi.setInfo(new Info().title("").version("").description(""));
 
-        Map<String, List<ApiDefinition>> pathToApis = apis.stream().collect(Collectors.groupingBy(ApiDefinition::getPath));
-        List<Entry<String, List<ApiDefinition>>> entrySets = pathToApis.entrySet().stream().sorted(Entry.comparingByKey())
-                .toList();
-        for (Entry<String, List<ApiDefinition>> entry : entrySets) {
-            String path = entry.getKey();
-            List<ApiDefinition> pathApis = entry.getValue();
-            PathItem pathItem = new PathItem();
-            for (ApiDefinition api : pathApis) {
-                setPathItemOperation(api, pathItem, buildOperation(api));
-            }
-            paths.addPathItem(path, pathItem);
-        }
+        apis.stream()
+                .collect(Collectors.groupingBy(ApiDefinition::getPath))
+                .entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(entry -> {
+                    PathItem pathItem = new PathItem();
+                    entry.getValue().forEach(api -> setPathItemOperation(api, pathItem, buildOperation(api)));
+                    openApi.getPaths().addPathItem(entry.getKey(), pathItem);
+                });
 
         return openApi;
     }
 
     private static void setPathItemOperation(ApiDefinition api, PathItem pathItem, Operation operation) {
         switch (api.getMethod()) {
-            case GET:
-                pathItem.setGet(operation);
-                break;
-            case POST:
-                pathItem.setPost(operation);
-                break;
-            case PUT:
-                pathItem.setPut(operation);
-                break;
-            case DELETE:
-                pathItem.setDelete(operation);
-                break;
-            case PATCH:
-                pathItem.setPatch(operation);
-                break;
-            case HEAD:
-                pathItem.setHead(operation);
-                break;
-            case OPTIONS:
-                pathItem.setOptions(operation);
-                break;
-            default:
-                break;
+            case GET -> pathItem.setGet(operation);
+            case POST -> pathItem.setPost(operation);
+            case PUT -> pathItem.setPut(operation);
+            case DELETE -> pathItem.setDelete(operation);
+            case PATCH -> pathItem.setPatch(operation);
+            case HEAD -> pathItem.setHead(operation);
+            case OPTIONS -> pathItem.setOptions(operation);
+            default -> pathItem.setTrace(operation);
         }
     }
 
     private Operation buildOperation(ApiDefinition api) {
         Operation operation = new Operation();
         operation.setSummary(api.getSummary());
-        // todo: 设置tag，这里考虑放的是分类，可以根据自己的需求变更
         operation.setTags(Lists.newArrayList(api.getCategory()));
         operation.setParameters(buildParameters(api));
         operation.setRequestBody(buildRequestBody(api));
@@ -105,24 +79,28 @@ public class OpenApiDataConvert {
 
             Schema<?> schema = new Schema<>();
             schema.setType(p.getType());
-            if (p.isArrayType()) {
-                schema.setMinItems(p.getMinLength());
-                schema.setMaxItems(p.getMaxLength());
-                schema.setUniqueItems(p.getUniqueItems());
-            } else if (p.isObjectType()) {
-                schema.setMinProperties(p.getMinLength());
-                schema.setMaxProperties(p.getMaxLength());
-            } else if (p.isStringType()) {
-                schema.setMinLength(p.getMinLength());
-                schema.setMaxLength(p.getMaxLength());
-            } else if (p.isNumberOrIntegerType()) {
-                schema.setMinimum(p.getMinimum());
-                schema.setMaximum(p.getMaximum());
-            }
+            schemaSettings(p, schema);
 
             parameter.schema(schema);
             return parameter;
         }).collect(Collectors.toList());
+    }
+
+    private void schemaSettings(Property p, Schema<?> schema) {
+        if (p.isArrayType()) {
+            schema.setMinItems(p.getMinLength());
+            schema.setMaxItems(p.getMaxLength());
+            schema.setUniqueItems(p.getUniqueItems());
+        } else if (p.isObjectType()) {
+            schema.setMinProperties(p.getMinLength());
+            schema.setMaxProperties(p.getMaxLength());
+        } else if (p.isStringType()) {
+            schema.setMinLength(p.getMinLength());
+            schema.setMaxLength(p.getMaxLength());
+        } else if (p.isNumberOrIntegerType()) {
+            schema.setMinimum(p.getMinimum());
+            schema.setMaximum(p.getMaximum());
+        }
     }
 
     private RequestBody buildRequestBody(ApiDefinition api) {
@@ -174,20 +152,7 @@ public class OpenApiDataConvert {
         schema.setDescription(p.getDescription());
         schema.setExample(p.getExample());
         schema.setDefault(p.getDefaultValue());
-        if (p.isArrayType()) {
-            schema.setMinItems(p.getMinLength());
-            schema.setMaxItems(p.getMaxLength());
-            schema.setUniqueItems(p.getUniqueItems());
-        } else if (p.isObjectType()) {
-            schema.setMinProperties(p.getMinLength());
-            schema.setMaxProperties(p.getMaxLength());
-        } else if (p.isStringType()) {
-            schema.setMinLength(p.getMinLength());
-            schema.setMaxLength(p.getMaxLength());
-        } else if (p.isNumberOrIntegerType()) {
-            schema.setMinimum(p.getMinimum());
-            schema.setMaximum(p.getMaximum());
-        }
+        schemaSettings(p, schema);
 
         // 特殊类型转换
         switch (p.getType()) {
