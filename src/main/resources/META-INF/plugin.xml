@@ -9,7 +9,7 @@
             <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
             |&nbsp;
             <a href="https://github.com/metersphere/metersphere/issues">Issues</a>
-        </p><br>
+        </p>
         <ul>
             <li><strong>特性：</strong>
                 <ul>
@@ -69,21 +69,56 @@
         </ul><br>
         自定义配置项：<br>
         Preferences —&gt; Other Settings —&gt; MeterSphere<br><br>
-        <table>
+
+            <table>
             <thead>
-                <tr>
-                    <td>配置项</td>
-                    <td>含义</td>
-                </tr>
+            <tr>
+            <td>配置项</td>
+            <td>含义</td>
+            </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Server</td>
-                    <td>MeterSphere Server 地址</td>
-                </tr>
-                <!-- Other configuration items omitted for brevity -->
-            </tbody>
-        </table><br>
+            <tr>
+            <td>Server</td>
+            <td>MeterSphere 服务器地址</td>
+            </tr>
+            <tr>
+            <td>AccessKey</td>
+            <td>AccessKey</td>
+            </tr>
+            <tr>
+            <td>SecretKey</td>
+            <td>SecretKey</td>
+            </tr>
+            <tr>
+            <td>Protocol</td>
+            <td>协议</td>
+            </tr>
+            <tr>
+            <td>Organization</td>
+            <td>组织</td>
+            </tr>
+            <tr>
+            <td>Project</td>
+            <td>项目</td>
+            </tr>
+            <tr>
+            <td>Module</td>
+            <td>接口将要导入的项目对应的模块</td>
+            </tr>
+            <tr>
+            <td>Mode</td>
+            <td>覆盖：
+               1. 系统已存在相同接口（请求类型+路径一致），请求参数内容不一致则覆盖系统原接口
+               2. 系统已存在相同接口（请求类型+路径一致），请求参数内容一致则不做变更
+               3. 系统不存在该接口，则新增<br>
+               不覆盖：
+               1. 系统已存在相同接口（请求类型+路径一致），则不做变更
+               2. 系统不存在该接口，则新增
+            </td>
+            </tr>
+            </table>
+
+        <br>
         <em>Compatible IDE versions:</em><br>
         2022.1+ <br><br>
     ]]></description>
@@ -116,7 +151,6 @@
         <group id="MeterSphereCodeMenu" text="MeterSphere" description="MeterSphereCodeMenu">
             <add-to-group group-id="CodeMenu" anchor="last"/>
         </group>
-        <!-- Other action groups and actions omitted for brevity -->
     </actions>
 
 </idea-plugin>
