@@ -1,9 +1,9 @@
-package io.metersphere.state;
+package io.metersphere.model.state;
 
 import lombok.Data;
 
 @Data
-public class MSOrganization {
+public class MSModule {
     private String name;
     private String id;
 
@@ -18,14 +18,9 @@ public class MSOrganization {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof MSOrganization) {
+        if (obj instanceof MSModule) {
             return obj.hashCode() == this.hashCode();
         }
         return false;
-    }
-
-    public MSOrganization(String name, String id) {
-        this.name = name;
-        this.id = id;
     }
 }

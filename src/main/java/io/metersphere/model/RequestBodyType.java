@@ -12,8 +12,7 @@ public enum RequestBodyType {
     form("application/x-www-form-urlencoded"),
     form_data("multipart/form-data"),
     json("application/json"),
-    raw("raw"),
-    ;
+    raw("raw");
 
     private final String contentType;
 

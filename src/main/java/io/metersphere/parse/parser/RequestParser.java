@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.model.DataTypes;
 import io.metersphere.model.HttpMethod;
 import io.metersphere.model.Property;
@@ -40,12 +40,12 @@ import static io.metersphere.constants.SpringConstants.*;
  */
 public class RequestParser {
 
-    private final ApiConfig settings;
+    private final ApiSpecification settings;
     private final KernelParser kernelParser;
     private final ParseHelper parseHelper;
     private final DateParser dateParser;
 
-    public RequestParser(Project project, Module module, ApiConfig settings) {
+    public RequestParser(Project project, Module module, ApiSpecification settings) {
         this.settings = settings;
         this.kernelParser = new KernelParser(project, module, settings, false);
         this.dateParser = new DateParser(settings);
@@ -96,7 +96,7 @@ public class RequestParser {
      * 解析请求方式
      */
     private RequestBodyType getRequestBodyType(List<PsiParameter> parameters, HttpMethod method) {
-        if (!method.isAllowBody()) {
+        if (method.isAllowBody()) {
             return null;
         }
         boolean requestBody = parameters.stream().anyMatch(p -> p.getAnnotation(RequestBody) != null);
@@ -120,7 +120,7 @@ public class RequestParser {
      */
     private List<Property> getRequestBody(PsiMethod method, List<PsiParameter> methodParameters, HttpMethod httpMethod,
                                           List<Property> requestParameters) {
-        if (!httpMethod.isAllowBody()) {
+        if (httpMethod.isAllowBody()) {
             return Lists.newArrayList();
         }
         Map<String, String> paramTags = PsiDocCommentUtils.getTagParamTextMap(method);
@@ -192,7 +192,7 @@ public class RequestParser {
      */
     private List<ParameterAnnotationPair> getRequestBodyParamParameters(List<PsiParameter> parameters) {
         // 自定义@RequestBody类型
-        ApiConfig.RequestBodyParamType type = settings.getRequestBodyParamType();
+        ApiSpecification.RequestBodyParamType type = settings.getRequestBodyParamType();
         if (type == null) {
             return Collections.emptyList();
         }
@@ -326,7 +326,7 @@ public class RequestParser {
                 .filter(p -> p.getAnnotation(RequestBody) == null)
                 .filter(p -> {
                     // 过滤掉自定义@RequestBody类型的参数
-                    ApiConfig.RequestBodyParamType requestBodyParamType = settings.getRequestBodyParamType();
+                    ApiSpecification.RequestBodyParamType requestBodyParamType = settings.getRequestBodyParamType();
                     if (requestBodyParamType == null) {
                         return true;
                     }

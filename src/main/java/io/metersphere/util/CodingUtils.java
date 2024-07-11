@@ -1,6 +1,6 @@
 package io.metersphere.util;
 
-import io.metersphere.state.AppSettingState;
+import io.metersphere.model.state.AppSettingState;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;

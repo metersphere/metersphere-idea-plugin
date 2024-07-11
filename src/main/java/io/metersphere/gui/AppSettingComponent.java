@@ -2,10 +2,10 @@ package io.metersphere.gui;
 
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
-import io.metersphere.state.AppSettingState;
-import io.metersphere.state.MSModule;
-import io.metersphere.state.MSOrganization;
-import io.metersphere.state.MSProject;
+import io.metersphere.model.state.AppSettingState;
+import io.metersphere.model.state.MSModule;
+import io.metersphere.model.state.MSOrganization;
+import io.metersphere.model.state.MSProject;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.MSClientUtils;
 import lombok.Data;
@@ -173,8 +173,6 @@ public class AppSettingComponent {
         if (CollectionUtils.isEmpty(appSettingState.getProjectOptions())) {
             this.moduleCB.removeAllItems();
             appSettingState.setModule(null);
-            appSettingState.setProjectVersion(null);
-            appSettingState.setUpdateVersion(null);
         }
     }
 
@@ -190,8 +188,6 @@ public class AppSettingComponent {
         } else {
             this.moduleCB.removeAllItems();
             appSettingState.setModule(null);
-            appSettingState.setProjectVersion(null);
-            appSettingState.setUpdateVersion(null);
         }
     }
 

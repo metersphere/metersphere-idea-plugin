@@ -1,10 +1,10 @@
 package io.metersphere.util;
 
 import io.metersphere.constants.URLConstants;
-import io.metersphere.state.AppSettingState;
-import io.metersphere.state.MSModule;
-import io.metersphere.state.MSOrganization;
-import io.metersphere.state.MSProject;
+import io.metersphere.model.state.AppSettingState;
+import io.metersphere.model.state.MSModule;
+import io.metersphere.model.state.MSOrganization;
+import io.metersphere.model.state.MSProject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;

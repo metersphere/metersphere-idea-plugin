@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * 接口信息
  */
 @Data
-public class Api {
+public class ApiDefinition {
 
     /**
      * 分类

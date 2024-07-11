@@ -1,10 +1,10 @@
 <idea-plugin>
     <id>io.metersphere</id>
     <name>MeterSphere</name>
-    <vendor email="support@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
+    <vendor email="yong.zhao@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
-    <em>Support Export API to MeterSphere.<em>
+    <em>Support Upload to MeterSphere.<em>
     <br>
     <br>
     <p>
@@ -21,7 +21,7 @@
       <li>Support the parsing of common annotations such as @ResponseBody, @RequestMapping, and generate api documents based on json5.</li>
       </ul><br>
       Usage：<br>
-      <ul><li>Locate the cursor to the package/project folder or class, right-click Sync to MeterSphere.</li></ul><br>
+      <ul><li>Locate the cursor to the package/project folder or class, right-click Upload to MeterSphere.</li></ul><br>
       <em>Support annotations：</em><br>
       org.springframework.web.bind.annotation.Controller<br>
       org.springframework.web.bind.annotation.RestController<br>
@@ -42,7 +42,7 @@
       <li>支持@ResponseBody等常用注解的解析</li>
       </ul><br>
       用法：<br>
-      <ul><li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Sync to MeterSphere".</li></ul><br>
+      <ul><li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Upload to MeterSphere".</li></ul><br>
       自定义配置项：<br>
       Preferences —> Other Settings —> MeterSphere<br><br>
 
@@ -169,8 +169,8 @@
         <action
                 id="MSAction"
                 icon="io.metersphere.icons.MsIcons.Icon"
-                class="io.metersphere.actions.ExportToMSAction" text="Sync to MeterSphere"
-                description="Sync to MeterSphere">
+                class="io.metersphere.actions.ExportToMSAction" text="Upload to MeterSphere"
+                description="Upload to MeterSphere">
 
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>

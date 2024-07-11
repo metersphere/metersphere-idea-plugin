@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.model.DataTypes;
 import io.metersphere.model.Property;
 import io.metersphere.constants.SpringConstants;
@@ -17,9 +17,9 @@ import java.util.Set;
  */
 public class DateParser {
 
-    private final ApiConfig settings;
+    private final ApiSpecification settings;
 
-    public DateParser(ApiConfig settings) {
+    public DateParser(ApiSpecification settings) {
         this.settings = settings;
     }
 

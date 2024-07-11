@@ -7,7 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTypesUtil;
 import io.metersphere.constants.DocumentTags;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.model.BeanCustom;
 import io.metersphere.model.DataTypes;
 import io.metersphere.model.Property;
@@ -32,13 +32,13 @@ public class KernelParser {
 
     private final Project project;
     private final Module module;
-    private final ApiConfig settings;
+    private final ApiSpecification settings;
     private final DataTypeParser dataTypeParser;
     private final DateParser dateParser;
     private final ParseHelper parseHelper;
     private final boolean isResponse;
 
-    public KernelParser(Project project, Module module, ApiConfig settings, boolean isResponse) {
+    public KernelParser(Project project, Module module, ApiSpecification settings, boolean isResponse) {
         this.project = project;
         this.module = module;
         this.settings = settings;

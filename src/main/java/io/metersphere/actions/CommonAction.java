@@ -40,8 +40,8 @@ public abstract class CommonAction extends AnAction {
         }, "Exporting Api to MeterSphere Please Wait...", true, event.getProject());
 
         if (r.get())
-            Messages.showInfoMessage("Sync to MeterSphere success!", PluginConstants.MessageTitle.Info.name());
+            Messages.showInfoMessage("Upload to MeterSphere success!", PluginConstants.MessageTitle.Info.name());
         else
-            Messages.showInfoMessage("Sync to MeterSphere fail! " + Optional.ofNullable(exception.get()).orElse(new Throwable("")).getMessage(), PluginConstants.MessageTitle.Error.name());
+            Messages.showInfoMessage("Upload to MeterSphere fail! " + Optional.ofNullable(exception.get()).orElse(new Throwable("")).getMessage(), PluginConstants.MessageTitle.Error.name());
     }
 }

@@ -4,7 +4,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.util.NlsContexts;
 import io.metersphere.gui.AppSettingComponent;
 import org.jetbrains.annotations.Nullable;
-import io.metersphere.state.AppSettingState;
+import io.metersphere.model.state.AppSettingState;
 
 import javax.swing.*;
 

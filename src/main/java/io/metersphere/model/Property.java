@@ -1,6 +1,5 @@
 package io.metersphere.model;
 
-import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
 import io.metersphere.constants.ParameterIn;
 import lombok.Data;
@@ -8,13 +7,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static java.lang.String.format;
 
 /**
  * 参数
@@ -22,31 +17,49 @@ import static java.lang.String.format;
 @Data
 public class Property {
 
-    /** 名称 */
+    /**
+     * 名称
+     */
     private String name;
 
-    /** 类型 */
+    /**
+     * 类型
+     */
     private String type;
 
-    /** 时间格式 */
+    /**
+     * 时间格式
+     */
     private String dateFormat;
 
-    /** 描述 */
+    /**
+     * 描述
+     */
     private String description;
 
-    /** 参数位置 */
+    /**
+     * 参数位置
+     */
     private ParameterIn in;
 
-    /** 是否必须 */
+    /**
+     * 是否必须
+     */
     private Boolean required;
 
-    /** 是否标记过期 */
+    /**
+     * 是否标记过期
+     */
     private Boolean deprecated;
 
-    /** 请求示例 */
+    /**
+     * 请求示例
+     */
     private String example;
 
-    /** 默认值 */
+    /**
+     * 默认值
+     */
     private String defaultValue;
 
     /**
@@ -107,30 +120,10 @@ public class Property {
         return DataTypes.NUMBER.equals(type) || DataTypes.INTEGER.equals(type);
     }
 
-    public boolean isNumberType() {
-        return DataTypes.NUMBER.equals(type);
-    }
-
-    public boolean isIntegerType() {
-        return DataTypes.INTEGER.equals(type);
-    }
-
     public boolean isFileType() {
         return DataTypes.FILE.equals(type);
     }
 
-    /**
-     * 获取类型名称, 包括数组
-     */
-    public String getTypeWithArray() {
-        if (!DataTypes.ARRAY.equals(this.type)) {
-            return this.type;
-        }
-        if (this.items == null) {
-            return DataTypes.OBJECT + "[]";
-        }
-        return this.items.type + "[]";
-    }
 
     /**
      * 合并自定义配置, 自定义优先
@@ -168,16 +161,6 @@ public class Property {
         }
     }
 
-    /**
-     * 获取可能的值
-     */
-    public List<String> getValueList() {
-        if (values == null) {
-            return Collections.emptyList();
-        }
-        return values.stream().map(Value::getValue).collect(Collectors.toList());
-    }
-
     public List<Value> getPropertyValues() {
         Property item = this;
         List<Value> values = item.getValues();
@@ -197,25 +180,4 @@ public class Property {
         this.properties.put(key, value);
     }
 
-    public String getDescriptionMore() {
-        Property property = this;
-        String description = property.getDescription() != null ? property.getDescription() : "";
-        List<String> attaches = Lists.newArrayList();
-        // 长度范围
-        if (property.getMinLength() != null || property.getMaxLength() != null) {
-            int min = property.getMinLength() != null ? property.getMinLength() : 0;
-            int max = property.getMaxLength() != null ? property.getMaxLength() : Integer.MAX_VALUE;
-            attaches.add(format("长度: %d~%d", min, max));
-        }
-        // 数值范围
-        if (property.getMinimum() != null || property.getMaximum() != null) {
-            String min = property.getMinimum() != null ? property.getMinimum().toPlainString() : "";
-            String max = property.getMaximum() != null ? property.getMaximum().toPlainString() : "";
-            attaches.add(format("大小: %s~%s", min, max));
-        }
-        if (!attaches.isEmpty()) {
-            description += " [" + String.join(", ", attaches) + "]";
-        }
-        return description;
-    }
 }

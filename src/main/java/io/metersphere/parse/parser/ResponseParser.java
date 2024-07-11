@@ -7,7 +7,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTypesUtil;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.model.Property;
 import io.metersphere.util.parser.PsiGenericUtils;
 import io.metersphere.util.psi.PsiTypeUtils;
@@ -26,11 +26,11 @@ public class ResponseParser {
 
     private final Project project;
     private final Module module;
-    private final ApiConfig settings;
+    private final ApiSpecification settings;
     private final KernelParser kernelParser;
     private final ParseHelper parseHelper;
 
-    public ResponseParser(Project project, Module module, ApiConfig settings) {
+    public ResponseParser(Project project, Module module, ApiSpecification settings) {
         this.project = project;
         this.module = module;
         this.settings = settings;

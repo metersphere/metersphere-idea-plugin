@@ -1,7 +1,7 @@
 package io.metersphere.openapi;
 
 import com.google.common.collect.Lists;
-import io.metersphere.model.Api;
+import io.metersphere.model.ApiDefinition;
 import io.metersphere.model.Property;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * Convert api data to openapi data.
  */
 public class OpenApiDataConvert {
-    public OpenAPI convert(List<Api> apis) {
+    public OpenAPI convert(List<ApiDefinition> apis) {
         OpenAPI openApi = new OpenAPI();
         Info openApiInfo = new Info();
         openApiInfo.setTitle("");
@@ -35,14 +35,14 @@ public class OpenApiDataConvert {
         openApi.setPaths(new Paths());
         Paths paths = openApi.getPaths();
 
-        Map<String, List<Api>> pathToApis = apis.stream().collect(Collectors.groupingBy(Api::getPath));
-        List<Entry<String, List<Api>>> entrySets = pathToApis.entrySet().stream().sorted(Entry.comparingByKey())
+        Map<String, List<ApiDefinition>> pathToApis = apis.stream().collect(Collectors.groupingBy(ApiDefinition::getPath));
+        List<Entry<String, List<ApiDefinition>>> entrySets = pathToApis.entrySet().stream().sorted(Entry.comparingByKey())
                 .toList();
-        for (Entry<String, List<Api>> entry : entrySets) {
+        for (Entry<String, List<ApiDefinition>> entry : entrySets) {
             String path = entry.getKey();
-            List<Api> pathApis = entry.getValue();
+            List<ApiDefinition> pathApis = entry.getValue();
             PathItem pathItem = new PathItem();
-            for (Api api : pathApis) {
+            for (ApiDefinition api : pathApis) {
                 setPathItemOperation(api, pathItem, buildOperation(api));
             }
             paths.addPathItem(path, pathItem);
@@ -51,7 +51,7 @@ public class OpenApiDataConvert {
         return openApi;
     }
 
-    private static void setPathItemOperation(Api api, PathItem pathItem, Operation operation) {
+    private static void setPathItemOperation(ApiDefinition api, PathItem pathItem, Operation operation) {
         switch (api.getMethod()) {
             case GET:
                 pathItem.setGet(operation);
@@ -79,7 +79,7 @@ public class OpenApiDataConvert {
         }
     }
 
-    private Operation buildOperation(Api api) {
+    private Operation buildOperation(ApiDefinition api) {
         Operation operation = new Operation();
         operation.setSummary(api.getSummary());
         // todo: 设置tag，这里考虑放的是分类，可以根据自己的需求变更
@@ -90,7 +90,7 @@ public class OpenApiDataConvert {
         return operation;
     }
 
-    private List<Parameter> buildParameters(Api api) {
+    private List<Parameter> buildParameters(ApiDefinition api) {
         List<Property> apiParameters = api.getParameters();
         if (apiParameters == null || apiParameters.isEmpty()) {
             return null;
@@ -125,7 +125,7 @@ public class OpenApiDataConvert {
         }).collect(Collectors.toList());
     }
 
-    private RequestBody buildRequestBody(Api api) {
+    private RequestBody buildRequestBody(ApiDefinition api) {
         Property request = api.getRequestBody();
         if (request == null && api.getRequestBodyForm() != null && !api.getRequestBodyForm().isEmpty()) {
             request = new Property();
@@ -150,7 +150,7 @@ public class OpenApiDataConvert {
         return requestBody;
     }
 
-    private ApiResponses buildResponses(Api api) {
+    private ApiResponses buildResponses(ApiDefinition api) {
         if (api.getResponses() == null) {
             return null;
         }

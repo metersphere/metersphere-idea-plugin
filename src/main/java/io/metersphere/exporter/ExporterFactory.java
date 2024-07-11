@@ -8,9 +8,9 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import io.metersphere.AppSettingService;
 import io.metersphere.constants.PluginConstants;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.model.DefaultConstants;
-import io.metersphere.model.Api;
+import io.metersphere.model.ApiDefinition;
 import io.metersphere.model.EventData;
 import io.metersphere.parse.ApiParser;
 import io.metersphere.parse.model.ClassApiData;
@@ -50,22 +50,22 @@ public class ExporterFactory {
             return;
         }
         // 1.解析配置
-        ExporterFactory.StepResult<ApiConfig> configResult = resolveConfig();
-        ApiConfig config = configResult.getData();
+        ExporterFactory.StepResult<ApiSpecification> configResult = resolveConfig();
+        ApiSpecification config = configResult.getData();
         if (configResult.isContinue()) {
             return;
         }
         // 2.前置处理
-        if (!before(source)) {
+        if (!before()) {
             return;
         }
         // 3.解析文档
-        ExporterFactory.StepResult<List<Api>> apisResult = parse(data, config);
+        ExporterFactory.StepResult<List<ApiDefinition>> apisResult = parse(data, config);
         if (apisResult.isContinue()) {
             return;
         }
         // 4.文档处理
-        List<Api> apis = apisResult.getData();
+        List<ApiDefinition> apis = apisResult.getData();
 
         // 5.导出到指定平台
         exporterMap.get(source).sync(apis);
@@ -75,22 +75,20 @@ public class ExporterFactory {
     /**
      * 获取配置
      */
-    private static ExporterFactory.StepResult<ApiConfig> resolveConfig() {
-        ApiConfig config = new ApiConfig();
-        config = ApiConfig.getMergedInternalConfig(config);
+    private static ExporterFactory.StepResult<ApiSpecification> resolveConfig() {
+        ApiSpecification config = new ApiSpecification();
+        config = ApiSpecification.getMergedInternalConfig(config);
         return ExporterFactory.StepResult.ok(config);
     }
 
     /**
      * 检查前操作
      */
-    private static boolean before(String source) {
-        if (EXPORTER_MS.equalsIgnoreCase(source)) {
-            //只有导出MeterSphere时才检查连接状态
-            assert appSettingService.getState() != null;
-            if (!MSClientUtils.test(appSettingService.getState())) {
-                throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
-            }
+    private static boolean before() {
+        //只有导出MeterSphere时才检查连接状态
+        assert appSettingService.getState() != null;
+        if (!MSClientUtils.test(appSettingService.getState())) {
+            throw new RuntimeException(PluginConstants.EXCEPTIONCODEMAP.get(1));
         }
         return true;
     }
@@ -98,7 +96,7 @@ public class ExporterFactory {
     /**
      * 解析文档模型数据
      */
-    private static ExporterFactory.StepResult<List<Api>> parse(EventData data, ApiConfig config) {
+    private static ExporterFactory.StepResult<List<ApiDefinition>> parse(EventData data, ApiSpecification config) {
         ApiParser parser = new ApiParser(data.getProject(), data.getModule(), config);
         // 选中方法
         if (data.getSelectedMethod() != null) {
@@ -136,7 +134,7 @@ public class ExporterFactory {
             LogUtils.info(DefaultConstants.NAME, "Not found valid controller class");
             return ExporterFactory.StepResult.stop();
         }
-        List<Api> apis = Lists.newLinkedList();
+        List<ApiDefinition> apis = Lists.newLinkedList();
         for (PsiClass controller : controllers) {
             ClassApiData controllerData = parser.parse(controller);
             if (!controllerData.isValid()) {
@@ -145,7 +143,7 @@ public class ExporterFactory {
             if (config.isStrict() && StringUtils.isEmpty(controllerData.getDeclaredCategory())) {
                 continue;
             }
-            List<Api> controllerApis = controllerData.getApis();
+            List<ApiDefinition> controllerApis = controllerData.getApis();
             if (config.isStrict()) {
                 controllerApis = controllerApis.stream().filter(o -> StringUtils.isNotEmpty(o.getSummary())).toList();
             }

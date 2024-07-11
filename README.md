@@ -11,7 +11,7 @@
 
 ### 使用方法：
 
-- 将光标定位到包/项目文件夹或类上，右键点击“Sync to MeterSphere”。
+- 将光标定位到包/项目文件夹或类上，右键点击“Upload to MeterSphere”。
 - 支持注解：
    <p>
    org.springframework.web.bind.annotation.Controller 

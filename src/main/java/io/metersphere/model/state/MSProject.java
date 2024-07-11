@@ -1,4 +1,4 @@
-package io.metersphere.state;
+package io.metersphere.model.state;
 
 import lombok.Data;
 

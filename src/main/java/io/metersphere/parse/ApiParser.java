@@ -4,8 +4,8 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import io.metersphere.constants.SpringConstants;
-import io.metersphere.model.Api;
-import io.metersphere.model.ApiConfig;
+import io.metersphere.model.ApiDefinition;
+import io.metersphere.model.ApiSpecification;
 import io.metersphere.parse.model.*;
 import io.metersphere.parse.parser.ParseHelper;
 import io.metersphere.parse.parser.PathParser;
@@ -33,9 +33,9 @@ public class ApiParser {
     private final ParseHelper parseHelper;
     private final Project project;
     private final Module module;
-    private final ApiConfig settings;
+    private final ApiSpecification settings;
 
-    public ApiParser(Project project, Module module, ApiConfig settings) {
+    public ApiParser(Project project, Module module, ApiSpecification settings) {
         checkNotNull(project);
         checkNotNull(module);
         checkNotNull(settings);
@@ -114,12 +114,12 @@ public class ApiParser {
         }
 
         // 3.解析方法的参数和响应信息
-        Api methodApi = getMethodApi(method, pathInfo);
+        ApiDefinition methodApi = getMethodApi(method, pathInfo);
         data.setDeclaredApiSummary(methodApi.getSummary());
 
         // 4.多路径处理
-        List<Api> apis = pathInfo.getPaths().stream().map(path -> {
-            Api api = new Api();
+        List<ApiDefinition> apis = pathInfo.getPaths().stream().map(path -> {
+            ApiDefinition api = new ApiDefinition();
             api.setSummary(methodApi.getSummary());
             api.setDescription(methodApi.getDescription());
             api.setTags(methodApi.getTags());
@@ -145,8 +145,8 @@ public class ApiParser {
     /**
      * 解析方法的通用信息，除请求路径、请求方法外.
      */
-    private Api getMethodApi(PsiMethod method, PathInfo path) {
-        Api api = new Api();
+    private ApiDefinition getMethodApi(PsiMethod method, PathInfo path) {
+        ApiDefinition api = new ApiDefinition();
         // 基本信息
         api.setMethod(path.getMethod());
         api.setSummary(parseHelper.getApiSummary(method));

@@ -6,7 +6,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import io.metersphere.state.AppSettingState;
+import io.metersphere.model.state.AppSettingState;
 
 /**
  * 存储配置

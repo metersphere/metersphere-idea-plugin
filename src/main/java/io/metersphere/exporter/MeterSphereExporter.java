@@ -4,62 +4,62 @@ import com.google.gson.JsonObject;
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
 import io.metersphere.constants.URLConstants;
-import io.metersphere.model.Api;
+import io.metersphere.model.ApiDefinition;
+import io.metersphere.model.state.AppSettingState;
+import io.metersphere.model.state.MSModule;
+import io.metersphere.model.state.MSProject;
 import io.metersphere.openapi.OpenApiDataConvert;
 import io.metersphere.openapi.OpenApiGenerator;
-import io.metersphere.state.AppSettingState;
-import io.metersphere.state.MSModule;
-import io.metersphere.state.MSProject;
 import io.metersphere.util.*;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 public class MeterSphereExporter implements IExporter {
     private final AppSettingService appSettingService = AppSettingService.getInstance();
 
     @Override
-    public void sync(List<Api> apis) {
+    public void sync(List<ApiDefinition> apis) {
         OpenAPI openApi = new OpenApiDataConvert().convert(apis);
         openApi.getInfo().setTitle("MeterSphere API IDEA Sync");
         JsonObject apiJsonObject = new OpenApiGenerator().generate(openApi);
         File temp = null;
         try {
             temp = File.createTempFile(UUID.randomUUID().toString(), null);
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
-
-            bufferedWriter.write(apiJsonObject.toString());
-            bufferedWriter.flush();
-            bufferedWriter.close();
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp))) {
+                bufferedWriter.write(apiJsonObject.toString());
+            }
 
             boolean r = uploadToServer(temp);
             if (!r) {
-                Messages.showInfoMessage("Sync to MeterSphere fail!", "Error");
+                Messages.showInfoMessage("Upload to MeterSphere fail!", "Error");
             }
         } catch (Exception e) {
             Messages.showInfoMessage(e.getMessage(), "Error");
         } finally {
             if (temp != null) {
-                temp.delete();
+                try {
+                    Files.deleteIfExists(temp.toPath());
+                } catch (IOException e) {
+                    LogUtils.error("Failed to delete temp file", e);
+                }
             }
         }
     }
 
     private boolean uploadToServer(File file) {
-        ProgressUtils.show("Start to sync to MeterSphere Server");
+        ProgressUtils.show("Start to Upload to MeterSphere Server");
 
         AppSettingState state = appSettingService.getState();
         Objects.requireNonNull(state, "AppSettingState must not be null");
@@ -81,41 +81,37 @@ public class MeterSphereExporter implements IExporter {
             httpPost.setEntity(formEntity);
 
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                StatusLine status = response.getStatusLine();
-                int statusCode = status.getStatusCode();
-                if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode == 200 || statusCode == 201) {
                     return true;
                 } else {
-                    throw new RuntimeException("Server error: " + status.getReasonPhrase());
+                    throw new RuntimeException("Server error: " + response.getStatusLine().getReasonPhrase());
                 }
             } catch (IOException e) {
                 LogUtils.error("Failed to upload to MeterSphere", e);
                 throw new RuntimeException("Failed to upload to MeterSphere", e);
             }
         } catch (Exception e) {
-            LogUtils.error("Failed to close httpclient", e);
-            throw new RuntimeException("Failed to close httpclient", e);
+            LogUtils.error("Failed to communicate with MeterSphere server", e);
+            throw new RuntimeException("Failed to communicate with MeterSphere server", e);
         }
     }
 
-
-    @NotNull
     private Map<String, Object> buildParam(AppSettingState state) {
         Map<String, Object> param = new HashMap<>();
         param.put("coverModule", state.isCoverModule());
         if (state.getModule() == null) {
-            throw new RuntimeException("no module selected ! please check your rights");
+            throw new RuntimeException("No module selected! Please check your rights.");
         }
         param.put("type", "API");
         param.put("platform", "Swagger3");
         param.put("syncCase", true);
-        param.put("moduleId", Optional.of(state.getModule()).orElse(new MSModule()).getId());
+        param.put("moduleId", Optional.ofNullable(state.getModule()).orElse(new MSModule()).getId());
         param.put("model", "definition");
         param.put("projectId", Optional.ofNullable(state.getProject()).orElse(new MSProject()).getId());
         param.put("protocol", "HTTP");
-        //标记导入来源是 idea
+        // Marking the import source as 'idea'
         param.put("origin", "idea");
         return param;
     }
-
 }

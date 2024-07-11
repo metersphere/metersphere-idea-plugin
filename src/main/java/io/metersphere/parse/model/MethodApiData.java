@@ -1,7 +1,7 @@
 package io.metersphere.parse.model;
 
 import com.intellij.psi.PsiMethod;
-import io.metersphere.model.Api;
+import io.metersphere.model.ApiDefinition;
 import lombok.Data;
 
 import java.util.Collections;
@@ -32,9 +32,9 @@ public class MethodApiData {
     /**
      * 接口列表
      */
-    private List<Api> apis;
+    private List<ApiDefinition> apis;
 
-    public List<Api> getApis() {
+    public List<ApiDefinition> getApis() {
         return apis != null ? apis : Collections.emptyList();
     }
 }

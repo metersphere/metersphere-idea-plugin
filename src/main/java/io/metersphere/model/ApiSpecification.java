@@ -21,7 +21,7 @@ import static io.metersphere.model.DefaultConstants.DEFAULT_PROPERTY_FILE;
  * 对应文件
  */
 @Data
-public class ApiConfig {
+public class ApiSpecification {
 
     /**
      * 严格模式: 未指定分类、接口名不处理
@@ -106,7 +106,7 @@ public class ApiConfig {
     /**
      * 解析配置
      */
-    public static ApiConfig fromProperties(Properties properties) {
+    public static ApiSpecification fromProperties(Properties properties) {
         Splitter splitter = Splitter.on(",").trimResults().omitEmptyStrings();
         String strict = properties.getProperty("strict", "");
         String path = properties.getProperty("path", null);
@@ -119,7 +119,7 @@ public class ApiConfig {
         String timeFormat = properties.getProperty("timeFormat", "");
         String requestBodyParamType = properties.getProperty("requestBodyParamType", "");
 
-        ApiConfig config = new ApiConfig();
+        ApiSpecification config = new ApiSpecification();
         if (StringUtils.isNotEmpty(strict)) {
             config.strict = Boolean.parseBoolean(strict);
         }
@@ -159,10 +159,10 @@ public class ApiConfig {
     /**
      * 合并配置
      */
-    public static ApiConfig getMergedInternalConfig(ApiConfig settings) {
+    public static ApiSpecification getMergedInternalConfig(ApiSpecification settings) {
         Properties defaultProperties = PropertiesLoader.getProperties(DEFAULT_PROPERTY_FILE);
-        ApiConfig internal = ApiConfig.fromProperties(defaultProperties);
-        ApiConfig config = new ApiConfig();
+        ApiSpecification internal = ApiSpecification.fromProperties(defaultProperties);
+        ApiSpecification config = new ApiSpecification();
         config.setStrict(settings.isStrict());
         config.setPath(settings.getPath());
         config.setReturnWrapType(settings.getReturnWrapType());

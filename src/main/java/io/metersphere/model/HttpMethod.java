@@ -32,6 +32,6 @@ public enum HttpMethod {
      */
     public boolean isAllowBody() {
         Set<HttpMethod> sets = Sets.newHashSet(POST, PUT, DELETE, PATCH);
-        return sets.contains(this);
+        return !sets.contains(this);
     }
 }

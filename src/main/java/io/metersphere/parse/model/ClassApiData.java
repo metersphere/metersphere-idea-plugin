@@ -1,7 +1,7 @@
 package io.metersphere.parse.model;
 
 import com.google.common.collect.Lists;
-import io.metersphere.model.Api;
+import io.metersphere.model.ApiDefinition;
 import lombok.Data;
 
 import java.util.Collections;
@@ -25,11 +25,11 @@ public class ClassApiData {
 
     private List<MethodApiData> methodDataList;
 
-    public List<Api> getApis() {
+    public List<ApiDefinition> getApis() {
         if (methodDataList == null || methodDataList.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Api> apis = Lists.newArrayList();
+        List<ApiDefinition> apis = Lists.newArrayList();
         for (MethodApiData methodApiInfo : methodDataList) {
             apis.addAll(methodApiInfo.getApis());
         }
