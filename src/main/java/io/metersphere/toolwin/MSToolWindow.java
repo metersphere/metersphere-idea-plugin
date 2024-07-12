@@ -10,11 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 
 public class MSToolWindow implements ToolWindowFactory {
     @Override
@@ -32,62 +28,7 @@ public class MSToolWindow implements ToolWindowFactory {
         });
         panel.add(openButton, BorderLayout.NORTH);
 
-        HttpClientPanel httpPanel = new HttpClientPanel();
-
-        Content content = ContentFactory.getInstance().createContent(httpPanel, "", false);
+        Content content = ContentFactory.getInstance().createContent(panel, "", false);
         toolWindow.getContentManager().addContent(content);
     }
-
-
-    private static class HttpClientPanel extends JPanel {
-
-        public HttpClientPanel() {
-            setLayout(new BorderLayout());
-
-            JPanel httpClientPanel = createHttpClientPanel();
-            add(httpClientPanel, BorderLayout.CENTER);
-        }
-
-        private JPanel createHttpClientPanel() {
-            JPanel panel = new JPanel(new BorderLayout());
-
-            JTextArea responseArea = new JTextArea();
-            responseArea.setEditable(false);
-            JScrollPane scrollPane = new JScrollPane(responseArea);
-            panel.add(scrollPane, BorderLayout.CENTER);
-
-            JButton requestButton = new JButton("Send Request");
-            requestButton.addActionListener(e -> {
-                try {
-                    URL url = new URL("https://jsonplaceholder.typicode.com/posts/1");
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-
-                    int responseCode = conn.getResponseCode();
-                    if (responseCode == HttpURLConnection.HTTP_OK) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder response = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            response.append(line);
-                        }
-                        reader.close();
-                        responseArea.setText(response.toString());
-                    } else {
-                        responseArea.setText("HTTP Error: " + responseCode);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    responseArea.setText("Exception: " + ex.getMessage());
-                }
-            });
-
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            buttonPanel.add(requestButton);
-            panel.add(buttonPanel, BorderLayout.SOUTH);
-
-            return panel;
-        }
-    }
-
 }

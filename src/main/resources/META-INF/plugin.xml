@@ -4,7 +4,7 @@
     <vendor email="yong.zhao@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
-        <em>MeterSphere V3 Plugin.</em><br><br>
+        <em>MeterSphere 是新一代的测试管理和接口测试工具，让软件测试工作更简单、更高效，不再成为持续交付的瓶颈。</em><br><br>
         <p>
             <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
             |&nbsp;
@@ -68,7 +68,7 @@
             <li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Upload to MeterSphere".</li>
         </ul><br>
         自定义配置项：<br>
-        Preferences —&gt; Other Settings —&gt; MeterSphere<br><br>
+        Preferences —&gt; Other Settings —&gt; MeterSphere Settings<br><br>
 
             <table>
             <thead>
