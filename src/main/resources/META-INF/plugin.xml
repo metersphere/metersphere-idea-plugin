@@ -131,6 +131,39 @@
 
     <depends>com.intellij.modules.platform</depends>
 
+    <actions>
+        <group id="MeterSphereCodeMenu" text="MeterSphere" description="MeterSphereCodeMenu">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+        </group>
+        <group id="MeterSphereGenerateMenu" text="MeterSphere" description="MeterSphereGenerateMenu">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </group>
+        <group id="MeterSphereEditorLangPopupMenu" text="MeterSphere" description="MeterSphereEditorLangPopupMenu">
+            <add-to-group group-id="EditorLangPopupMenu" anchor="last"/>
+        </group>
+        <group id="MeterSphereProjectViewPopupMenu" text="MeterSphere" description="MeterSphereProjectViewPopupMenu">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+
+        <action
+                id="MSAction"
+                icon="io.metersphere.icons.MsIcons.Icon"
+                class="io.metersphere.actions.MSUploadAction" text="Upload to MeterSphere"
+                description="Upload to MeterSphere">
+
+            <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
+            <add-to-group group-id="MeterSphereProjectViewPopupMenu" anchor="last"/>
+            <keyboard-shortcut first-keystroke="alt shift m" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="command m s" keymap="Mac OS X" replace-all="true"/>
+            <keyboard-shortcut first-keystroke="command m s" keymap="Mac OS X 10.5+" replace-all="true"/>
+        </action>
+
+    </actions>
+
+    <depends>com.intellij.modules.java</depends>
+
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
                 parentId="other"
