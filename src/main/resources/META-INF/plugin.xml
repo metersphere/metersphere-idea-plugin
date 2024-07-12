@@ -139,12 +139,12 @@
                 displayName="MeterSphere Settings"/>
         <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
         <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"/>
-        <toolWindow
+       <!-- <toolWindow
                 id="MeterSphere"
                 secondary="true"
                 anchor="right"
                 icon="io.metersphere.icons.MsIcons.Icon"
-                factoryClass="io.metersphere.toolwin.MSToolWindow"/>
+                factoryClass="io.metersphere.toolwin.MSToolWindow"/>-->
     </extensions>
 
     <actions>

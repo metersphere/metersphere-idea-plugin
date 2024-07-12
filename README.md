@@ -144,10 +144,10 @@
 
 ## License & Copyright
 
-版权所有 © 2014-2024 飞致云 FIT2CLOUD。保留所有权利。
+Copyright (c) 2014-2024 飞致云 FIT2CLOUD, All rights reserved.
 
-根据 GNU 通用公共许可证第 3 版（GPLv3）许可；您可以在遵守许可的前提下使用本文件。您可以在以下链接获取许可证的副本：
+Licensed under The GNU General Public License version 3 (GPLv3)  (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
-[https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)
+https://www.gnu.org/licenses/gpl-3.0.html
 
-除非适用法律要求或书面同意，根据许可分发的软件基于“按原样”分发，无任何形式的明示或暗示担保或条件。详见许可证，了解具体语言规定的权限和限制。
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
