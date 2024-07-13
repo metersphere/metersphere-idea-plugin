@@ -1,15 +1,13 @@
 <idea-plugin>
-    <id>io.metersphere</id>
+    <id>io.metersphere.idea.plugin</id>
     <name>MeterSphere-V3</name>
     <vendor email="yong.zhao@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
         <em>MeterSphere 是新一代的测试管理和接口测试工具，让软件测试工作更简单、更高效，不再成为持续交付的瓶颈。</em><br><br>
-        <p>
-            <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
-            |&nbsp;
-            <a href="https://github.com/metersphere/metersphere/issues">Issues</a>
-        </p>
+        <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
+        |&nbsp;
+        <a href="https://github.com/metersphere/metersphere/issues">Issues</a>
         <ul>
             <li><strong>特性：</strong>
                 <ul>
@@ -155,9 +153,6 @@
             <add-to-group group-id="MeterSphereGenerateMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereEditorLangPopupMenu" anchor="last"/>
             <add-to-group group-id="MeterSphereProjectViewPopupMenu" anchor="last"/>
-            <keyboard-shortcut first-keystroke="alt shift m" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="command m s" keymap="Mac OS X" replace-all="true"/>
-            <keyboard-shortcut first-keystroke="command m s" keymap="Mac OS X 10.5+" replace-all="true"/>
         </action>
 
     </actions>
@@ -179,11 +174,5 @@
                 icon="io.metersphere.icons.MsIcons.Icon"
                 factoryClass="io.metersphere.toolwin.MSToolWindow"/>-->
     </extensions>
-
-    <actions>
-        <group id="MeterSphereCodeMenu" text="MeterSphere" description="MeterSphereCodeMenu">
-            <add-to-group group-id="CodeMenu" anchor="last"/>
-        </group>
-    </actions>
 
 </idea-plugin>
