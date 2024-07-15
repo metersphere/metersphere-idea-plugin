@@ -54,7 +54,7 @@ public class PathParser {
             }
         }
 
-        // 公司内部定制@ApiVersion注解
+        // 定制版本注解处理
         if (pathInfo != null && CollectionUtils.isNotEmpty(pathInfo.getPaths())) {
             spiPathHandle(method, pathInfo);
         }
@@ -114,7 +114,7 @@ public class PathParser {
 
 
     /**
-     * 小宝定制
+     * 定制版本处理
      */
     private static void spiPathHandle(PsiMethod method, PathInfo pathInfo) {
         PsiAnnotation apiVersion = PsiAnnotationUtils.getAnnotation(method, SpiConstants.ApiVersion);
