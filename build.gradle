@@ -12,7 +12,13 @@ repositories {
     mavenCentral()
 }
 
-·
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
 
 dependencies {
     implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
