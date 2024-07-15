@@ -19,10 +19,8 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -37,7 +35,7 @@ public class MSBaseTransfer implements BaseTransfer {
         File temp = null;
         try {
             temp = File.createTempFile(UUID.randomUUID().toString(), null);
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp))) {
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(temp), StandardCharsets.UTF_8))) {
                 bufferedWriter.write(apiJsonObject.toString());
             }
 

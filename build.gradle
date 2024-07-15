@@ -12,6 +12,8 @@ repositories {
     mavenCentral()
 }
 
+·
+
 dependencies {
     implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
     compileOnly 'org.projectlombok:lombok:1.18.34' // 只在编译时需要，不参与运行时
