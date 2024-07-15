@@ -113,8 +113,9 @@
             </table>
 
         <br>
-        <em>Compatible IDE versions:</em><br>
-        2022.1+ <br><br>
+        <em>兼容的 IDE 版本：2022.1 及以上</em><br>
+         <em>MeterSphere 版本：3.0.1 及以上</em><br>
+       <br>
     ]]></description>
 
     <change-notes><![CDATA[
