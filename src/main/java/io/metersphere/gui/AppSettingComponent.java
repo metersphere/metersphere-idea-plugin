@@ -258,6 +258,10 @@ public class AppSettingComponent {
         List<MSModule> modules = MSClientUtils.getModuleList(appSettingState, msProjectId);
 
         if (CollectionUtils.isNotEmpty(modules)) {
+            modules.stream()
+                    .filter(module -> module.getName().equals("Unplanned Api"))
+                    .findFirst()
+                    .ifPresent(module -> module.setName("未规划接口"));
             appSettingState.setModuleOptions(modules);
         } else {
             LogUtils.error("get module failed!");
