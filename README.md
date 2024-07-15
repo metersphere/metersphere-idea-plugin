@@ -108,10 +108,6 @@
 <td>SecretKey</td>
 </tr>
 <tr>
-<td>Protocol</td>
-<td>协议</td>
-</tr>
-<tr>
 <td>Organization</td>
 <td>组织</td>
 </tr>

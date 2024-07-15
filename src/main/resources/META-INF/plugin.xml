@@ -16,7 +16,7 @@
                     <li>支持列表、集合和其他数据结构，包括嵌套泛型解析</li>
                 </ul>
             </li>
-            <li><strong>注解支持：</strong>
+            <li><strong>注解解析功能概览：</strong>
                 <ul>
                     <li><strong>Spring Framework 注解：</strong>
                         <ul>
@@ -81,15 +81,11 @@
             </tr>
             <tr>
             <td>AccessKey</td>
-            <td>AccessKey</td>
+            <td>MeterSphere -> 个人中心 -> API KEY AccessKey</td>
             </tr>
             <tr>
             <td>SecretKey</td>
-            <td>SecretKey</td>
-            </tr>
-            <tr>
-            <td>Protocol</td>
-            <td>协议</td>
+            <td>MeterSphere -> 个人中心 -> API KEY SecretKey</td>
             </tr>
             <tr>
             <td>Organization</td>
