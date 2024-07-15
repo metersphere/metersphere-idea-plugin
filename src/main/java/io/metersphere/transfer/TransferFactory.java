@@ -17,6 +17,7 @@ import io.metersphere.parse.model.ClassApiData;
 import io.metersphere.parse.model.MethodApiData;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.MSClientUtils;
+import io.metersphere.util.ProgressUtils;
 import io.metersphere.util.psi.PsiFileUtils;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +46,7 @@ public class TransferFactory {
     }
 
     private static void actionPerformed(AnActionEvent event, String source) {
+        ProgressUtils.show(("Beginning Environment Check ..."));
         EventData data = EventData.of(event);
         if (!data.shouldHandle()) {
             return;
@@ -59,6 +61,9 @@ public class TransferFactory {
         if (!before()) {
             return;
         }
+
+        ProgressUtils.show(("Starting to Parse the Document ..."));
+
         // 3.解析文档
         TransferFactory.StepResult<List<ApiDefinition>> apisResult = parse(data, config);
         if (apisResult.isContinue()) {
@@ -68,6 +73,8 @@ public class TransferFactory {
         List<ApiDefinition> apis = apisResult.getData();
 
         // 5.同步到指定平台
+        ProgressUtils.show(("Interface Information Parsing Complete ..."));
+
         exporterMap.get(source).upload(apis);
 
     }

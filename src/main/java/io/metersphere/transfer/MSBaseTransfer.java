@@ -57,7 +57,7 @@ public class MSBaseTransfer implements BaseTransfer {
     }
 
     private boolean uploadToServer(File file) {
-        ProgressUtils.show("Start to Upload to MeterSphere Server");
+        ProgressUtils.show("Starting Upload to MeterSphere Server");
 
         AppSettingState state = appSettingService.getState();
         Objects.requireNonNull(state, "AppSettingState must not be null");
