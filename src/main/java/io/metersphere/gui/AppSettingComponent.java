@@ -107,7 +107,7 @@ public class AppSettingComponent {
         secretKey.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                appSettingState.setSecretKey(secretKey.getText());
+                appSettingState.setSecretKey(new String(secretKey.getPassword()));
             }
         });
 
