@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>io.metersphere.idea.plugin</id>
-    <name>MeterSphere-V3</name>
+    <name>MeterSphere</name>
     <vendor email="yong.zhao@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
 
     <description><![CDATA[
