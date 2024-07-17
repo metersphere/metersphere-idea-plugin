@@ -97,7 +97,7 @@ public class MSBaseTransfer implements BaseTransfer {
 
     private Map<String, Object> buildParam(AppSettingState state) {
         Map<String, Object> param = new HashMap<>();
-        param.put("coverModule", state.isCoverModule());
+        param.put("coverModule", state.getCoverModule().getId().equals("override"));
         if (state.getModule() == null) {
             throw new RuntimeException("No module selected! Please check your rights.");
         }

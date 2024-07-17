@@ -2,10 +2,7 @@ package io.metersphere.gui;
 
 import com.intellij.openapi.ui.Messages;
 import io.metersphere.AppSettingService;
-import io.metersphere.model.state.AppSettingState;
-import io.metersphere.model.state.MSModule;
-import io.metersphere.model.state.MSOrganization;
-import io.metersphere.model.state.MSProject;
+import io.metersphere.model.state.*;
 import io.metersphere.util.LogUtils;
 import io.metersphere.util.MSClientUtils;
 import lombok.Data;
@@ -18,6 +15,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +36,7 @@ public class AppSettingComponent {
     private JComboBox<MSOrganization> organizationCB;
     private JTextArea beanContent;
     private JCheckBox enable;
-    private JComboBox<Boolean> coverModule;
+    private JComboBox<CoverModule> coverModules;
 
     private AppSettingService appSettingService = AppSettingService.getInstance();
 
@@ -74,13 +72,22 @@ public class AppSettingComponent {
         }
     };
 
+    private ItemListener coverItemListener = itemEvent -> {
+        if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+            if (coverModules.getSelectedItem() != null) {
+                assert appSettingService.getState() != null;
+                appSettingService.getState().setCoverModule((CoverModule) itemEvent.getItem());
+            }
+        }
+    };
+
 
     public AppSettingComponent() {
         AppSettingState appSettingState = appSettingService.getState();
         assert appSettingState != null;
+        initCoverModule();
         // 初始化数据
         initData(appSettingState);
-
         testCon.addActionListener(actionEvent -> {
             if (test(appSettingState)) {
                 if (initOrganization())
@@ -286,6 +293,44 @@ public class AppSettingComponent {
         }
 
         this.moduleCB.addItemListener(moduleItemListener);
+    }
+
+
+    void initCoverModule() {
+        AppSettingState appSettingState = appSettingService.getState();
+        if (appSettingState == null) {
+            return;
+        }
+
+        // 创建覆盖模块列表
+        List<CoverModule> list = Arrays.asList(
+                new CoverModule("override", "覆盖"),
+                new CoverModule("non-override", "不覆盖")
+        );
+
+        // 更新 AppSettingState 中的覆盖模块列表
+        appSettingState.setCoverModuleList(list);
+
+        // 移除和重新添加 ItemListener，确保不触发不必要的事件
+        coverModules.removeItemListener(coverItemListener);
+        coverModules.removeAllItems();
+
+        // 将覆盖模块列表添加到 JComboBox 中
+        list.forEach(coverModules::addItem);
+
+        // 恢复选中的覆盖模块
+        CoverModule selectedModule = appSettingState.getCoverModule();
+        CoverModule finalSelectedModule = selectedModule;
+        selectedModule = list.stream()
+                .filter(module -> module.equals(finalSelectedModule))
+                .findFirst()
+                .orElse(list.get(1));
+
+        coverModules.setSelectedItem(selectedModule);
+        appSettingState.setCoverModule(selectedModule);
+
+        // 添加 ItemListener，处理 JComboBox 选择变化事件
+        coverModules.addItemListener(coverItemListener);
     }
 
 

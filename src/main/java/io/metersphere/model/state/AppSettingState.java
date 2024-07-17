@@ -33,7 +33,9 @@ public class AppSettingState {
     private String exportModuleName;
 
     //是否覆盖模块 coverModule
-    private boolean coverModule = true;
+    private CoverModule coverModule;
+
+    private List<CoverModule> coverModuleList;
 
     public String getMeterSphereAddress() {
         if (StringUtils.isNotBlank(this.meterSphereAddress)) {
@@ -52,5 +54,6 @@ public class AppSettingState {
         project = null;
         moduleOptions = null;
         module = null;
+        coverModule = null;
     }
 }
