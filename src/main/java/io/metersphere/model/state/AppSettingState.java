@@ -54,6 +54,5 @@ public class AppSettingState {
         project = null;
         moduleOptions = null;
         module = null;
-        coverModule = null;
     }
 }
