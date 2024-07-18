@@ -1,0 +1,56 @@
+// 应用 IntelliJ 插件 for Gradle
+apply plugin: 'org.jetbrains.intellij'
+
+// 定义依赖解析的仓库
+repositories {
+    mavenCentral()
+}
+
+// 确定要使用的 IntelliJ IDEA 版本，默认为 '2024.1.1' 如果未指定
+def ideaVersion = (rootProject.hasProperty('ideaVersion') && rootProject.ideaVersion) ? rootProject.ideaVersion : '2024.1.1'
+
+// 确定 IntelliJ IDEA 类型（默认为 'IC' - IntelliJ Community Edition）
+def ideaType = (rootProject.hasProperty('ideaType') && rootProject.ideaType) ? rootProject.ideaType : 'IC'
+
+// 确定是否启用代码仪器（默认为 true）
+def shouldInstrumentCode = rootProject.hasProperty('shouldInstrumentCode') ? rootProject.shouldInstrumentCode : true
+
+// 应用来自项目目录下的 shared.gradle 文件中的配置
+apply from: "$rootProject.projectDir/shared.gradle"
+
+// 定义要启用的 IntelliJ 配置中的插件
+def enabledPlugins = ['java', 'junit', 'properties']
+enabledPlugins = filterPlugins(enabledPlugins) // 假设 filterPlugins 是一个用于筛选插件的自定义函数
+
+// 配置 IntelliJ IDEA 插件设置
+intellij {
+    pluginName = 'APIDebugger' // 要配置的 IntelliJ 插件名称
+    instrumentCode = shouldInstrumentCode // 是否启用代码仪器
+    version = ideaVersion // 要使用的 IntelliJ IDEA 版本
+    type = ideaType // IntelliJ IDEA 的类型（Community Edition 或 Ultimate）
+    downloadSources = true // 是否下载依赖的源码
+    sameSinceUntilBuild = false // 插件是否与相同的 IntelliJ IDEA 版本兼容
+    updateSinceUntilBuild = false // 是否更新插件与较新版本的兼容性
+    plugins = enabledPlugins // 在 IntelliJ 配置中要启用的插件列表
+}
+
+
+dependencies {
+    // 特征提取模块
+    implementation(project(':ms-common-lib')) {
+        // 排除特定的依赖项，以避免不需要的组件或插件被包含进来
+        exclude group: 'com.jetbrains', module: 'ideaIC'  // 排除 JetBrains 的 ideaIC 模块
+        exclude group: 'org.jetbrains.plugins', module: 'junit'  // 排除 IntelliJ IDEA 插件 junit
+        exclude group: 'org.jetbrains.plugins', module: 'properties'  // 排除 IntelliJ IDEA 插件 properties
+        exclude group: 'org.jetbrains.plugins', module: 'Groovy'  // 排除 IntelliJ IDEA 插件 Groovy
+    }
+
+    implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
+    compileOnly 'org.projectlombok:lombok:1.18.34' // 只在编译时需要，不参与运行时
+    annotationProcessor 'org.projectlombok:lombok:1.18.34' // 注解处理器，用于生成代码
+    testCompileOnly 'org.projectlombok:lombok:1.18.34' // 测试时编译依赖
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34' // 测试时注解处理器
+
+    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5' // IntelliJ Lombok 插件支持
+
+}

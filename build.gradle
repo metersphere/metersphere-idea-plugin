@@ -6,7 +6,7 @@ plugins {
 group 'org.intellij.sdk'
 version '3.0'
 
-sourceCompatibility = 17
+sourceCompatibility = jvmTargetVersion
 
 repositories {
     mavenCentral()
@@ -20,7 +20,26 @@ compileTestJava {
     options.encoding = 'UTF-8'
 }
 
+apply from: "$rootProject.projectDir/shared.gradle"
+
 dependencies {
+    // 特征提取模块
+    implementation(project(':ms-common-lib')) {
+        // 排除特定的依赖项，以避免不需要的组件或插件被包含进来
+        exclude group: 'com.jetbrains', module: 'ideaIC'  // 排除 JetBrains 的 ideaIC 模块
+        exclude group: 'org.jetbrains.plugins', module: 'junit'  // 排除 IntelliJ IDEA 插件 junit
+        exclude group: 'org.jetbrains.plugins', module: 'properties'  // 排除 IntelliJ IDEA 插件 properties
+        exclude group: 'org.jetbrains.plugins', module: 'Groovy'  // 排除 IntelliJ IDEA 插件 Groovy
+    }
+    // API 调试模块
+    implementation(project(':ms-api-debugger')) {
+        // 排除特定的依赖项，以避免不需要的组件或插件被包含进来
+        exclude group: 'com.jetbrains', module: 'ideaIC'  // 排除 JetBrains 的 ideaIC 模块
+        exclude group: 'org.jetbrains.plugins', module: 'junit'  // 排除 IntelliJ IDEA 插件 junit
+        exclude group: 'org.jetbrains.plugins', module: 'properties'  // 排除 IntelliJ IDEA 插件 properties
+        exclude group: 'org.jetbrains.plugins', module: 'Groovy'  // 排除 IntelliJ IDEA 插件 Groovy
+    }
+
     implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
     compileOnly 'org.projectlombok:lombok:1.18.34' // 只在编译时需要，不参与运行时
     annotationProcessor 'org.projectlombok:lombok:1.18.34' // 注解处理器，用于生成代码

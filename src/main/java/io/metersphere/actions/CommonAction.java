@@ -7,10 +7,10 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
-import io.metersphere.constants.PluginConstants;
-import io.metersphere.transfer.TransferFactory;
-import io.metersphere.util.LogUtils;
-import io.metersphere.util.ProgressUtils;
+import io.metersphere.common.constants.PluginConstants;
+import io.metersphere.ms.transfer.TransferFactory;
+import io.metersphere.common.util.LogUtils;
+import io.metersphere.common.util.ProgressUtils;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;

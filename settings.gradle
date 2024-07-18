@@ -1,2 +1,3 @@
 rootProject.name = "metersphere-idea-plugin"
 
+include 'ms-common-lib', 'ms-api-debugger', 'ms-ai-math-ops', 'ms-unit-test-gen'
