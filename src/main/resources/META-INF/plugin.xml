@@ -1,131 +1,121 @@
 <idea-plugin>
     <id>io.metersphere.idea.plugin</id>
     <name>MeterSphere</name>
+    <version>3.0.1</version>
     <vendor email="yong.zhao@fit2cloud.com" url="https://metersphere.io/">FIT2CLOUD</vendor>
-
     <description><![CDATA[
-        <em>MeterSphere 是新一代的测试管理和接口测试工具，让软件测试工作更简单、更高效，不再成为持续交付的瓶颈。</em><br><br>
+        <em>MeterSphere is a next-generation testing management and API testing tool that simplifies and enhances software testing, eliminating it as a bottleneck in continuous delivery.</em><br><br>
+
         <a href="https://github.com/metersphere/metersphere-idea-plugin">GitHub</a>
         |&nbsp;
         <a href="https://github.com/metersphere/metersphere/issues">Issues</a>
+
         <ul>
-            <li><strong>特性：</strong>
+            <li><strong>Features:</strong>
                 <ul>
-                    <li>基于 Javadoc 的分析，无需额外的注解</li>
-                    <li>自动识别类，生成接口定义到 MeterSphere</li>
-                    <li>支持列表、集合和其他数据结构，包括嵌套泛型解析</li>
+                    <li>Uses Javadoc analysis, no additional annotations required</li>
+                    <li>Automatically detects classes and generates interface definitions to MeterSphere</li>
+                    <li>Supports lists, collections, and other data structures including nested generics resolution</li>
                 </ul>
             </li>
-            <li><strong>注解解析功能概览：</strong>
+            <li><strong>Annotation Parsing Overview:</strong>
                 <ul>
-                    <li><strong>Spring Framework 注解：</strong>
+                    <li><strong>Spring Framework Annotations:</strong>
                         <ul>
-                            <li><code>@Controller</code></li>
-                            <li><code>@RestController</code></li>
-                            <li><code>@RequestMapping</code></li>
-                            <li><strong>HTTP 方法映射注解：</strong>
+                            <li><code>@Controller</code>, <code>@RestController</code>, <code>@RequestMapping</code></li>
+                            <li><strong>HTTP Method Mapping Annotations:</strong>
                                 <ul>
-                                    <li><code>@GetMapping</code></li>
-                                    <li><code>@PutMapping</code></li>
-                                    <li><code>@DeleteMapping</code></li>
-                                    <li><code>@PatchMapping</code></li>
-                                    <li><code>@PathVariable</code></li>
-                                    <li><code>@RequestBody</code></li>
-                                    <li><code>@RequestParam</code></li>
-                                    <li><code>@ResponseBody</code></li>
+                                    <li><code>@GetMapping</code>, <code>@PutMapping</code>, <code>@DeleteMapping</code>, <code>@PatchMapping</code></li>
+                                    <li><code>@PathVariable</code>, <code>@RequestBody</code>, <code>@RequestParam</code>, <code>@ResponseBody</code></li>
                                 </ul>
                             </li>
                         </ul>
                     </li>
-                    <li><strong>Swagger 2.0 相关注解：</strong>
+                    <li><strong>Swagger 2.0 Annotations:</strong>
                         <ul>
-                            <li><code>@Api</code></li>
-                            <li><code>@ApiOperation</code></li>
-                            <li><code>@ApiParam</code></li>
-                            <li><code>@ApiModel</code></li>
-                            <li><code>@ApiModelProperty</code></li>
+                            <li><code>@Api</code>, <code>@ApiOperation</code>, <code>@ApiParam</code>, <code>@ApiModel</code>, <code>@ApiModelProperty</code></li>
                         </ul>
                     </li>
-                    <li><strong>OpenAPI 3.0 相关注解：</strong>
+                    <li><strong>OpenAPI 3.0 Annotations:</strong>
                         <ul>
-                            <li><code>@io.swagger.v3.oas.annotations.Operation</code></li>
-                            <li><code>@io.swagger.v3.oas.annotations.Parameter</code></li>
-                            <li><code>@io.swagger.v3.oas.annotations.media.Schema</code></li>
+                            <li><code>@io.swagger.v3.oas.annotations.Operation</code>, <code>@io.swagger.v3.oas.annotations.Parameter</code>, <code>@io.swagger.v3.oas.annotations.media.Schema</code></li>
                         </ul>
                     </li>
-                    <li><strong>标准验证注解：</strong>
+                    <li><strong>Standard Validation Annotations:</strong>
                         <ul>
-                            <li>多种标准验证注解，如 <code>@NotNull</code>, <code>@NotEmpty</code>, 等</li>
+                            <li>Various standard validation annotations like <code>@NotNull</code>, <code>@NotEmpty</code>, etc.</li>
                         </ul>
                     </li>
                 </ul>
             </li>
         </ul>
-        用法：<br>
+
+        Usage:<br>
         <ul>
-            <li>将光标定位到项目/包级目录或者打开类，鼠标右键单击"Upload to MeterSphere".</li>
+            <li>Position the cursor on the project/package directory or open a class, right-click and choose "Upload to MeterSphere".</li>
         </ul><br>
-        自定义配置项：<br>
+        Custom Configuration:<br>
         Preferences —&gt; Other Settings —&gt; MeterSphere Settings<br><br>
 
-            <table>
+        <table>
             <thead>
-            <tr>
-            <td>配置项</td>
-            <td>含义</td>
-            </tr>
+                <tr>
+                    <td>Setting</td>
+                    <td>Meaning</td>
+                </tr>
             </thead>
             <tr>
-            <td>Server</td>
-            <td>MeterSphere 服务器地址</td>
+                <td>Server</td>
+                <td>MeterSphere Server URL</td>
             </tr>
             <tr>
-            <td>AccessKey</td>
-            <td>MeterSphere -> 个人中心 -> API KEY AccessKey</td>
+                <td>AccessKey</td>
+                <td>MeterSphere -> Personal Center -> API KEY AccessKey</td>
             </tr>
             <tr>
-            <td>SecretKey</td>
-            <td>MeterSphere -> 个人中心 -> API KEY SecretKey</td>
+                <td>SecretKey</td>
+                <td>MeterSphere -> Personal Center -> API KEY SecretKey</td>
             </tr>
             <tr>
-            <td>Organization</td>
-            <td>组织</td>
+                <td>Organization</td>
+                <td>Organization</td>
             </tr>
             <tr>
-            <td>Project</td>
-            <td>项目</td>
+                <td>Project</td>
+                <td>Project</td>
             </tr>
             <tr>
-            <td>Module</td>
-            <td>接口将要导入的项目对应的模块</td>
+                <td>Module</td>
+                <td>Module of the project where the interfaces will be imported</td>
             </tr>
             <tr>
-            <td>Mode</td>
-            <td>覆盖：
-               1. 系统已存在相同接口（请求类型+路径一致），请求参数内容不一致则覆盖系统原接口
-               2. 系统已存在相同接口（请求类型+路径一致），请求参数内容一致则不做变更
-               3. 系统不存在该接口，则新增<br>
-               不覆盖：
-               1. 系统已存在相同接口（请求类型+路径一致），则不做变更
-               2. 系统不存在该接口，则新增
-            </td>
+                <td>Mode</td>
+                <td>Overwrite:
+                    <ol>
+                        <li>If an identical interface exists (same request type + path), overwrite if request parameters differ</li>
+                        <li>If an identical interface exists (same request type + path), do not change if request parameters are the same</li>
+                        <li>If the interface does not exist, add it</li>
+                    </ol>
+                    Do not overwrite:
+                    <ol>
+                        <li>If an identical interface exists (same request type + path), do not change</li>
+                        <li>If the interface does not exist, add it</li>
+                    </ol>
+                </td>
             </tr>
-            </table>
+        </table>
 
-        <br>
-        <em>兼容的 IDE 版本：2022.2.5 及以上</em><br>
-         <em>MeterSphere 版本：3.0.1 及以上</em><br>
-       <br>
+        <em>Compatible with IDE versions: 2022.2.5 and above</em><br>
+        <em>MeterSphere version: 3.0.1 and above</em><br>
     ]]></description>
 
     <change-notes><![CDATA[
         <ul>
-            <li><b>3.0</b> feat：支持 v3 版本接口同步</li>
+            <li><b>3.0</b> feat: Added support for syncing with v3 version interfaces</li>
         </ul>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
-
     <actions>
         <group id="MeterSphereCodeMenu" text="MeterSphere" description="MeterSphereCodeMenu">
             <add-to-group group-id="CodeMenu" anchor="last"/>
@@ -164,12 +154,6 @@
                 displayName="MeterSphere Settings"/>
         <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
         <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"/>
-       <!-- <toolWindow
-                id="MeterSphere"
-                secondary="true"
-                anchor="right"
-                icon="io.metersphere.icons.MsIcons.Icon"
-                factoryClass="io.metersphere.toolwin.MSToolWindow"/>-->
     </extensions>
 
 </idea-plugin>
