@@ -1,6 +1,6 @@
 # MeterSphere IntelliJ IDEA Plugin
 
-## MeterSphere API 是一款类似于 Postman 的 IntelliJ IDEA 插件，旨在帮助开发者高效调试 API。此外，该插件还支持一键将 API 同步到 [MeterSphere](https://github.com/metersphere/metersphere)。
+## MeterSphere API Debugger 是一款类似于 Postman 的 IntelliJ IDEA 插件，旨在帮助开发者高效调试 API。此外，该插件还支持一键将 API 同步到 [MeterSphere](https://github.com/metersphere/metersphere)。
 
 ---
 
