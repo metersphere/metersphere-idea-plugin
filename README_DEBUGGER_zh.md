@@ -57,4 +57,4 @@ MeterSphere API Debugger 是一个用于调试和测试 API 的插件，专注�
 
 ## 功能演示视频
 
-[![MeterSphere API Debugger](https://img.youtube.com/vi/1Q2sZ9z1Z1Y/0.jpg)](https://www.youtube.com/watch?v=1Q2sZ9z1Z1Y)
+[MeterSphere API Debugger](https://youtu.be/kqaP6kz07dk)
