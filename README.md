@@ -11,9 +11,9 @@
 - 基于 Javadoc 的分析，无需额外的注解
 - 支持列表、集合和其他数据结构，包括嵌套泛型解析
 - 自动识别类并生成接口定义到 MeterSphere
-- [详情查看 MeterSphere Plugin 的公共库，专注于提供通用的功能和工具](/README_LIB_zh.md)
+- [详情查看 MeterSphere Plugin 的公共库，专注于提供通用的功能和工具](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_LIB_zh.md)
 
-### API 调试支持
+### API 调试功能
 
 - 提供完整的 API 调试功能，支持发送请求并进行实时调试
 - 自动构建 API 请求 URL 和参数，简化接口调用流程
@@ -26,7 +26,7 @@
 - 提供 API 管理功能，包括搜索、过滤和修改接口名称，以便于组织和维护 API 文档
 - 支持从调试历史记录中一键定位到相应 API，并进行后续的二次调试，确保问题的有效解决
 - 根据接口定义的规范自动生成请求数据，确保生成的数据与接口要求相符，支持多种数据格式和验证规则
-- [详情查看 API 调试和测试相关的功能](/README_DEBUGGER_zh.md)
+- [详情查看 API 调试和测试相关的功能](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_DEBUGGER_zh.md)
 
 ---
 
