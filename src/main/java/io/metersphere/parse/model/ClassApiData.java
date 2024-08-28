@@ -1,7 +1,7 @@
 package io.metersphere.parse.model;
 
 import com.google.common.collect.Lists;
-import io.metersphere.model.ApiDefinition;
+import io.metersphere.entity.ApiDefinition;
 import lombok.Data;
 
 import java.util.Collections;

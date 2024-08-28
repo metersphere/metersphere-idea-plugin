@@ -1,6 +1,6 @@
 package io.metersphere.parse.model;
 
-import io.metersphere.model.HttpMethod;
+import io.metersphere.entity.HttpMethod;
 import lombok.Data;
 
 import java.util.List;

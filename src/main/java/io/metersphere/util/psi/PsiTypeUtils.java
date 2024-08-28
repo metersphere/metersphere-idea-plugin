@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiTypesUtil;
-import io.metersphere.model.DataTypes;
+import io.metersphere.entity.DataTypes;
 import io.metersphere.parse.parser.DataTypeParser;
 
 import java.util.Collection;

@@ -20,6 +20,13 @@ public interface SpringConstants {
     String JsonIgnore = "com.fasterxml.jackson.annotation.JsonIgnore";
     String JsonIgnoreProperties = "com.fasterxml.jackson.annotation.JsonIgnoreProperties";
     String JsonIncludeProperties = "com.fasterxml.jackson.annotation.JsonIncludeProperties";
+    String ResponseBody = "org.springframework.web.bind.annotation.ResponseBody";
+    String MatrixVariable = "org.springframework.web.bind.annotation.MatrixVariable";
+    String ModelAttribute = "org.springframework.web.bind.annotation.ModelAttribute";
+    String RequestPart = "org.springframework.web.bind.annotation.RequestPart";
+    String CookieValue = "org.springframework.web.bind.annotation.CookieValue";
+    String SessionAttribute = "org.springframework.web.bind.annotation.SessionAttribute";
+
     String DEFAULT_NONE = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n";
     String Validated = "org.springframework.validation.annotation.Validated";
 }

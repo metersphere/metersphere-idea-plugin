@@ -1,7 +1,7 @@
 package io.metersphere.parse.model;
 
-import io.metersphere.model.Property;
-import io.metersphere.model.RequestBodyType;
+import io.metersphere.entity.Property;
+import io.metersphere.entity.RequestBodyType;
 import lombok.Data;
 
 import java.util.List;

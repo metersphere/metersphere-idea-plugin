@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.intellij.sdk'
-version '3.1.0'
+version '3.2.0'
 
 sourceCompatibility = 17
 
@@ -21,15 +21,11 @@ compileTestJava {
 }
 
 dependencies {
-    implementation 'org.projectlombok:lombok:1.18.34' // 主项目使用的 Lombok 版本
-    compileOnly 'org.projectlombok:lombok:1.18.34' // 只在编译时需要，不参与运行时
-    annotationProcessor 'org.projectlombok:lombok:1.18.34' // 注解处理器，用于生成代码
-    testCompileOnly 'org.projectlombok:lombok:1.18.34' // 测试时编译依赖
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34' // 测试时注解处理器
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5' // IntelliJ Lombok 插件支持
-    implementation ("io.swagger.core.v3:swagger-models:2.2.22")
-
+    implementation 'de.plushnikov.lombok-intellij-plugin:intellij-facade-factory:0.5'
+    implementation "io.swagger.core.v3:swagger-models:2.2.22"
 }
 
 intellij {

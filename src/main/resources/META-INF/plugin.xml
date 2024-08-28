@@ -106,7 +106,7 @@
         </table>
 
         <em>Compatible with IDE versions: 2022.2.5 and above</em><br>
-        <em>MeterSphere version: 3.0.1 and above</em><br>
+        <em>MeterSphere version: 3.0.1｜2.10 and above</em><br>
     ]]></description>
 
     <change-notes><![CDATA[
@@ -130,10 +130,9 @@
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </group>
 
-        <action
-                id="MSAction"
-                icon="io.metersphere.icons.MsIcons.Icon"
-                class="io.metersphere.actions.MSUploadAction" text="Upload to MeterSphere"
+        <action id="MSAction"
+                class="io.metersphere.ms.actions.UploadAction"
+                text="Upload to MeterSphere"
                 description="Upload to MeterSphere">
 
             <add-to-group group-id="MeterSphereCodeMenu" anchor="last"/>
@@ -149,11 +148,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
                 parentId="other"
-                instance="io.metersphere.AppSettingConfigurable"
-                id="io.metersphere.AppSettingConfigurable"
-                displayName="MeterSphere Settings"/>
-        <applicationService serviceImplementation="io.metersphere.AppSettingService"/>
-        <applicationService serviceImplementation="io.metersphere.gui.AppSettingComponent"/>
+                instance="io.metersphere.UploadSettingConfigurable"
+                id="io.metersphere.UploadSettingConfigurable"
+                displayName="MeterSphere Upload Settings"/>
+        <applicationService serviceImplementation="io.metersphere.UploadSettingComponent"/>
+        <applicationService serviceImplementation="io.metersphere.ms.gui.UploadSettingWindow"/>
     </extensions>
 
 </idea-plugin>

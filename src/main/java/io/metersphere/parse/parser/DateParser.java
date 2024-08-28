@@ -4,10 +4,10 @@ import com.google.common.collect.Sets;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
-import io.metersphere.model.ApiSpecification;
-import io.metersphere.model.DataTypes;
-import io.metersphere.model.Property;
 import io.metersphere.constants.SpringConstants;
+import io.metersphere.entity.ApiSpecification;
+import io.metersphere.entity.DataTypes;
+import io.metersphere.entity.Property;
 import io.metersphere.util.psi.PsiAnnotationUtils;
 
 import java.util.Set;

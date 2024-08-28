@@ -30,4 +30,9 @@ public class Jsr303Info {
      */
     private Integer maxLength;
 
+    /**
+     * 属性名称
+     */
+    private String fieldName;
+
 }

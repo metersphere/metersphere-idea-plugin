@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 public class JSON {
     private static final Gson gson = new Gson();
@@ -42,17 +41,21 @@ public class JSON {
         }
     }
 
-    public static Map parseMap(String jsonObject) {
+    public static ResultHolder getResult(String jsonObject) {
         try {
-            return gson.fromJson(jsonObject, Map.class);
+            return gson.fromJson(jsonObject, ResultHolder.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static ResultHolder getResult(String jsonObject) {
+    public static <T> T parseObject(Object content, Class<T> clazz) {
         try {
-            return gson.fromJson(jsonObject, ResultHolder.class);
+            // 将 content 转换为 JSON 字符串
+            String json = gson.toJson(content);
+
+            // 使用 Gson 将 JSON 字符串转换为单个对象 T
+            return gson.fromJson(json, clazz);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -8,13 +8,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
-import io.metersphere.model.ApiSpecification;
-import io.metersphere.model.DataTypes;
-import io.metersphere.model.HttpMethod;
-import io.metersphere.model.Property;
-import io.metersphere.model.RequestBodyType;
 import io.metersphere.constants.ParameterIn;
 import io.metersphere.constants.SpringConstants;
+import io.metersphere.entity.*;
 import io.metersphere.parse.model.Jsr303Info;
 import io.metersphere.parse.model.RequestInfo;
 import io.metersphere.parse.model.TypeParseContext;
@@ -29,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
-import static io.metersphere.constants.SpringConstants.*;
 
 
 /**
@@ -99,7 +93,7 @@ public class RequestParser {
         if (method.isAllowBody()) {
             return null;
         }
-        boolean requestBody = parameters.stream().anyMatch(p -> p.getAnnotation(RequestBody) != null);
+        boolean requestBody = parameters.stream().anyMatch(p -> p.getAnnotation(SpringConstants.RequestBody) != null);
         if (requestBody) {
             return RequestBodyType.json;
         }
@@ -128,7 +122,7 @@ public class RequestParser {
 
         // JSON: 解析@RequestBody注解参数、自定义@RequestBody注解参数
         PsiParameter bodyParameter = methodParameters.stream()
-                .filter(p -> p.getAnnotation(RequestBody) != null).findFirst().orElse(null);
+                .filter(p -> p.getAnnotation(SpringConstants.RequestBody) != null).findFirst().orElse(null);
         if (bodyParameter != null) {
             bodyProperty = kernelParser.parse(bodyParameter.getType());
             String description = paramTags.get(bodyParameter.getName());
@@ -235,10 +229,10 @@ public class RequestParser {
         PsiAnnotation annotation = null;
         ParameterIn in = ParameterIn.query;
         Map<String, ParameterIn> targets = new LinkedHashMap<>();
-        targets.put(RequestParam, ParameterIn.query);
-        targets.put(RequestAttribute, ParameterIn.query);
-        targets.put(RequestHeader, ParameterIn.header);
-        targets.put(PathVariable, ParameterIn.path);
+        targets.put(SpringConstants.RequestParam, ParameterIn.query);
+        targets.put(SpringConstants.RequestAttribute, ParameterIn.query);
+        targets.put(SpringConstants.RequestHeader, ParameterIn.header);
+        targets.put(SpringConstants.PathVariable, ParameterIn.path);
         for (Entry<String, ParameterIn> target : targets.entrySet()) {
             annotation = PsiAnnotationUtils.getAnnotation(parameter, target.getKey());
             if (annotation != null) {
@@ -323,7 +317,7 @@ public class RequestParser {
 
     private List<PsiParameter> filterRequestParameters(List<PsiParameter> parameters) {
         return parameters.stream()
-                .filter(p -> p.getAnnotation(RequestBody) == null)
+                .filter(p -> p.getAnnotation(SpringConstants.RequestBody) == null)
                 .filter(p -> {
                     // 过滤掉自定义@RequestBody类型的参数
                     ApiSpecification.RequestBodyParamType requestBodyParamType = settings.getRequestBodyParamType();

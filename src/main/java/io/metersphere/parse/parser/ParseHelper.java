@@ -12,10 +12,10 @@ import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
-import io.metersphere.model.Value;
 import io.metersphere.constants.DocumentTags;
 import io.metersphere.constants.JavaConstants;
 import io.metersphere.constants.SpringConstants;
+import io.metersphere.entity.Value;
 import io.metersphere.parse.model.Jsr303Info;
 import io.metersphere.parse.model.TypeParseContext;
 import io.metersphere.util.parser.InternalUtils;
@@ -49,6 +49,11 @@ public class ParseHelper {
         this.module = module;
     }
 
+    public ParseHelper(Project project) {
+        this.project = project;
+        this.module = null;
+    }
+
     //----------------------- 接口Api相关 ------------------------------------//
 
     /**
@@ -77,7 +82,7 @@ public class ParseHelper {
      * 获取接口概述
      */
     public String getApiSummary(PsiMethod psiMethod) {
-        // 优先级: swagger注解@ApiOperation > 文档注释标记@description >  文档注释第一行
+        // 优先级: swagger注解@ApiOperation > 文档注释标记@Description >  文档注释第一行
         String summary = PsiSwaggerUtils.getApiSummary(psiMethod);
         if (StringUtils.isNotBlank(summary)) {
             return trim(summary);

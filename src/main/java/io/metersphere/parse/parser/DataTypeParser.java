@@ -3,7 +3,7 @@ package io.metersphere.parse.parser;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiType;
-import io.metersphere.model.DataTypes;
+import io.metersphere.entity.DataTypes;
 import io.metersphere.util.PropertiesLoader;
 import io.metersphere.util.psi.PsiTypeUtils;
 import org.apache.commons.lang3.StringUtils;

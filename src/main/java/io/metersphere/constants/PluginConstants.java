@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PluginConstants {
-    public static final String EXPORTER_MS = "MeterSphere";
+    public static final String EXPORTER_MS_V3 = "V3";
+    public static final String EXPORTER_MS_V2 = "V2";
 
 
     public enum MessageTitle {
