@@ -131,7 +131,7 @@
         </group>
 
         <action id="MSAction"
-                class="io.metersphere.ms.actions.UploadAction"
+                class="io.metersphere.action.UploadAction"
                 text="Upload to MeterSphere"
                 description="Upload to MeterSphere">
 
@@ -148,11 +148,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
                 parentId="other"
-                instance="io.metersphere.UploadSettingConfigurable"
-                id="io.metersphere.UploadSettingConfigurable"
+                instance="io.metersphere.component.UploadSettingConfigurable"
+                id="io.metersphere.component.UploadSettingConfigurable"
                 displayName="MeterSphere Upload Settings"/>
-        <applicationService serviceImplementation="io.metersphere.UploadSettingComponent"/>
-        <applicationService serviceImplementation="io.metersphere.ms.gui.UploadSettingWindow"/>
+        <applicationService serviceImplementation="io.metersphere.component.UploadSettingComponent"/>
+        <applicationService serviceImplementation="io.metersphere.gui.UploadSettingWindow"/>
     </extensions>
 
 </idea-plugin>
