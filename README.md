@@ -28,6 +28,12 @@
 - 根据接口定义的规范自动生成请求数据，确保生成的数据与接口要求相符，支持多种数据格式和验证规则
 - [详情查看 API 调试和测试相关的功能](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_DEBUGGER_zh.md)
 
+
+### AI 功能
+
+- [详情查看 AI 相关的功能](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_AI_zh.md)
+
+
 ---
 
 
