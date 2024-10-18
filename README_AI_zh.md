@@ -20,3 +20,18 @@
 - **测试数据生成**：AI 可以根据接口定义生成测试数据，支持各种数据格式和验证规则，确保测试数据的有效性和准确性。
 - 
 
+## 功能页面截图
+![AI](images/ai/chat.png)
+
+![AI](images/ai/swath-model.png)
+
+
+## AI 交互页面截图
+![AI](images/ai/code-action.png)
+
+## AI 代码生成页面截图
+![AI](images/ai/code-insert.png)
+
+## 在线镜像
+
+![AI](images/ai/browser.png)
