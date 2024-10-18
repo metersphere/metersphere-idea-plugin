@@ -35,3 +35,4 @@
 ## 在线镜像
 
 ![AI](images/ai/browser.png)
+![AI](images/ai/browser-1.png)
