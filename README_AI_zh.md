@@ -21,6 +21,8 @@
 - 
 
 ## 功能页面截图
+![AI](images/ai/ai-toolwindow.png)
+
 ![AI](images/ai/chat.png)
 
 ![AI](images/ai/swath-model.png)
