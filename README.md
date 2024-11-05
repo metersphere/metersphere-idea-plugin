@@ -29,10 +29,6 @@
 - [详情查看 API 调试和测试相关的功能](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_DEBUGGER_zh.md)
 
 
-### AI 功能
-
-- [详情查看 AI 相关的功能](https://github.com/metersphere/metersphere-idea-plugin/blob/v3.x/README_AI_zh.md)
-
 
 ---
 
